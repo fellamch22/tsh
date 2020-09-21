@@ -1,0 +1,12 @@
+***********  Membres de l'equipe ***********
+
+  NOM ET PRENOM        | NUMERO ETUDIANT | PSEUDO GITLAB
+
+  MECHOUAR FELLA       |    21964933     | @mechouar
+
+  LIFANG  SU           |                 | @su
+
+  BADJI  SIDY          |                 | @badji	
+
+
+
