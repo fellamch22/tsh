@@ -2,9 +2,9 @@
 
   NOM ET PRENOM        | NUMERO ETUDIANT | PSEUDO GITLAB
 
-  MECHOUAR FELLA       |    71964933     | @mechouar
+  MECHOUAR FELLA       |    21964933     | @mechouar
 
-  SU  LIFANG           |    71957835     | @su
+  SU  LIFANG           |    21957835     | @su
 
   BADJI  SIDY          |    71702458     | @badji	
 
