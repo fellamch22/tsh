@@ -1,0 +1,85 @@
+Système d’exploration
+1.	Séparer le projet le plus possible, dans des fichiers différents, en faisant attention que certaines fonctions restent équivalentes : 
+-	on peut avoir 2 fonctions codées de la même façon sans que ça pose problème 
+ex : suppression fichier ou dossier ( rmdir et rm ) seule différences : est-ce un fichier ou un dossier à supprimer , le reste du code est identique.
+-	exemple de séparation :
+
+Commande Externes	Usage	Nom de fonc	
+ls	lister les fichiers		
+mkdir	géré la création de dossier 		
+vi			
+sleep			
+cal			
+			
+			
+
+changedirectory.c (géré le changement de répertoire : cd)
+remove.c ( géré rmdir et rm )
+mkdir.c (: mkdir)
+lister.c (, les répétoir : ls)
+	-if (a, l, r, t) afficher les différences contenues
+Redirection.c( géré les redirection : <, >, >>)
+Cat.c (géré l’affichage d’un fichier : cat)
+All.c (gérer les "*")
+
+-	Variable env V.S Variable local 
+
+
+
+2.	pipe (gérer des flux de données)
+-	première chose  à prévoir dans l'architecture : pour prendre en la sortie standard pour la faire rentrer en entrée du programme suivant
+3.	Fait un fork (duplique le procès) qui exécute la commande et renvoi le résultat au Shell directement
+4.	La partie tar
+5.	Site ref :
+-	https://chrtophe.developpez.com/tutoriels/minisysteme/
+
+
+
+
+
+
+
+
+
+02.10.2020
+-bibliothèque tar.h
+
+cd(char * chemin)
+      .tar/…/…
+	- int file to block (int fd, char * contenue)
+		 ajouter file extérieur dans le .tar comme archiver
+		 préparer sa structure pour mettre dans .tar
+	- add-fichier(int fd, char * contenue, int nbdeblock, off_t position) 
+                                     descripteur du fichier « .tar »               où on va ajouter le fichier
+  Déplacer le fichier dans .tar                        
+		        
+		Exemple : 
+		tar -cvf toto.tar rep1 f1 f2 f3
+		affichier toto.tar 
+					rep/ff1
+					rep/ff2
+					f1
+					f2
+					f3….
+(si je veux ajouter f4 dans toto.tar, il faut déplacer les autre fichiers pour ne 
+pas écraser les données.)
+					
+	- get fichier type(int fd, char * chemin) ;
+			                nom de fichier ./tar/A/a/b…etc
+				   renvoie 0, 5…etc comme tp1 
+	- afficher fichier(int fd, off_t position) : cat
+	- afficher repetoire(int fd, off_t position) : ls (cf. fseek : SETCUR, SETIN…)
+			       pour éviter de parcourir tout le répertoire
+	- off_t trouv(int fd, char * chemin)
+	    Remplacement du fichier / répertoire dans .tar
+	    s’il a trouvé le fichier, return la position, sinon return -1
+	- delete fichier (int fd, char * chemin )
+			nom de fichier
+	- delete répertoire (int fd, char * chemin )
+			nom de fichier	
+
+
+
+
+	
+
