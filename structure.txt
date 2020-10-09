@@ -1,7 +1,7 @@
 - cd(char * chemin  plus tard
       .tar/…/…
 
-- int file to block (int fd, char * contenue) --> Fella
+- int file to block (int fd, char * contenue)  -->Fella
  ajouter file extérieur dans le .tar comme archiver
  préparer sa structure pour mettre dans .tar
 
@@ -20,7 +20,7 @@ f3….
 (si je veux ajouter f4 dans toto.tar, il faut déplacer les autre fichiers pour ne 
 pas écraser les données.)
 
-- get fichier type(int fd, char * chemin) ; -->LiFang
+- get fichier type(int fd, char * chemin) ;-->LiFang
                nom de fichier ./tar/A/a/b…etc
   renvoie 0, 5…etc comme tp1 
 un trouve position afficher l’entete  lire entete (block [512])
