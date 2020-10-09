@@ -1,43 +1,49 @@
-
-02.10.2020
--bibliothèque tar.h
-
-cd(char * chemin)
+- cd(char * chemin  plus tard
       .tar/…/…
-	- int file to block (int fd, char * contenue)
-		 ajouter file extérieur dans le .tar comme archiver
-		 préparer sa structure pour mettre dans .tar
-	- add-fichier(int fd, char * contenue, int nbdeblock, off_t position) 
+
+- int file to block (int fd, char * contenue) --> Fella
+ ajouter file extérieur dans le .tar comme archiver
+ préparer sa structure pour mettre dans .tar
+
+
+- add-fichier(int fd, char * contenue, int nbdeblock, off_t position) --> Fella
                                      descripteur du fichier « .tar »               où on va ajouter le fichier
-  Déplacer le fichier dans .tar                        
-		        
-		Exemple : 
-		tar -cvf toto.tar rep1 f1 f2 f3
-		affichier toto.tar 
-					rep/ff1
-					rep/ff2
-					f1
-					f2
-					f3….
+  Déplacer le fichier dans .tar 
+Exemple : 
+tar -cvf toto.tar rep1 f1 f2 f3
+affichier toto.tar 
+rep/ff1
+rep/ff2
+f1
+f2
+f3….
 (si je veux ajouter f4 dans toto.tar, il faut déplacer les autre fichiers pour ne 
 pas écraser les données.)
-					
-	- get fichier type(int fd, char * chemin) ;
-			                nom de fichier ./tar/A/a/b…etc
-				   renvoie 0, 5…etc comme tp1 
-	- afficher fichier(int fd, off_t position) : cat
-	- afficher repetoire(int fd, off_t position) : ls (cf. fseek : SETCUR, SETIN…)
-			       pour éviter de parcourir tout le répertoire
-	- off_t trouv(int fd, char * chemin)
-	    Remplacement du fichier / répertoire dans .tar
-	    s’il a trouvé le fichier, return la position, sinon return -1
-	- delete fichier (int fd, char * chemin )
-			nom de fichier
-	- delete répertoire (int fd, char * chemin )
-			nom de fichier	
+
+- get fichier type(int fd, char * chemin) ; -->LiFang
+               nom de fichier ./tar/A/a/b…etc
+  renvoie 0, 5…etc comme tp1 
+un trouve position afficher l’entete  lire entete (block [512])
 
 
+- afficher fichier(int fd, off_t position) : cat --> LiFang
+ afficher le contenu du fichier STDOUT listtar, ou mycat
+
+- afficher repetoire(int fd, off_t position) : ls (cf. fseek : SETCUR, SETIN…)  LiFang
+      pour éviter de parcourir tout le répertoire
+dir ne marhce pas dans le tar
 
 
-	
+- off_t trouv(int fd, char * chemin)--> Sidy
+   Remplacement du fichier / répertoire dans .tar
+   s’il a trouvé le fichier, return la position, sinon return -1
 
+
+- delete fichier (int fd, char * chemin ) --> Sidy
+fd = descripteur de tar 
+char * chemin = path de fichier pour deleted
+ faire trouve, après faire memove
+
+
+- delete répertoire (int fd, char * chemin )Sidy & Fella(plus tard)
+nom de fichier 
