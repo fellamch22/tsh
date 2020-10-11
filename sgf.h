@@ -1,5 +1,10 @@
-<<<<<<< HEAD
-hello Fella
-=======
-knrkjtnkjkwjbeer
->>>>>>> ba1d2372433075f7bbe59fef6805f3bc55612ea9
+
+#ifndef SGF_H
+#define SGF_H
+#include "tar.h"
+
+int fileToBlocks( int fd , char * filename ,char * contenu );
+void addFile( int fd , char * contenu , int nb_blocks , off_t position);
+
+
+#endif
