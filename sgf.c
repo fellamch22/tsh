@@ -67,36 +67,3 @@ int main(int argc , char **argv){
   return 0;
 }
 
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-
-/*printf("fichier %s de type %c et de  taille : %s\n", p.name, p.typeflag, p.size);
-  while(p.name[position] != '\0'){
-    if(trouve(fd, filename)){
-      remove(filename);
-      sscanf(p.size, "%d", &filesize);
-      int diff = ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE;
-      lseek(fd, diff, BLOCKSIZE) - BLOCKSIZE;
-      printf("fichier %s de type %c et de  taille : %s\n", p.name, p.typeflag, p.size);
-    }
-    sscanf(p.size, "%o", &filesize);
-    int diff = ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE;
-    lseek(fd, diff, SEEK_CUR);
-    read(fd, &p, BLOCKSIZE);
-  }*/
