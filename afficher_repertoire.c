@@ -38,12 +38,12 @@ void afficher_repertoire(int fd, off_t position){
     }
     
     while (i < nb_blocks - 2){
-        bzero(&ph, sizeof(ph));
-        read(fd, &ph, sizeof(ph));
-        if (!strncmp(ph.name, ph.name, ft_strlen(ph.name)))
-            printf("> %s\n",ph.name);
-        i++;
-    }
+         bzero(&ph, sizeof(ph));
+         read(fd, &ph, sizeof(ph));
+         if (!strncmp(ph.name, ph.name, ft_strlen(ph.name)))
+             printf(" [%c] > %s\n",ph.typeflag, ph.name);
+         i++;
+     }
 }
 
 int main(int argc, char * argv[]){
