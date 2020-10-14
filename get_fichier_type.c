@@ -10,7 +10,7 @@ char get_fichier_type(int fd, char *chemin){
     
     struct stat buff;
     fstat(fd, &buff);
-    int nb_blocks = (buff.st_size + 512 - 1) / 512;
+    int nb_blocks = (buff.st_size + BLOCKSIZE - 1) / BLOCKSIZE;
     struct posix_header ph;
 
     int i=0;
