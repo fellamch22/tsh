@@ -7,19 +7,34 @@
 
 #include "sgh.h"
 
+int ft_strlen(char *s) {
+    int i = 0;
+    while(s[i])
+        i++;
+    return i;
+}
+
 char get_fichier_type(int fd, char *chemin){
     
     struct stat buff;
     fstat(fd, &buff);
     int nb_blocks = (buff.st_size + 512 - 1) / 512;
     struct posix_header ph;
-
+    char nomfic[100];
     int i=0;
-    while (i < nb_blocks - 2){
+    while (i < nb_blocks - 2)
+    {
         bzero(&ph, sizeof(ph));
         read(fd, &ph, sizeof(ph));
+        strcpy(nomfic,ph.name);
+
+        // On copie le ph.name dans nomfic, et on remplace dans nomfic le dernier caractere
+        // par un \0 si il s'agit d'un '/' , De meme pour le chemin
+        if (nomfic[ft_strlen(nomfic)-1] == '/') {nomfic[ft_strlen(nomfic)-1] = '\0';}
         
-         if (!strcmp(ph.name, chemin)) {
+        if (chemin[ft_strlen(chemin)-1] == '/') {chemin[ft_strlen(chemin)-1] = '\0';}
+
+         if   (!strcmp(nomfic, chemin) ) {
              switch(ph.typeflag){
                 case '0' :
                             printf("[%c] Le chemin mene a un Fichier\n",ph.typeflag);
@@ -82,13 +97,6 @@ void afficher_fichier(int fd, off_t position){
     else perror("bad file descriptor");
 }
 
-
-int ft_strlen(char *s) {
-    int i = 0;
-    while(s[i])
-        i++;
-    return i;
-}
 
 void afficher_repertoire(int fd, off_t position){
     if (fd == -1){
