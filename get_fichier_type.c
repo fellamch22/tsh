@@ -17,13 +17,12 @@ char get_fichier_type(int fd, char *chemin){
     
     struct stat buff;
     fstat(fd, &buff);
-    int nb_blocks = (buff.st_size + 512 - 1) / 512;
+    int nb_blocks = (buff.st_size + BLOCKSIZE - 1) / BLOCKSIZE;
     struct posix_header ph;
-    char nomfic[100];
+    char nomfic[sizeof(ph.name)];
     int i=0;
-    while (i < nb_blocks - 2)
-    {
-        bzero(&ph, sizeof(ph));
+    while (i < nb_blocks - 2){
+        memset(&ph, 0, sizeof(ph));
         read(fd, &ph, sizeof(ph));
         strcpy(nomfic,ph.name);
 
