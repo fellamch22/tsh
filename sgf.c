@@ -20,7 +20,7 @@ off_t trouve(int fd, char *filename){
    		if(strcmp(p.name , filename) == 0){
       		return  lseek(fd,-512, SEEK_CUR);
     	}else{ 
-			lseek(fd,((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE,SEEK_CUR);
+			lseek(fd, ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
    			read(fd, &p, BLOCKSIZE);
 		}
 	}
@@ -49,6 +49,7 @@ void delete_fichier(int fd, char *filename){
    		 	perror(" read failed ");
     		exit(1);
 		}
+		
 		sscanf(p.size,"%o",&filesize);
 		pos_decalage = lseek(fd,((filesize % 512) == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE , SEEK_CUR);
 		diff = s.st_size - pos_decalage;
@@ -61,6 +62,7 @@ void delete_fichier(int fd, char *filename){
    		 	perror(" lseek failed ");
     		exit(1);
 		}
+		write(fd, decalage, diff);
   	}
 }
 
