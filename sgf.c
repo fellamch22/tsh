@@ -77,9 +77,7 @@ void delete_repertoire(int fd, char *repname){
 	off_t position;		
 	struct posix_header p ;
 
-	char prefix[strlen(repname)+1] ;
-	memset(prefix ,'\0',strlen(repname)+1);
-
+	
 	position = trouve(fd, repname);
 
 
@@ -111,10 +109,9 @@ void delete_repertoire(int fd, char *repname){
 	// VERIFIER DANS LES HEADER SUIVANTS SI L'UN D'EUX COMMENCE PAR FILENAME ALORS ON LE SUPPRIME
 	// TANT QUE CA COMMENCE PAR repname ON CONTINUE
 
-	strncpy(prefix,p.name,strlen(repname));
 
 
-	while(strcmp(repname,prefix)== 0 ){
+	while(strncmp(repname,p.name,strlen(repname))== 0 ){
 
 
 		delete_fichier(fd,p.name);
@@ -132,8 +129,8 @@ void delete_repertoire(int fd, char *repname){
     			exit(1);
 		}
 
-		strncpy(prefix,p.name,strlen(repname));
-		printf("%s \n",prefix);
+
+
 
 	}
 
