@@ -1,50 +1,86 @@
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "tar.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include "tar.h"
 
-void print_file(int fd, unsigned int nb_block){
-    char buff[BLOCKSIZE] = { 0 };
+off_t trouve(int fd, char *filename){
+	int filesize = 0;
+	struct posix_header p;
+  	lseek(fd, 0, SEEK_SET);
 
-    while (nb_block) {
-        read(fd, buff, sizeof(buff));
+	if(fd < 0){
 
-        printf("%s", buff);
+    		perror("Fichier n'existe pas");
+    		exit(1);
+ 	}
 
-        memset(buff, 0, sizeof(buff));
-        nb_block--;
-    }
+  	read(fd, &p, BLOCKSIZE);
+
+	sscanf(p.size,"%o",&filesize);
+  	while(p.name[0] != '\0' ){
+
+   		if(strcmp(p.name , filename) == 0){
+      		return  lseek(fd,-512, SEEK_CUR);
+    	}else{ 
+
+			lseek(fd,(filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+   			read(fd, &p, BLOCKSIZE);
+			sscanf(p.size,"%o",&filesize);
+
+		}
+
+	}
+
+  	return  -1;
 }
 
 void afficher_fichier(int fd, char *chemin){
-    struct stat buff;
-    fstat(fd, &buff);
-    int nb_blocks = (buff.st_size + BLOCKSIZE - 1) / BLOCKSIZE;
-    struct posix_header ph;
 
-    int i = 0;
-    while (i < nb_blocks - 2)
-    {
-        memset(&ph, 0, sizeof(ph));
-        read(fd, &ph, sizeof(ph));
+	off_t position ;
+	unsigned int filesize;
 
-        if (!strcmp(ph.name, chemin)) {
-            if (ph.typeflag == '0') {
-                unsigned int file_size= 0;
-                sscanf(ph.size, "%o", &file_size);
-                
-                /*nb de block qu'on lit*/
-                unsigned int nb_block_file = (file_size + BLOCKSIZE - 1) / BLOCKSIZE;
-                print_file(fd, nb_block_file);
-                return;
-            } else
-                printf("Le chemin mene pas a un ficher");
-        }
-        i++;
-    }
+	struct posix_header p;
+
+   	position = trouve(fd,chemin);
+
+	if ( position == -1 ){
+
+		perror(" fichier inexistant ");
+		exit(1);
+
+	}
+
+
+	// la tete de lecture se trouve au bon endroit , par la fonction trouv
+
+	if( read(fd,&p,BLOCKSIZE) <= 0 ){
+
+		perror(" Erreur de lecture  ");
+		exit(1);
+
+		
+	}
+
+	sscanf(p.size,"%o",&filesize);
+	
+	char content [filesize];
+
+	if( read(fd,content,filesize) <= 0 ){
+
+		perror(" Erreur de lecture  ");
+		exit(1);
+
+		
+	}
+
+	write(1,content,filesize);
+	
+
+
 }
 
 int main(int argc, char * argv[])
