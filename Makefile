@@ -1,5 +1,5 @@
 CC=gcc
-CFLAGS=-Wall -g "-mmacosx-version-min=10.7"
+CFLAGS=-Wall -g
  
 ALL= get_fichier_type afficher_fichier afficher_repertoire cmd_ls 
 all: $(ALL)
