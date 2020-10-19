@@ -67,62 +67,76 @@ void delete_fichier(int fd, char *filename){
   	}
 }
 
-void delete_repertoire(int fd, char *filename){
-	size_t taille;
-	off_t position;		
-	struct stat s, stat_entry;
-	struct dirent *entry;
-	DIR *dir;
-	char *chemin;
 
-	position = trouve(fd, filename);
+
+void delete_repertoire(int fd, char *repname){
+	/* le descripteur donne fd  doit etre un descripteur d'un fichier .tar et ouvert en lecture et ecriture.
+	    repname est le nom du repertoire a supprimer suivi par '/' a la fin
+	 */
+
+	off_t position;		
+	struct posix_header p ;
+
+	char prefix[strlen(repname)+1] ;
+	memset(prefix ,'\0',strlen(repname)+1);
+
+	position = trouve(fd, repname);
+
+
+
 	if(position == -1){
 		perror("Repertoire n'existe pas dans Fichiers.tar");
-    	exit(1);
-	else{
-		delete_fichier(fd, filename);
-		// si ton trouve un repertoire dans le fichier.tar 
-		fstat(fd, &s);
-		if(S_ISDIR(s.st_mode) == 0){
-			perror("Repertoire ");
-			exit(1);
-		}
-		if((dir = opendir(filename)) == NULL){
-			perror("Ouverture Repertoire ");
-			exit(1);
-		}
-		taille = strlen(filename);
-		while((entry = readdir(dir)) != NULL){
-			if(!strcmp(entry -> d_name, ".") || !strcmp(entry -> d_name, ".."))
-				continue;
-				
-
-			chemin = calloc(taille + strlen(entry -> d_name) + 1, sizeof(char));
-			strcpy(chemin, filename);
-			strcat(chemin, "/");
-			strcat(chemin, entry -> d_name);
-
-			fstat(fd, &stat_entry);
-
-			if(S_ISDIR(stat_entry.st_mode) != 0){
-				delete_repertoire(fd, filename);
-				continue;
-			}
-
-			if(unlink(chemin) == 0)
-				printf("Supprimer fichier : %s\n", chemin);
-			else
-				printf(" Echec suppression fichier  : %s\n", chemin);
-		
-			free(chemin);
-		}
-
-		if(rmdir(filename) == 0)
-			printf("Supprimer repertoire : %s\n", filename);
-		else	
-			printf("Echec suppression repertoire : %s\n", filename);
-		closedir(dir);
+    		exit(1);
 	}
+	
+	// supprimer le premier block correspondant au filename
+
+	delete_fichier(fd,repname);
+	
+	// revenir a position , car le contenu du fichier est decale par delete_file
+
+
+	if (lseek(fd,position,SEEK_SET) == -1 ){
+
+		perror("delete_repertoire / ERREUR LSEEK ");
+    		exit(1);
+	}
+
+	if (read(fd,&p,BLOCKSIZE) < 0 ){
+
+		perror("delete_repertoire  / ERREUR READ ");
+    		exit(1);
+	}
+
+	// VERIFIER DANS LES HEADER SUIVANTS SI L'UN D'EUX COMMENCE PAR FILENAME ALORS ON LE SUPPRIME
+	// TANT QUE CA COMMENCE PAR repname ON CONTINUE
+
+	strncpy(prefix,p.name,strlen(repname));
+
+
+	while(strcmp(repname,prefix)== 0 ){
+
+
+		delete_fichier(fd,p.name);
+
+		// revenir a la bonne position 
+		if(lseek(fd,position,SEEK_SET) == -1){
+
+			perror("delete_repertoire / ERREUR LSEEK ");
+    			exit(1);
+		}
+
+		if (read(fd,&p,BLOCKSIZE) < 0 ){
+
+			perror("delete_repertoire  / ERREUR READ ");
+    			exit(1);
+		}
+
+		strncpy(prefix,p.name,strlen(repname));
+		printf("%s \n",prefix);
+
+	}
+
 }
 
 int main(int argc , char **argv){
