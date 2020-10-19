@@ -10,20 +10,27 @@
 #include"tar.h"
 
 off_t trouve(int fd, char *filename){
+
 	int filesize = 0;
 	struct posix_header p;
   	lseek(fd, 0, SEEK_SET);
+
 	if(fd < 0){
+
     	perror("Fichier n'existe pas");
     	exit(1);
+
  	}
   	read(fd, &p, BLOCKSIZE);
+	sscanf(p.size,"%o",&filesize);
+
   	while(p.name[0] != '\0' ){
    		if(strcmp(p.name , filename) == 0){
       		return  lseek(fd,-512, SEEK_CUR);
     	}else{ 
-			lseek(fd, ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+			lseek(fd, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
    			read(fd, &p, BLOCKSIZE);
+			sscanf(p.size,"%o",&filesize);
 		}
 	}
   	return  -1;
