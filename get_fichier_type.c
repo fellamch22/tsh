@@ -1,72 +1,106 @@
+#include <stdlib.h>
 #include <string.h>
 #include <stdio.h>
-#include "tar.h"
 #include <sys/types.h>
 #include <sys/stat.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include "tar.h"
 
-int ft_strlen(char *s) {
-    int i = 0;
-    while(s[i])
-        i++;
-    return i;
+off_t trouve(int fd, char *filename){
+	int filesize = 0;
+	struct posix_header p;
+  	lseek(fd, 0, SEEK_SET);
+
+	if(fd < 0){
+
+    		perror("Fichier n'existe pas");
+    		exit(1);
+ 	}
+
+  	read(fd, &p, BLOCKSIZE);
+
+	sscanf(p.size,"%o",&filesize);
+  	while(p.name[0] != '\0' ){
+
+   		if(strcmp(p.name , filename) == 0){
+      		return  lseek(fd,-512, SEEK_CUR);
+    	}else{ 
+
+			lseek(fd,(filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+   			read(fd, &p, BLOCKSIZE);
+			sscanf(p.size,"%o",&filesize);
+
+		}
+
+	}
+
+  	return  -1;
 }
 
 char get_fichier_type(int fd, char *chemin){
 
-    struct stat buff;
-    fstat(fd, &buff);
-    int nb_blocks = (buff.st_size + BLOCKSIZE - 1) / BLOCKSIZE;
-    //printf("st_size = %lld", buff.st_size);
-    struct posix_header ph;
-    int i=0;
+	struct posix_header p;
+ 	off_t position ;
+	
+	position = trouve(fd ,chemin);
+	
+	
+	if ( position == -1 ){
 
-    int sizechemin=ft_strlen(chemin);
-    if (chemin[sizechemin-1] == '/') { chemin[sizechemin-1] = '\0'; }
- 
-    while (i < nb_blocks - 2){
-        memset(&ph, 0, sizeof(ph));
-        read(fd, &ph, sizeof(ph));
-        if (ph.name[ft_strlen(ph.name)-1] == '/') {ph.name[ft_strlen(ph.name)-1] = '\0';}
+		perror(" fichier inexistant ");
+		exit(1);
 
-        if   (!(strcmp(ph.name, chemin))) {
-            switch(ph.typeflag){
+	}
+
+
+	// la tete de lecture se trouve au bon endroit , par la fonction trouv
+
+	if( read(fd,&p,BLOCKSIZE) <= 0 ){
+
+		perror(" Erreur de lecture  ");
+		exit(1);
+
+		
+	}
+   
+	
+            switch(p.typeflag){
               case '0' :
-                printf("[%c] Le chemin mene a un Fichier\n",ph.typeflag);
+                printf("[%c] Le chemin mene a un Fichier\n",p.typeflag);
                 break;
               case '1' :
-                printf("[%c] Le chemin mene a un Lien materiel\n",ph.typeflag);
+                printf("[%c] Le chemin mene a un Lien materiel\n",p.typeflag);
                 break;
               case '2' :
-                printf("[%c] Le chemin mene a un Lien symbolique\n",ph.typeflag);
+                printf("[%c] Le chemin mene a un Lien symbolique\n",p.typeflag);
                 break;
               case '3' :
-                printf("[%c] Le chemin mene a un Fichier special caractere\n",ph.typeflag);
+                printf("[%c] Le chemin mene a un Fichier special caractere\n",p.typeflag);
                 break;
               case '4' :
-                printf("[%c] Le chemin mene a un Fichier special bloc\n",ph.typeflag);
+                printf("[%c] Le chemin mene a un Fichier special bloc\n",p.typeflag);
                 break;
               case '5' :
-                printf("[%c] Le chemin mene a un Repertoire\n",ph.typeflag);
+                printf("[%c] Le chemin mene a un Repertoire\n",p.typeflag);
                 break;
               case '6' :
-                printf("[%c] Le chemin mene a un Tube nomme\n",ph.typeflag);
+                printf("[%c] Le chemin mene a un Tube nomme\n",p.typeflag);
                 break;
               case '7' :
-                printf("[%c] Le chemin mene a un Fichier contigu\n",ph.typeflag);
+                printf("[%c] Le chemin mene a un Fichier contigu\n",p.typeflag);
                 break;
               default  :
-                printf("[%c] Le chemin mene a un autre type\n",ph.typeflag);
+                printf("[%c] Le chemin mene a un autre type\n",p.typeflag);
                 break;
             }
-            return (ph.typeflag);
-        }
-        i++;
-    }
-    printf("Le chemin n'existe pas\n");
-    return 0;
+
+
+            return (p.typeflag);
+       
+
 }
+
 
 int main(int argc, char * argv[]){
     if (argc != 3){
