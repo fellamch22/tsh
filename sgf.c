@@ -5,9 +5,13 @@
 #include <sys/stat.h>
 #include <unistd.h>
 #include <string.h>
+#include <time.h>
 #include "sgf.h"
 #include <sys/types.h>
 #include <fcntl.h>
+#include <sys/types.h>
+#include <pwd.h>
+#include <grp.h>
 
 char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 
@@ -25,12 +29,13 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 	};
 
 
-	sprintf(m.name,"%s",filename);
+	//sprintf(m.name,"%s",filename);
+	//strcpy(m.name
 	sprintf(m.size,"%011lo",s.st_size);
 	sprintf(m.mode,"%o",s.st_mode);
 	sprintf(m.uid,"%o",s.st_uid);
 	sprintf(m.gid,"%o",s.st_gid);
-	sprintf(m.mtime,"%ju",s.st_mtime);
+	sprintf(m.mtime,"%s",ctime(&s.st_mtime));
 	m.typeflag =  (S_ISREG(s.st_mode))? '0': (S_ISDIR(s.st_mode))?'5' :(S_ISCHR(s.st_mode))? '3' : (S_ISLNK(s.st_mode))? '2' : '\0';
 	sprintf(m.magic,"%s",TMAGIC);
 	sprintf(m.version,"%s",TVERSION);
@@ -94,12 +99,14 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 void addFile( int fd, int fd1 , char * src_filename , off_t position){
 
 
-	char * contenu = NULL;
+
 	ssize_t c =0;
 	int i = 0;
         int nb_blocks = 0;
+	int taille;
 	struct posix_header m ;
 	struct stat s ;
+	struct tm * p;
 	// faire un fstat pour creer la strucuture header du fichier
 	
 	if ( fstat(fd1,&s)  == -1 ){
@@ -109,18 +116,24 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 	};
 
 
+	//strcpy(m.name,src_filename);
+
 	strcpy(m.name,src_filename);
+	strcpy(m.uname,getpwuid(s.st_uid)->pw_name);
+	strcpy(m.gname,getgrgid(s.st_gid)->gr_name);
 	sprintf(m.size,"%011lo",s.st_size);
 	sprintf(m.mode,"%o",s.st_mode);
 	sprintf(m.uid,"%d",s.st_uid);
 	sprintf(m.gid,"%d",s.st_gid);
 	sprintf(m.mtime,"%ld",s.st_mtime);
+	//p = gmtime(&s.st_mtime);
+	//strftime(m.mtime,12,"%Y-%m-%d %H:%M",p);
 	m.typeflag =  (S_ISREG(s.st_mode))? '0': (S_ISDIR(s.st_mode))?'5' :(S_ISCHR(s.st_mode))? '3' : (S_ISLNK(s.st_mode))? '2' : '\0';
+	printf(" %c \n",m.typeflag);
 	sprintf(m.magic,"%s",TMAGIC);
 	sprintf(m.version,"%s",TVERSION);
 	set_checksum(&m);
-	printf(" checksum correct %d %c\n",check_checksum(&m),m.typeflag); 
-
+	//printf(" checksum correct %d %c %ld\n",check_checksum(&m),m.typeflag,s.st_mtime); 
 
 	/*if( lseek( fd , 0 , SEEK_SET) == -1 ){
 		perror(" fileToBlocks : Erreur seek");
@@ -133,13 +146,8 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 		exit(2);
 	};*/
 
-	contenu = malloc((s.st_size % 512 == 0)? s.st_size+512 : ((s.st_size/512+2))*512);
-	//contenu = malloc(190000);
-	if( contenu == NULL){
-
-		perror(" fileToBlocks : Erreur malloc");
-		exit(2);
-	}
+	taille = (s.st_size % 512 == 0)? s.st_size+512 : ((s.st_size/512)+2)*512;
+	char contenu [taille];
 	
 	printf(" %ld / %ld\n",s.st_size, ((s.st_size+2*512)/512)*512);
 
@@ -174,7 +182,7 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 
 /********************************************************************************************************************************/
 	
-	off_t size , diff ;
+	off_t  diff ;
 	struct stat s1;
 
 	/*if( lseek( fd , 0 , SEEK_SET) == -1 ){
@@ -197,10 +205,9 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 	//sscanf(s.st_size,"%011lo",&size);
 	//printf(" %lo \n",size);
 
-	diff = s.st_size - position ;
+	diff = s1.st_size - position ;
 
-	char * decalage;
-	decalage = malloc(diff);
+	char decalage[diff];
 
 	
 	if( lseek( fd , position , SEEK_SET) == -1 ){
@@ -254,14 +261,13 @@ int main( int argc , char * argv[]){
 
 	//v = fileToBlocks(fd,"book1.txt",&blocks);
 	//read(fd1,&m,512);
-	//sscanf(m.size,"%o",&n);
+	//printf("%s\n",m.mtime);
 	//printf("%ld\n",sizeof(v));
 	//position = lseek(fd1, -2*512-1,SEEK_END);
 	addFile(fd1,fd,"book1.txt",0);
-	addFile(fd1,fd,"book1.txt",0);
 	//write(0,v,blocks*512);
 	//printf(" blocks : %d \n",blocks);
-	close(fd);
+	//close(fd);
 	close(fd1);
 
 }
