@@ -180,7 +180,7 @@ static void afficher_repertoire(int fd, off_t position, int mode){
         strcat(res, &p.typeflag);
         //ls -l
         strcat(res, p.mode);//mode
-        //-rwxr-xr-x nboflink username staff inode dd mm date filename
+        //-rwxr-xr-x nbofl username staff inode dd mm date filename
         /*switch(p.mode){
               case '0007' :
                 printf();
@@ -188,17 +188,17 @@ static void afficher_repertoire(int fd, off_t position, int mode){
                 
                 
              }*/
-        /*printf("File Permissions: \t");
-        printf( (S_ISDIR(p.st_mode)) ? "d" : "-");
-        printf( (p.st_mode & S_IRUSR) ? "r" : "-");
-        printf( (p.st_mode & S_IWUSR) ? "w" : "-");
-        printf( (p.st_mode & S_IXUSR) ? "x" : "-");
-        printf( (p.st_mode & S_IRGRP) ? "r" : "-");
-        printf( (p.st_mode & S_IWGRP) ? "w" : "-");
-        printf( (p.st_mode & S_IXGRP) ? "x" : "-");
-        printf( (p.st_mode & S_IROTH) ? "r" : "-");
-        printf( (p.st_mode & S_IWOTH) ? "w" : "-");
-        printf( (p.st_mode & S_IXOTH) ? "x" : "-");*/
+        // printf("File Permissions: \t");
+        // printf( (S_ISDIR(p.st_mode)) ? "d" : "-");
+        // printf( (p.st_mode & S_IRUSR) ? "r" : "-");
+        // printf( (p.st_mode & S_IWUSR) ? "w" : "-");
+        // printf( (p.st_mode & S_IXUSR) ? "x" : "-");
+        // printf( (p.st_mode & S_IRGRP) ? "r" : "-");
+        // printf( (p.st_mode & S_IWGRP) ? "w" : "-");
+        // printf( (p.st_mode & S_IXGRP) ? "x" : "-");
+        // printf( (p.st_mode & S_IROTH) ? "r" : "-");
+        // printf( (p.st_mode & S_IWOTH) ? "w" : "-");
+        // printf( (p.st_mode & S_IXOTH) ? "x" : "-");
 
         strcat(res, p.name);
         write(1, res, strlen(res));
