@@ -340,7 +340,9 @@ static void afficher_repertoire(int fd, off_t position, int mode){
 
     
     }else{
-        write(1, p.name, strlen(p.name));
+         char name[strlen(p.name)+2];
+            sprintf(name,"%s\n",p.name);
+            write(1, name, strlen(name));
     }
 
 
@@ -380,7 +382,9 @@ static void afficher_repertoire(int fd, off_t position, int mode){
 
 
         }else{
-            write(1,p.name,strlen(p.name));
+             char name[strlen(p.name)+2];
+            sprintf(name,"%s\n",p.name);
+            write(1, name, strlen(name));
         }
         
 
