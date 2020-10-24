@@ -77,9 +77,7 @@ static char get_fichier_type(int fd, char *chemin){
     position = trouve(fd ,chemin);
     
     if ( position == -1 ){
-
         perror(" fichier inexistant ");
-        exit(1);
     }
 
     // la tete de lecture se trouve au bon endroit , par la fonction trouv
@@ -87,7 +85,6 @@ static char get_fichier_type(int fd, char *chemin){
     if( read(fd,&p,BLOCKSIZE) <= 0 ){
 
         perror(" Erreur de lecture  ");
-        exit(1);
     }
     
             switch(p.typeflag){
