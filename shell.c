@@ -473,7 +473,7 @@ static int analyse(char* cmd, int fd, int premiere, int derniere)
                     perror("open");
                     return -1;
                     }
-                    afficher_repertoire(fdx, trouve(fdx,args[3]), 0);
+                    afficher_repertoire(fdx, trouve(fdx,args[2]), 0);
                 }
                 close(fdx);
         }
