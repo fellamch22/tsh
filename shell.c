@@ -16,6 +16,7 @@
 #define ECRITURE 1
 
 static char* args[BUFFER];
+static int argc;
 pid_t pid;
 static char* pwd; // current dir
 static char ligne[BUFFER]; // commande a analyser
@@ -208,6 +209,88 @@ char * modeToString(int mode, char type ){
     return droits;
 }
 
+/* cette fonction permet d'afficher le contenu integral du fichier .tar pointe par le descripteur fd
+--> si le mode == 1 elle fait un affichage similaire a ls -l sinon elle affiche juste la liste des fichiers que contient
+le fichier .tar */
+void afficher_tar_content(int fd , int mode){
+
+
+    struct posix_header p;
+    unsigned int filesize ;
+    time_t time;
+    struct tm * m ;
+    char * droits ;
+    char  res [BUFFER] ;
+    char mdate [15];
+
+    if( lseek(fd,0,SEEK_SET) < 0 ){
+
+        perror(" erreur lseek ");
+        exit(1);
+    }
+
+    if(read(fd,&p,BLOCKSIZE) <= 0){
+
+        perror(" erreur de lecture ");
+        exit(1);
+    }
+        sscanf(p.size,"%o",&filesize); 
+
+    while (p.name[0] != '\0')
+    {
+        
+        if (mode == 1){/* ls -l x.tar*/
+
+            //typeflag [0/5/...]
+            droits = modeToString(atoi(p.mode),p.typeflag);
+      
+            sscanf(p.mtime,"%lo",&time);
+            m = localtime(&time);
+
+            if ( p.typeflag != '5'){
+
+            strftime(mdate,15,"%b. %d %Y",m);
+
+            }else{
+
+            strftime(mdate,15,"%b. %d %H:%M",m);
+
+            }
+
+        
+        
+            sprintf(res,"%s %s %s %10d %s %s\n",droits,p.uname,p.gname,filesize,mdate,p.name);
+
+            free(droits);
+        
+            write(1, res, strlen(res));
+
+        }else{/* ls x.tar */
+
+            char name[strlen(p.name)+2];
+            sprintf(name,"%s\n",p.name);
+            write(1, name, strlen(name));
+            
+
+        }
+
+        if(lseek(fd,(filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR) == -1){
+            perror(" erreur lseek ");
+            exit(1);
+        }
+
+         if(read(fd, &p, BLOCKSIZE) <= 0){
+             perror("erreur de lecture ");
+             exit(1);
+         }
+
+         sscanf(p.size,"%o",&filesize); 
+    }
+    
+
+
+
+}
 static void afficher_repertoire(int fd, off_t position, int mode){
 
     struct posix_header p;
@@ -400,10 +483,12 @@ static void decoupe(char* cmd)
     cmd = removeSpace(cmd); // on enleve les espaces multiples
     char* next = strchr(cmd, ' '); // on decoupe la string avec chaque espace
     int i = 0;
+    argc = 0;
     while(next != NULL) { // tant qu un nouvel espace est present,
         args[i] = cmd;
         next[0] = '\0';
         ++i;
+        argc ++;
         cmd = removeSpace(next + 1);
         next = strchr(cmd, ' ');
     }
@@ -412,6 +497,7 @@ static void decoupe(char* cmd)
         args[i] = cmd;
         next = strchr(cmd, '\n');
         next[0] = '\0';
+        argc ++;
         ++i;
     }
 
@@ -465,15 +551,18 @@ static int analyse(char* cmd, int fd, int premiere, int derniere)
                     perror("open");
                     return -1;
                     }
+                    if ( argc == 4) afficher_repertoire(fdx, trouve(fdx,args[3]), 1);
+                    if ( argc == 3) afficher_tar_content(fdx ,1);
 
-                    afficher_repertoire(fdx, trouve(fdx,args[3]), 1);
                 }else{
                     fdx = open(args[1], O_RDONLY);
                     if (fdx < 0){
                     perror("open");
                     return -1;
                     }
-                    afficher_repertoire(fdx, trouve(fdx,args[3]), 0);
+                    if (argc == 3) afficher_repertoire(fdx, trouve(fdx,args[2]), 0);
+                    if ( argc == 2) afficher_tar_content(fdx ,0);
+
                 }
                 close(fdx);
         }
