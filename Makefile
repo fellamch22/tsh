@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -g
  
-ALL= get_fichier_type afficher_fichier afficher_repertoire cmd_ls 
+ALL= get_fichier_type afficher_fichier afficher_repertoire shell
 all: $(ALL)
 
 get_fichier_type:
@@ -17,12 +17,12 @@ afficher_repertoire:
 	$(CC) -o afficher_repertoire  afficher_repertoire.o
 
 
-cmd_ls:
-	$(CC) -o cmd_ls.o -c cmd_ls.c $(CFLAGS) 
-	$(CC) -o cmd_ls  cmd_ls.o
+shell :
+	$(CC) -o shell.o -c shell.c $(CFLAGS) 
+	$(CC) -o shell  shell.o
 	
 clean:
 	rm -rf *.o
-	rm -rf get_fichier_type  afficher_fichier afficher_repertoire cmd_ls  
+	rm -rf get_fichier_type  afficher_fichier afficher_repertoire shell
 	rm -rf $(ALL) 
 
