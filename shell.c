@@ -15,11 +15,8 @@
 #define LECTURE  0
 #define ECRITURE 1
 
-<<<<<<< HEAD
 static char* args[BUFFER];
 static int argc;
-=======
->>>>>>> c970d789c76c4654db4bdc5e5d9dff07dd7b02fa
 pid_t pid;
 int fdt;
 static char* args[BUFFER];
@@ -634,13 +631,9 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                     perror("open");
                     return -1;
                     }
-<<<<<<< HEAD
                     if (argc == 3) afficher_repertoire(fdx, trouve(fdx,args[2]), 0);
                     if ( argc == 2) afficher_tar_content(fdx ,0);
 
-=======
-                    afficher_repertoire(fdx, trouve(fdx,args[2]), 0);
->>>>>>> c970d789c76c4654db4bdc5e5d9dff07dd7b02fa
                 }
                 close(fdx);
         }
