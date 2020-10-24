@@ -8,6 +8,7 @@
 #include <ctype.h>
 #include <sys/stat.h>
 #include <fcntl.h>
+#include<time.h>
 #include "tar.h"
 
 #define BUFFER 1024
@@ -152,10 +153,70 @@ static void afficher_fichier(int fd, char *chemin){
 
 }
 
+/* transforme le champs mode et type flag du posix header en une suite de caracteres 
+    pour l'affichage de la commande ls -l*/
+char * modeToString(int mode, char type ){
+
+    char* droits = malloc(10);
+    int d = 100;
+    if( type == '5'){
+        strcat(droits,"d");
+    }else{
+
+         strcat(droits,"-");
+    }
+
+    while( d != 0){
+
+        switch(mode / d){
+            case(0):
+                strcat(droits,"---");
+            break;
+             case(1):
+                 strcat(droits,"--x");
+            break;
+            case(2):
+                 strcat(droits,"-w-");
+
+            break;
+             case(3):
+                strcat(droits,"-wx");
+            break;
+             case(4):
+              strcat(droits,"r--");
+            break;
+             case(5):
+              strcat(droits,"r-x");
+            break;
+             case(6):
+              strcat(droits,"rw-");
+            break;
+             case(7):
+              strcat(droits,"rwx");
+            break;
+        }
+
+        mode = mode % d ;
+        d = d / 10;
+    }
+   
+
+    //
+
+
+
+    return droits;
+}
+
 static void afficher_repertoire(int fd, off_t position, int mode){
 
     struct posix_header p;
     unsigned int filesize ;
+    time_t time;
+    struct tm * m ;
+    char * droits ;
+    char  res [BUFFER] ;
+    char mdate [15];
 
     if(lseek(fd , position, SEEK_SET) == -1 ){
         perror(" ERREUR lseek ");
@@ -176,31 +237,18 @@ static void afficher_repertoire(int fd, off_t position, int mode){
 
     if(mode == 1){
         //typeflag [0/5/...]
-        char *res = (char*) malloc (BUFFER);
-        strcat(res, &p.typeflag);
-        //ls -l
-        strcat(res, p.mode);//mode
-        //-rwxr-xr-x nbofl username staff inode dd mm date filename
-        /*switch(p.mode){
-              case '0007' :
-                printf();
-                break;
-                
-                
-             }*/
-        // printf("File Permissions: \t");
-        // printf( (S_ISDIR(p.st_mode)) ? "d" : "-");
-        // printf( (p.st_mode & S_IRUSR) ? "r" : "-");
-        // printf( (p.st_mode & S_IWUSR) ? "w" : "-");
-        // printf( (p.st_mode & S_IXUSR) ? "x" : "-");
-        // printf( (p.st_mode & S_IRGRP) ? "r" : "-");
-        // printf( (p.st_mode & S_IWGRP) ? "w" : "-");
-        // printf( (p.st_mode & S_IXGRP) ? "x" : "-");
-        // printf( (p.st_mode & S_IROTH) ? "r" : "-");
-        // printf( (p.st_mode & S_IWOTH) ? "w" : "-");
-        // printf( (p.st_mode & S_IXOTH) ? "x" : "-");
+         droits = modeToString(atoi(p.mode),p.typeflag);
+      
+        sscanf(p.mtime,"%lo",&time);
+        m = localtime(&time);
+        strftime(mdate,15,"%b. %d %H:%M",m);
 
-        strcat(res, p.name);
+        
+        
+        sprintf(res,"%s %s %s %10d %s %s\n",droits,p.uname,p.gname,filesize,mdate,p.name);
+
+        free(droits);
+        
         write(1, res, strlen(res));
 
     
@@ -208,7 +256,6 @@ static void afficher_repertoire(int fd, off_t position, int mode){
         write(1, p.name, strlen(p.name));
     }
 
-    write(1,"\n",1);
 
        if( read (fd , &p, BLOCKSIZE) <= 0 ){
         perror(" ERREUR read ");
@@ -220,16 +267,35 @@ static void afficher_repertoire(int fd, off_t position, int mode){
 
 
         if(mode == 1){
-            //typeflag [0/5/...]
-            char *res2 = (char*) malloc (BUFFER);
-            strcat(res2, &p.typeflag);
-            strcat(res2, p.name);
-            write(1,res2,strlen(res2));
+          
+            droits = modeToString(atoi(p.mode),p.typeflag);
+            sscanf(p.mtime,"%lo",&time);
+
+            m = localtime(&time);
+
+            sscanf(p.size,"%o",&filesize);
+
+            if ( p.typeflag != '5'){
+
+            strftime(mdate,15,"%b. %d %Y",m);
+
+            }else{
+
+            strftime(mdate,15,"%b. %d %H:%M",m);
+
+            }
+        
+            sprintf(res,"%s %s %s %10d %s %s\n",droits,p.uname,p.gname,filesize,mdate,p.name);
+            
+             free(droits);
+
+            write(1,res,strlen(res));
+
+
         }else{
             write(1,p.name,strlen(p.name));
         }
         
-        write(1,"\n",1);
 
         sscanf(p.size,"%o",&filesize);
 
@@ -400,14 +466,14 @@ static int analyse(char* cmd, int fd, int premiere, int derniere)
                     return -1;
                     }
 
-                    afficher_repertoire(fdx, 0, 1);
+                    afficher_repertoire(fdx, trouve(fdx,args[3]), 1);
                 }else{
                     fdx = open(args[1], O_RDONLY);
                     if (fdx < 0){
                     perror("open");
                     return -1;
                     }
-                    afficher_repertoire(fdx, 0, 0);
+                    afficher_repertoire(fdx, trouve(fdx,args[3]), 0);
                 }
                 close(fdx);
         }
