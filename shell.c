@@ -15,12 +15,22 @@
 #define LECTURE  0
 #define ECRITURE 1
 
+<<<<<<< HEAD
 static char* args[BUFFER];
 static int argc;
+=======
+>>>>>>> c970d789c76c4654db4bdc5e5d9dff07dd7b02fa
 pid_t pid;
+int fdt;
+static char* args[BUFFER];
 static char* pwd; // current dir
+static char* pwdtmp; // copy pwd tmp dir
+static char* pwdtar; // chemin du tar
+static char* arboTar; // arborescence tar
+static char* arboTarTmp; // arborescence tar
 static char ligne[BUFFER]; // commande a analyser
 static int nbexecuteCmds = 0; // nombre de executeCmdes
+static int estDansTar = 0; // 0 = non, 1 = oui
 char cwd[BUFFER]; // durrent dir
 
 
@@ -72,9 +82,7 @@ static char get_fichier_type(int fd, char *chemin){
     position = trouve(fd ,chemin);
     
     if ( position == -1 ){
-
         perror(" fichier inexistant ");
-        exit(1);
     }
 
     // la tete de lecture se trouve au bon endroit , par la fonction trouv
@@ -82,7 +90,6 @@ static char get_fichier_type(int fd, char *chemin){
     if( read(fd,&p,BLOCKSIZE) <= 0 ){
 
         perror(" Erreur de lecture  ");
-        exit(1);
     }
     
             switch(p.typeflag){
@@ -398,8 +405,8 @@ static void afficher_repertoire(int fd, off_t position, int mode){
  
  /*
  * fd: numero du file descriptor
- * premiere: 1 si premiere commande dans la sequence
- * derniere: 1 si derniere commande dans la sequence
+ * debut: 1 si debut commande dans la sequence
+ * dernier: 1 si dernier commande dans la sequence
  *
  * EXEMPLE avec la commande "ls -l | head -n 2 | wc -l" :
  *    fd1  = executeCmd(0, 1, 0), with args[0] = "ls" and args[1] = "-l"
@@ -409,7 +416,7 @@ static void afficher_repertoire(int fd, off_t position, int mode){
  */
  
  
-static int executeCmd(int fd, int premiere, int derniere)
+static int executeCmd(int fd, int debut, int dernier)
 {
     //renvoi un FD
     int tubes[2];
@@ -428,18 +435,18 @@ static int executeCmd(int fd, int premiere, int derniere)
             if (args[i] != NULL) printf(" %s",args[i]);
         }
         
-        printf("> fd=%d premiere=%d derniere=%d\n",fd,premiere,derniere);
+        printf("> fd=%d debut=%d dernier=%d\n",fd,debut,dernier);
         
-        if (fd == 0 && premiere == 1 && derniere == 0  ) {
-            // pour la premiere commande redirection de la sortie dans le tube
+        if (fd == 0 && debut == 1 && dernier == 0  ) {
+            // pour la debut commande redirection de la sortie dans le tube
             dup2( tubes[ECRITURE], STDOUT_FILENO );
-        } else if (fd != 0 && premiere == 0 && derniere == 0 ) {
+        } else if (fd != 0 && debut == 0 && dernier == 0 ) {
             // pour les commende du milieu, ecoute de l entree depuis fd,
             // redirection de la sortie dans tubes[ECRITURE]
             dup2(fd, STDIN_FILENO);
             dup2(tubes[ECRITURE], STDOUT_FILENO);
         } else {
-            // pour la derniere commande , ecoute de l entree depuis fd
+            // pour la dernier commande , ecoute de l entree depuis fd
             dup2( fd, STDIN_FILENO );
         }
         if (execvp( args[0], args) == -1) {
@@ -456,8 +463,8 @@ static int executeCmd(int fd, int premiere, int derniere)
     // plus rien ne doit etre ecrit
     close(tubes[ECRITURE]);
  
-    // plus rien ne doit etre lu si il s'agit de la derniere executeCmde
-    if (derniere == 1) {
+    // plus rien ne doit etre lu si il s'agit de la dernier executeCmde
+    if (dernier == 1) {
         close(tubes[LECTURE]);
     }
     return tubes[LECTURE];
@@ -506,9 +513,9 @@ static void decoupe(char* cmd)
 
 // Liste des commandes reconnues par le shell //
 
-static int analyse(char* cmd, int fd, int premiere, int derniere)
+static int analyse(char* cmd, int fd, int debut, int dernier)
 {
-    //printf("CMD= %s fd=%d premiere=%d derniere=%d\n",cmd,fd,premiere,derniere);
+    //printf("CMD= %s fd=%d debut=%d dernier=%d\n",cmd,fd,debut,dernier);
     decoupe(cmd); // decoupe la commande proprement dans le tableau d'args
     if (args[0] != NULL) {
         //commandes SHELL
@@ -519,18 +526,85 @@ static int analyse(char* cmd, int fd, int premiere, int derniere)
         }
             //Implementation CD
         else if (!strcmp(args[0], "cd")){
-            if ((strcmp(args[1], "..")) == 0){
-                chdir(".."); //change repertoire
-            }
-            else if (strcmp(args[1],"..") != 0 ) {
-                strcat(pwd,"/");
-                strcat(pwd,args[1]);
-                if(chdir(pwd) == -1) {
-                    printf("Cannot change directory \n");
-                }
-            }
-            //il faut ajouter ici si c'est un .tar ... et exec les commandes appropri�es
+            
+             if ((strcmp(args[1], "..")) == 0){//cd ..
+                 //si on sort du fichier.tar
+                           if((pwdtar != NULL) && (strcmp(pwdtar, pwd) == 0)) {
+                               estDansTar = 0;
+                           }
+
+                           //si on fait <cd ..>,on lire a l'inverse juasq'a "/" et afficher tous ce qu'avant "/ "
+                           for(int i = strlen(pwd); i > 0; i--){
+                               if(pwd[i] == '/'){
+                                   pwd[i] = '\0';
+                                   break;
+                               }else{
+                                   pwd[i] = '\0';
+                               }
+                           }
+
+                           //si on n'est pas dans un fichier.tar, on change le reprtoire
+                          if(estDansTar == 0 ){
+                             chdir(pwd); //change repertoire reel
+                           }
+                       }
+                       else if (strcmp(args[1],"..") != 0 ) {
+                          // cd arg
+                           
+                           //genere pwdtmp avec l argument et on essaye de chdir dessus
+                           pwdtmp = malloc(sizeof(char) * BUFFER);
+
+                           strcpy(pwdtmp, pwd); //strcpy(dest, source);
+                           strcat(pwdtmp,"/");
+                           strcat(pwdtmp,args[1]);
+
+                           printf("pwd : %s, pwdtmp : %s\n", pwd, pwdtmp);
+
+                           if(estDansTar == 0){
+                               if(chdir(pwdtmp) == -1) {
+
+                                   //verifier si le fichier.tar existe
+                                   fdt = open(pwdtmp, O_RDONLY);
+                                   if (fdt < 0){
+                                       perror("Error : open");
+                                   }else{
+                                       //On est considere etre dans le fichier.tar
+                                       strcpy(pwd, pwdtmp); //msj de pwd
+                                       estDansTar = 1;
+                                       strcpy(pwdtar, pwdtmp); //save le chemin du fichier.tar
+                                   }
+                               }else{
+                                   strcpy(pwd, pwdtmp);
+                               }
+                               free(pwdtmp);
+                           }else{
+                               /*si on est dans le fichier.tar
+                               fdt est ouvert sur le tar
+                               pwdtar exits*/
+
+                               arboTarTmp = malloc(sizeof(char) * BUFFER);
+
+                               strcpy(arboTarTmp, arboTar);
+                               strcat(arboTarTmp, args[1]);
+                               strcat(arboTarTmp,"/");
+                               
+                               //printf("arboTarTmp : %s\n", arboTarTmp);
+                               if(get_fichier_type(fdt, arboTarTmp) == '5'){
+                                   strcat(pwd,"/");
+                                   strcat(pwd, args[1]);
+
+                                   //Maj arbotar
+                                   strcpy(arboTar, arboTarTmp);
+                                   strcat(arboTar,"/");
+                               }
+                               
+                               free(arboTarTmp);
+                           }
+                       }
         }
+        
+        
+        
         //afficher_fichier => cat
         else if (!strcmp(args[0], "cat2")){
                 int fdx = open(args[1], O_RDONLY);
@@ -560,9 +634,13 @@ static int analyse(char* cmd, int fd, int premiere, int derniere)
                     perror("open");
                     return -1;
                     }
+<<<<<<< HEAD
                     if (argc == 3) afficher_repertoire(fdx, trouve(fdx,args[2]), 0);
                     if ( argc == 2) afficher_tar_content(fdx ,0);
 
+=======
+                    afficher_repertoire(fdx, trouve(fdx,args[2]), 0);
+>>>>>>> c970d789c76c4654db4bdc5e5d9dff07dd7b02fa
                 }
                 close(fdx);
         }
@@ -580,7 +658,7 @@ static int analyse(char* cmd, int fd, int premiere, int derniere)
         //Execution commande
         else {
         nbexecuteCmds += 1;
-        return executeCmd(fd, premiere, derniere);
+        return executeCmd(fd, debut, dernier);
         }
     }
     return 0;
@@ -589,8 +667,11 @@ static int analyse(char* cmd, int fd, int premiere, int derniere)
 int main()
 {
     printf("(%d) Shell\n",getpid());
+    pwd = getcwd(cwd, sizeof(cwd)); //un fois au debut : ou je suis
+    pwdtar = malloc(sizeof(char) * BUFFER);
+    arboTar = malloc(sizeof(char) * BUFFER);
+    
     while (1) {
-        pwd = getcwd(cwd, sizeof(cwd));
         // Prompt
         printf("\n%s$> ",pwd);
         fflush(NULL);
@@ -601,21 +682,23 @@ int main()
         }
  
         int fd = 0;
-        int premiere = 1;
+        int debut = 1;
         char* cmd = ligne;
         char* next = strchr(cmd, '|'); // recherche du premier pipe
  
         while (next != NULL) {
             // next => pipe
             *next = '\0';
-            fd = analyse(cmd, fd, premiere, 0); // on lance une analyse des commandes precedant chaque pipe
+            fd = analyse(cmd, fd, debut, 0); // on lance une analyse des commandes precedant chaque pipe
             cmd = next + 1;
             next = strchr(cmd, '|'); // prochain pipe
-            premiere = 0;
+            debut = 0;
         }
-        fd = analyse(cmd, fd, premiere, 1); // on analyse la cmd avec derniere = 1
+        fd = analyse(cmd, fd, debut, 1); // on analyse la cmd avec dernier = 1
         nettoyage(nbexecuteCmds);
         nbexecuteCmds = 0;
     }
+    free(pwdtar);
+    free(arboTar);
     return 0;
 }
