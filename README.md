@@ -8,6 +8,22 @@ SYSTÈME : Le premier rendu
 # Les branches
 
 ## SGF1
+
+## Fonctions permettant l'ajout d'un fichier externe dans un tarball
+
+* char * fileToBlocks( int fd , char * filename , int * nb_blocks)
+    - Cette fonction effectue la transformation du fichier pointé par le descripteur fd
+    en un ensemble de blocks des taille de 512 chacun , compatibles avec la representation d'un fichier dans
+    un tarball.
+    - la fonction retourne un pointeur vers les blocs contruits pour le fichier , ainsi que le nombre de blocks aloués 
+    dans la variable 'nb_blocks'
+
+* void addFile( int fd, int fd1 , char * src_filename , off_t position)
+
+    -  Cette fonction utilise le résultat  de la conversion du fichier pointé par fd1 par la fonction fileToBlocks ,et l'insère à la position ‘position’ dans le fichier .tar pointé par fd.
+
+    
+
 ## SGF2
 * off_t trouve(int fd, char *filename){...}
 
