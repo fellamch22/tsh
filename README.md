@@ -5,9 +5,9 @@ SYSTÈME : Le premier rendu
 
 # Les branches
 
-## SGF1
+## SGF3
 
-### Fonctions permettant l'ajout d'un fichier externe dans un tarball
+### Fonctions permettant l'ajout d'un fichier externe dans un tarball ( dans le fichier sgf.c )
 
 * char * fileToBlocks( int fd , char * filename , int * nb_blocks)
     - Cette fonction effectue la transformation du fichier pointé par le descripteur fd en un ensemble de blocks des taille de 512 chacun , compatibles avec la representation d'un fichier dans un tarball.
@@ -18,7 +18,7 @@ SYSTÈME : Le premier rendu
 -  Cette fonction utilise le résultat  de la conversion du fichier pointé par fd1 par la fonction fileToBlocks, et l'insère à la position "position" dans le fichier .tar pointé par fd.
 
 
-## SGF2
+
 
 ### Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
 
@@ -36,7 +36,7 @@ SYSTÈME : Le premier rendu
     NB : les commande pour supprimer ont été entamés mais ne fonctionnent pas encore voir shell.c dans la branche SGF2/ 
 
 
-## SGF3
+
 
 ### Fonctionnement du Shell
 
