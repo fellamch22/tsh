@@ -473,10 +473,20 @@ int main( int argc , char * argv[]){
 	/*test des fonction : trouve delete_fichier delete_repertoire
 	 * Décommenter pour tester
 	 */
+<<<<<<< HEAD
 	//int fd = open(argv[1], O_RDWR);
 	//printf("%ld\n" ,trouve(fd, argv[2]));
 	//delete_fichier(fd, argv[2]);
 	//delete_repertoire(fd, argv[2]);
+=======
+	//int fd3 = open(argv[1], O_RDWR);
+	//printf("%ld\n" ,trouve(fd3, argv[2]));
+	//delete_fichier(fd3, argv[2]);
+	//delete_repertoire(fd3, argv[2]);
+  //close(fd3);
+	close(fd1);
+  close(fd);
+>>>>>>> af77f434f2ea2844efd90d765511858828fa7321
 
 	/*test pour afficher*/
 	//afficher_fichier(fd, argv[2]);
