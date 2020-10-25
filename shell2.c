@@ -25,9 +25,11 @@ static char* pwdtmp; // copy pwd tmp dir
 static char* pwdtar; // chemin du tar
 static char* arboTar; // arborescence tar
 static char* arboTarTmp; // arborescence tar
+static char* Tmp;
 static char ligne[BUFFER]; // commande a analyser
 static int nbexecuteCmds = 0; // nombre de executeCmdes
 static int estDansTar = 0; // 0 = non, 1 = oui
+static int debug = 0; // 0 = normal , 1 = debug mode;
 char cwd[BUFFER]; // durrent dir
 
 
@@ -37,7 +39,6 @@ static off_t trouve(int fd, char *filename){
       lseek(fd, 0, SEEK_SET);
 
     if(fd < 0){
-
             perror("Fichier n'existe pas");
      }
 
@@ -50,9 +51,9 @@ static off_t trouve(int fd, char *filename){
     if (filename[sizefilename-1] == '/') {
         filename[sizefilename-1] = '\0';
     }
-    
+   
       while(p.name[0] != '\0' ){
-        
+       //printf("N= %s\n",p.name);
         //enlever le dernier / dans p.name
         if (p.name[strlen(p.name)-1] == '/') {
             p.name[strlen(p.name)-1] = '\0';
@@ -79,6 +80,7 @@ static char get_fichier_type(int fd, char *chemin){
     
     if ( position == -1 ){
         perror(" fichier inexistant ");
+    return 0;
     }
 
     // la tete de lecture se trouve au bon endroit , par la fonction trouv
@@ -86,35 +88,36 @@ static char get_fichier_type(int fd, char *chemin){
     if( read(fd,&p,BLOCKSIZE) <= 0 ){
 
         perror(" Erreur de lecture  ");
+    return 0;
     }
     
             switch(p.typeflag){
               case '0' :
-                printf("[%c] Le chemin mene a un Fichier\n",p.typeflag);
+                if(debug == 1) printf("[%c] Le chemin mene a un Fichier\n",p.typeflag);
                 break;
               case '1' :
-                printf("[%c] Le chemin mene a un Lien materiel\n",p.typeflag);
+                if(debug == 1) printf("[%c] Le chemin mene a un Lien materiel\n",p.typeflag);
                 break;
               case '2' :
-                printf("[%c] Le chemin mene a un Lien symbolique\n",p.typeflag);
+                if(debug == 1) printf("[%c] Le chemin mene a un Lien symbolique\n",p.typeflag);
                 break;
               case '3' :
-                printf("[%c] Le chemin mene a un Fichier special caractere\n",p.typeflag);
+                if(debug == 1) printf("[%c] Le chemin mene a un Fichier special caractere\n",p.typeflag);
                 break;
               case '4' :
-                printf("[%c] Le chemin mene a un Fichier special bloc\n",p.typeflag);
+                if(debug == 1) printf("[%c] Le chemin mene a un Fichier special bloc\n",p.typeflag);
                 break;
               case '5' :
-                printf("[%c] Le chemin mene a un Repertoire\n",p.typeflag);
+                if(debug == 1) printf("[%c] Le chemin mene a un Repertoire\n",p.typeflag);
                 break;
               case '6' :
-                printf("[%c] Le chemin mene a un Tube nomme\n",p.typeflag);
+                if(debug == 1) printf("[%c] Le chemin mene a un Tube nomme\n",p.typeflag);
                 break;
               case '7' :
-                printf("[%c] Le chemin mene a un Fichier contigu\n",p.typeflag);
+                if(debug == 1) printf("[%c] Le chemin mene a un Fichier contigu\n",p.typeflag);
                 break;
               default  :
-                printf("[%c] Le chemin mene a un autre type\n",p.typeflag);
+                if(debug == 1) printf("[%c] Le chemin mene a un autre type\n",p.typeflag);
                 break;
             }
 
@@ -123,7 +126,7 @@ static char get_fichier_type(int fd, char *chemin){
 }
 
 
-static void afficher_fichier(int fd, char *chemin){
+static int afficher_fichier(int fd, char *chemin){
 
     off_t position ;
     unsigned int filesize;
@@ -134,12 +137,14 @@ static void afficher_fichier(int fd, char *chemin){
 
     if ( position == -1 ){
         perror(" fichier inexistant ");
+        return 1;
     }
 
     // la tete de lecture se trouve au bon endroit , par la fonction trouv
 
     if( read(fd,&p,BLOCKSIZE) <= 0 ){
         perror(" Erreur de lecture  ");
+        return 1;
     }
 
     sscanf(p.size,"%o",&filesize);
@@ -148,13 +153,14 @@ static void afficher_fichier(int fd, char *chemin){
 
     if( read(fd,content,filesize) <= 0 ){
         perror(" Erreur de lecture  ");
+        return 1;
     }
 
     write(1,content,filesize);
-
+    return 0;
 }
 
-/* transforme le champs mode et type flag du posix header en une suite de caracteres 
+/* transforme le champs mode et type flag du posix header en une suite de caracteres
     pour l'affichage de la commande ls -l*/
 char * modeToString(int mode, char type ){
 
@@ -226,15 +232,13 @@ void afficher_tar_content(int fd , int mode){
     if( lseek(fd,0,SEEK_SET) < 0 ){
 
         perror(" erreur lseek ");
-        exit(1);
     }
 
     if(read(fd,&p,BLOCKSIZE) <= 0){
 
         perror(" erreur de lecture ");
-        exit(1);
     }
-        sscanf(p.size,"%o",&filesize); 
+        sscanf(p.size,"%o",&filesize);
 
     while (p.name[0] != '\0')
     {
@@ -284,7 +288,7 @@ void afficher_tar_content(int fd , int mode){
              exit(1);
          }
 
-         sscanf(p.size,"%o",&filesize); 
+         sscanf(p.size,"%o",&filesize);
     }
     
 
@@ -550,7 +554,7 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                            strcat(pwdtmp,"/");
                            strcat(pwdtmp,args[1]);
 
-                           printf("pwd : %s, pwdtmp : %s\n", pwd, pwdtmp);
+                           if(debug ==1 ) printf("pwd : %s\nPwdtmp : %s\n", pwd, pwdtmp);
 
                            if(estDansTar == 0){
                                if(chdir(pwdtmp) == -1) {
@@ -580,7 +584,6 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                                strcat(arboTarTmp, args[1]);
                                strcat(arboTarTmp,"/");
                                
-                               //printf("arboTarTmp : %s\n", arboTarTmp);
                                if(get_fichier_type(fdt, arboTarTmp) == '5'){
                                    strcat(pwd,"/");
                                    strcat(pwd, args[1]);
@@ -597,6 +600,27 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
         
         
         
+        //afficher_fichier => cat
+        else if (!strcmp(args[0], "cat2")){
+        if (estDansTar == 1 ) {
+                //int fdx = open(args[1], O_RDONLY);
+                       int fdx = open(pwdtar, O_RDONLY);
+            if (fdx < 0){
+                            perror("open");
+                            return -1;
+                    }
+            Tmp = malloc(sizeof(char) * BUFFER);
+            strcpy(Tmp,arboTar);
+            strcat(Tmp,args[1]);
+            afficher_fichier(fdx,Tmp);
+            close(fdx);
+            free(Tmp);
+            }
+        else {
+                    printf("Use cat2 after entering in a tar file\n");
+                }
+
+    }
         //afficher_fichier => cat
         else if (!strcmp(args[0], "cat2")){
                 int fdx = open(args[1], O_RDONLY);
@@ -632,6 +656,8 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                 }
                 close(fdx);
         }
+
+        
         //get_fichier_type =>
         else if (!strcmp(args[0], "gft")){
                 int fdx = open(args[1], O_RDONLY);
@@ -652,15 +678,23 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
     return 0;
 }
 
-int main()
+int main(int argc,char *argv[] )
 {
     printf("(%d) Shell\n",getpid());
     pwd = getcwd(cwd, sizeof(cwd)); //un fois au debut : ou je suis
     pwdtar = malloc(sizeof(char) * BUFFER);
     arboTar = malloc(sizeof(char) * BUFFER);
-    
+
+    if ( (argc >= 2)  && ( strcmp(argv[1],"-debug")) == 0 ) {
+    printf ("DEBUG MODE ENABLED !\n");
+        debug=1;
+    }
+ 
     while (1) {
-        // Prompt
+        if(debug == 1) {
+    printf("\nEstDansTar = %d\nPWDTAR = %s\nARBOTAR = %s\n",estDansTar,pwdtar,arboTar);
+    }
+    // Prompt
         printf("\n%s$> ",pwd);
         fflush(NULL);
  
