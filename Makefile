@@ -1,7 +1,7 @@
 CC=gcc
 CFLAGS=-Wall -g
  
-ALL= get_fichier_type afficher_fichier afficher_repertoire shell
+ALL= get_fichier_type afficher_fichier afficher_repertoire shell sgf
 all: $(ALL)
 
 get_fichier_type:
@@ -20,6 +20,10 @@ afficher_repertoire:
 shell :
 	$(CC) -o shell.o -c shell.c $(CFLAGS) 
 	$(CC) -o shell  shell.o
+
+sgf :
+	$(CC) -o sgf.o -c sgf.c $(CFLAGS) 
+	$(CC) -o sgf  sgf.o
 	
 clean:
 	rm -rf *.o
