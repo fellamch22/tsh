@@ -544,7 +544,6 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                            strcat(pwdtmp,"/");
                            strcat(pwdtmp,args[1]);
 
-                           printf("pwd : %s, pwdtmp : %s\n", pwd, pwdtmp);
 
                            if(estDansTar == 0){
                                if(chdir(pwdtmp) == -1) {
