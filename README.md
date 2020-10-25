@@ -15,7 +15,7 @@ SYSTÈME : Le premier rendu
 
 * void addFile( int fd, int fd1 , char * src_filename , off_t position)
 
--  Cette fonction utilise le résultat  de la conversion du fichier pointé par fd1 par la fonction fileToBlocks, et l'insère à la position "position" dans le fichier .tar pointé par fd.
+    -  Cette fonction utilise le résultat  de la conversion du fichier pointé par fd1 par la fonction fileToBlocks, et l'insère à la position "position" dans le fichier .tar pointé par fd.
 
 
 
