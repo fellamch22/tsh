@@ -93,7 +93,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
     - des l'executions, le prompt apparait avec la localisation actuelle sur le systeme de fichiers (pwd). 
     - Commandes executables : 
         - exit (Termine le programme)
-        - cd < dir >, cd <tarfile>, cd <dir dans un tarfile>, cd ..
+        - cd < dir >, cd < tarfile >, cd < dir dans un tarfile >, cd ..
         - cat2 < fichier inclus dans un tarfile >, apres etre deja rentre dedans via cd <tarfile>
         - ls2 <fichier.tar> <chemin  (option)>
         - ls2 -l <fichier.tar> <chemin  (option)>
