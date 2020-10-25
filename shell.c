@@ -765,18 +765,19 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                 get_fichier_type(fdx, args[2]);
                 close(fdx);
         }
-	/****************************************************************************************************************************************************/
+/**********************************************************************************************************************************************************************/
 	//suppression fichier
         else if(!strcmp(args[0], "rm2")){
 	  int fdx;
-	  //suppression reccursive
+      	  //suppression reccursive
 	  if(!strcmp(args[1], "-r")){
 	    fdx = open(args[2], O_RDONLY);
 	    if(fdx < 0){
 	      perror("open");
 	      return -1;
 	    }
-	    /*if(argc == 3)*/ delete_repertoire(fdx , args[2]);
+	    if(get_fichier_type(fdx, args[2]) == '5') delete_repertoire(fdx , args[2]);
+	    else delete_fichier(fdx, args[2]);
 	  }else{
 	    //suppression fichier
 	    fdx = open(args[1], O_RDONLY);
@@ -784,22 +785,22 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
 	      perror("open");
 	      return -1;
 	    }
-	    /*if(argc == 3)*/ delete_fichier(fdx, args[2]);
+	    if(get_fichier_type(fdx, args[2]) == '0')delete_fichier(fdx, args[2]);
 	  }
 	  close(fdx);
 	}
 	//supppression repertoire
 	 else if (!strcmp(args[0], "rmdir2")){
-                int fdx = open(args[1], O_RDONLY);
-                if (fdx < 0){
-                    perror("open");
-                    return -1;
-                }
-                delete_repertoire(fdx, args[2]);
-                close(fdx);
+	   int fdx = open(args[1], O_RDONLY);
+	   if (fdx < 0){
+	     perror("open");
+	     return -1;
+	   }
+	  if(get_fichier_type(fdx, args[2]) == '5') delete_repertoire(fdx , args[2]);
+	  close(fdx);
         }
 
-/***************************************************************************************************************************************************************/
+       /*******************************************************************************************************************************************************************/
 	
         //Execution commande
         else {
