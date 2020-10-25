@@ -19,7 +19,7 @@
 pid_t pid;
 int fdt;
 static char* args[BUFFER];
-
+static char* Tmp;
 static char* args[BUFFER];
 static char* pwd; // current dir
 static char* pwdtmp; // copy pwd tmp dir
