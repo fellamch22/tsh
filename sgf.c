@@ -14,6 +14,10 @@
 #include "sgf.h"
 
 
+/**********************************************/
+/*   Partie Ajout dans le fichier .tar       */
+/********************************************/
+
 /* cette fonction effectue la transformation du fichier refernce par l'ouverture fd1 
       en un ensemble de blocs compatible pour 
 	la representation des fichiers dans un fichier .tar */
@@ -159,9 +163,10 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 
 }
 
-/**************************************************************/
-/*  Suppression fichier et repertoire dans le fichier .tar   */
-/************************************************************/
+/*********************************************************************/
+/* Partie  Suppression fichier et repertoire dans le fichier .tar   */
+/*******************************************************************/
+
 off_t trouve(int fd, char *filename){
   int filesize = 0;
   struct posix_header p;
@@ -281,7 +286,7 @@ void delete_repertoire(int fd, char *repname){
 
 
 /**********************************************/
-/*   Partie affichage dans le fichier .tar   */
+/*   Partie Affichage dans le fichier .tar   */
 /********************************************/
 
 void afficher_fichier(int fd, char *chemin){
