@@ -15,10 +15,11 @@
 #define LECTURE  0
 #define ECRITURE 1
 
-static char* args[BUFFER];
-static int argc;
+
 pid_t pid;
 int fdt;
+static char* args[BUFFER];
+
 static char* args[BUFFER];
 static char* pwd; // current dir
 static char* pwdtmp; // copy pwd tmp dir
@@ -28,6 +29,8 @@ static char* arboTarTmp; // arborescence tar
 static char ligne[BUFFER]; // commande a analyser
 static int nbexecuteCmds = 0; // nombre de executeCmdes
 static int estDansTar = 0; // 0 = non, 1 = oui
+static int argc;
+
 char cwd[BUFFER]; // durrent dir
 
 
@@ -37,7 +40,6 @@ static off_t trouve(int fd, char *filename){
       lseek(fd, 0, SEEK_SET);
 
     if(fd < 0){
-
             perror("Fichier n'existe pas");
      }
 
@@ -79,6 +81,7 @@ static char get_fichier_type(int fd, char *chemin){
     
     if ( position == -1 ){
         perror(" fichier inexistant ");
+        return 0;
     }
 
     // la tete de lecture se trouve au bon endroit , par la fonction trouv
@@ -86,6 +89,7 @@ static char get_fichier_type(int fd, char *chemin){
     if( read(fd,&p,BLOCKSIZE) <= 0 ){
 
         perror(" Erreur de lecture  ");
+        return 0;
     }
     
             switch(p.typeflag){
@@ -224,20 +228,16 @@ void afficher_tar_content(int fd , int mode){
     char mdate [15];
 
     if( lseek(fd,0,SEEK_SET) < 0 ){
-
         perror(" erreur lseek ");
-        exit(1);
     }
 
     if(read(fd,&p,BLOCKSIZE) <= 0){
-
         perror(" erreur de lecture ");
-        exit(1);
     }
-        sscanf(p.size,"%o",&filesize); 
+    
+    sscanf(p.size,"%o",&filesize);
 
-    while (p.name[0] != '\0')
-    {
+    while (p.name[0] != '\0'){
         
         if (mode == 1){/* ls -l x.tar*/
 
@@ -318,13 +318,11 @@ static void afficher_repertoire(int fd, off_t position, int mode){
 
     if(mode == 1){
         //typeflag [0/5/...]
-         droits = modeToString(atoi(p.mode),p.typeflag);
+        droits = modeToString(atoi(p.mode),p.typeflag);
       
         sscanf(p.mtime,"%lo",&time);
         m = localtime(&time);
         strftime(mdate,15,"%b. %d %H:%M",m);
-
-        
         
         sprintf(res,"%s %s %s %10d %s %s\n",droits,p.uname,p.gname,filesize,mdate,p.name);
 
@@ -332,21 +330,17 @@ static void afficher_repertoire(int fd, off_t position, int mode){
         
         write(1, res, strlen(res));
 
-    
     }else{
          char name[strlen(p.name)+2];
             sprintf(name,"%s\n",p.name);
             write(1, name, strlen(name));
     }
 
-
        if( read (fd , &p, BLOCKSIZE) <= 0 ){
         perror(" ERREUR read ");
     }
 
     while(strncmp(repname,p.name,strlen(repname)) == 0){
-
-
 
         if(mode == 1){
           
@@ -579,8 +573,7 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                                strcpy(arboTarTmp, arboTar);
                                strcat(arboTarTmp, args[1]);
                                strcat(arboTarTmp,"/");
-                               
-                               //printf("arboTarTmp : %s\n", arboTarTmp);
+
                                if(get_fichier_type(fdt, arboTarTmp) == '5'){
                                    strcat(pwd,"/");
                                    strcat(pwd, args[1]);
@@ -599,14 +592,35 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
         
         //afficher_fichier => cat
         else if (!strcmp(args[0], "cat2")){
-                int fdx = open(args[1], O_RDONLY);
-                if (fdx < 0){
-                    perror("open");
-                    return -1;
-                }
-                afficher_fichier(fdx, args[2]);
-                close(fdx);
+              if (estDansTar == 1 ) {
+                 //int fdx = open(args[1], O_RDONLY);
+                  int fdx = open(pwdtar, O_RDONLY);
+                  if (fdx < 0){
+                       perror("open");
+                       return -1;
+                  }
+                  Tmp = malloc(sizeof(char) * BUFFER);
+                  strcpy(Tmp,arboTar);
+                  strcat(Tmp,args[1]);
+                  afficher_fichier(fdx,Tmp);
+                  close(fdx);
+                  free(Tmp);
+                  }
+              else {
+                  printf("Use cat2 after entering in a tar file\n");
+              }
+          }
+        //afficher_fichier => cat
+        else if (!strcmp(args[0], "cat2")){
+             int fdx = open(args[1], O_RDONLY);
+             if (fdx < 0){
+                  perror("open");
+                  return -1;
+             }
+             afficher_fichier(fdx, args[2]);
+             close(fdx);
         }
+        
         //afficher_repertoire => ls
         else if (!strcmp(args[0], "ls2")){
                 int fdx;
@@ -632,6 +646,8 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                 }
                 close(fdx);
         }
+        
+        
         //get_fichier_type =>
         else if (!strcmp(args[0], "gft")){
                 int fdx = open(args[1], O_RDONLY);
@@ -645,8 +661,8 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
         
         //Execution commande
         else {
-        nbexecuteCmds += 1;
-        return executeCmd(fd, debut, dernier);
+            nbexecuteCmds += 1;
+             return executeCmd(fd, debut, dernier);
         }
     }
     return 0;
