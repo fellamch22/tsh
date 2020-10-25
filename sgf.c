@@ -279,6 +279,11 @@ void delete_repertoire(int fd, char *repname){
   }
 }
 
+
+/**********************************************/
+/*   Partie affichage dans le fichier .tar   */
+/********************************************/
+
 void afficher_fichier(int fd, char *chemin){
 
 	off_t position ;
@@ -324,9 +329,6 @@ void afficher_fichier(int fd, char *chemin){
 
 }
 
-/**********************************************/
-/*   Partie affichage dans le fichier .tar   */
-/********************************************/
 void afficher_repertoire(int fd, off_t position){
 
 
