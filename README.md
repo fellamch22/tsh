@@ -104,3 +104,5 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         - ./sgf 
     - Partie  Suppression fichier et repertoire dans le fichier .tar : delete_repertoire / delete_fichier / trouve
         - ./sgf <tarfile> <fichier>
+        
+        ########
