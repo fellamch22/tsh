@@ -27,6 +27,6 @@ sgf :
 	
 clean:
 	rm -rf *.o
-	rm -rf get_fichier_type  afficher_fichier afficher_repertoire shell
+	rm -rf get_fichier_type  afficher_fichier afficher_repertoire shell sgf
 	rm -rf $(ALL) 
 
