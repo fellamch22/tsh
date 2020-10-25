@@ -159,6 +159,9 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 
 }
 
+/**************************************************************/
+/*  Suppression fichier et repertoire dans le fichier .tar   */
+/************************************************************/
 off_t trouve(int fd, char *filename){
   int filesize = 0;
   struct posix_header p;
@@ -276,9 +279,189 @@ void delete_repertoire(int fd, char *repname){
   }
 }
 
+void afficher_fichier(int fd, char *chemin){
 
+	off_t position ;
+	unsigned int filesize;
+
+	struct posix_header p;
+
+   	position = trouve(fd,chemin);
+
+	if ( position == -1 ){
+
+		perror(" fichier inexistant ");
+		exit(1);
+
+	}
+
+
+	// la tete de lecture se trouve au bon endroit , par la fonction trouv
+
+	if( read(fd,&p,BLOCKSIZE) <= 0 ){
+
+		perror(" Erreur de lecture  ");
+		exit(1);
+
+		
+	}
+
+	sscanf(p.size,"%o",&filesize);
+	
+	char content [filesize];
+
+	if( read(fd,content,filesize) <= 0 ){
+
+		perror(" Erreur de lecture  ");
+		exit(1);
+
+		
+	}
+
+	write(1,content,filesize);
+	
+
+
+}
+
+/**********************************************/
+/*   Partie affichage dans le fichier .tar   */
+/********************************************/
+void afficher_repertoire(int fd, off_t position){
+
+
+	struct posix_header p;
+	unsigned int filesize ;
+
+	if(lseek(fd , position, SEEK_SET) == -1 ){
+
+		perror(" ERREUR lseek ");
+		exit(1);
+
+	}
+
+	if( read (fd , &p, BLOCKSIZE) <= 0 ){
+
+		perror(" ERREUR read ");
+		exit(1);
+
+	}
+
+        char repname[strlen(p.name)+1];
+	
+	strcpy(repname,p.name);
+
+	repname[strlen(p.name)]='\0';
+
+		write(1,p.name,strlen(p.name));
+		write(1,"\n",1);
+
+   	if( read (fd , &p, BLOCKSIZE) <= 0 ){
+
+		perror(" ERREUR read ");
+		exit(1);
+
+	}
+
+
+
+	while(strncmp(repname,p.name,strlen(repname) )== 0){
+
+		
+		write(1,p.name,strlen(p.name));
+		write(1,"\n",1);
+
+		sscanf(p.size,"%o",&filesize);
+
+		if( lseek(fd,(filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR)== -1){
+
+			perror(" ERREUR read ");
+			exit(1);
+		}
+
+		if( read (fd , &p, BLOCKSIZE) <= 0 ){
+
+		perror(" ERREUR read ");
+		exit(1);
+
+	}
+
+
+	}
+
+
+	
+    
+}
+
+char get_fichier_type(int fd, char *chemin){
+
+	struct posix_header p;
+ 	off_t position ;
+	
+	position = trouve(fd ,chemin);
+	
+	
+	if ( position == -1 ){
+
+		perror(" fichier inexistant ");
+		exit(1);
+
+	}
+
+
+	// la tete de lecture se trouve au bon endroit , par la fonction trouv
+
+	if( read(fd,&p,BLOCKSIZE) <= 0 ){
+
+		perror(" Erreur de lecture  ");
+		exit(1);
+
+		
+	}
+   
+	
+            switch(p.typeflag){
+              case '0' :
+                printf("[%c] Le chemin mene a un Fichier\n",p.typeflag);
+                break;
+              case '1' :
+                printf("[%c] Le chemin mene a un Lien materiel\n",p.typeflag);
+                break;
+              case '2' :
+                printf("[%c] Le chemin mene a un Lien symbolique\n",p.typeflag);
+                break;
+              case '3' :
+                printf("[%c] Le chemin mene a un Fichier special caractere\n",p.typeflag);
+                break;
+              case '4' :
+                printf("[%c] Le chemin mene a un Fichier special bloc\n",p.typeflag);
+                break;
+              case '5' :
+                printf("[%c] Le chemin mene a un Repertoire\n",p.typeflag);
+                break;
+              case '6' :
+                printf("[%c] Le chemin mene a un Tube nomme\n",p.typeflag);
+                break;
+              case '7' :
+                printf("[%c] Le chemin mene a un Fichier contigu\n",p.typeflag);
+                break;
+              default  :
+                printf("[%c] Le chemin mene a un autre type\n",p.typeflag);
+                break;
+            }
+
+
+            return (p.typeflag);
+       
+
+}
+
+
+/*******************************/
+/*        Partie main         */
+/******************************/
 int main( int argc , char * argv[]){
-
 
 	/* test d'insertion du fichier book1.txt au debut du fichier .tar */
 
@@ -286,7 +469,7 @@ int main( int argc , char * argv[]){
 	int fd1 = open("toto.tar",O_RDWR);
 
 	addFile(fd1,fd,"book1.txt",0);
-
+	close(fd1);
 	/*test des fonction : trouve delete_fichier delete_repertoire
 	 * Décommenter pour tester
 	 */
@@ -294,8 +477,34 @@ int main( int argc , char * argv[]){
 	//printf("%ld\n" ,trouve(fd, argv[2]));
 	//delete_fichier(fd, argv[2]);
 	//delete_repertoire(fd, argv[2]);
-	close(fd1);
 
+	/*test pour afficher*/
+	//afficher_fichier(fd, argv[2]);
+	/*if (argc != 3)
+	  {
+	    printf("Wrong number of arguments\nUsage: ./afficher_fichier <file.tar> <chemin>\n");
+	    return 1;
+	  }
+
+	int fd = open(argv[1], O_RDONLY);
+	if (fd < 0)
+	  {
+	    perror("open\n");
+	    return -1;
+	  }
+	afficher_fichier(fd, argv[2]);
+	if (close(fd) == -1)
+	  {
+	    perror("close\n");
+	    return -1;
+	    }
+
+	    afficher_repertoire(fd, 0);
+	    get_fichier_type(fd, argv[2]);*/
+
+	return 0;
+	
+	
 }
 
 
