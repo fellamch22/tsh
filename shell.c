@@ -517,7 +517,7 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
             exit(0);
         }
             //Implementation PWD pour tarball
-        else if (strcmp(args[0], "pwd2") == 0){ //pwd passe en tarball
+        else if (strcmp(args[0], "pwd") == 0){ //pwd passe en tarball
             printf("%s\n", pwd);
         }
 
@@ -595,7 +595,7 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                                    strcpy(old_pwd, pwd);
                                    strcpy(pwd, pwdtmp);
                                }
-                               free(pwdtmp);
+                               
                            }else{
                                /*si on est dans le fichier.tar
                                fdt est ouvert sur le tar
