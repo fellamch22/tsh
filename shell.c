@@ -18,11 +18,12 @@
 
 pid_t pid;
 int fdt;
-static char* args[BUFFER];
 static char* Tmp;
 static char* args[BUFFER];
 static char* pwd; // current dir
 static char* pwdtmp; // copy pwd tmp dir
+static char* old_pwd; // copy old pwd
+static char* home_pwd; // copy home
 static char* pwdtar; // chemin du tar
 static char* arboTar; // arborescence tar
 static char* arboTarTmp; // arborescence tar
@@ -158,7 +159,7 @@ static void afficher_fichier(int fd, char *chemin){
 
 }
 
-/* transforme le champs mode et type flag du posix header en une suite de caracteres 
+/* transforme le champs mode et type flag du posix header en une suite de caracteres
     pour l'affichage de la commande ls -l*/
 char * modeToString(int mode, char type ){
 
@@ -284,7 +285,7 @@ void afficher_tar_content(int fd , int mode){
              exit(1);
          }
 
-         sscanf(p.size,"%o",&filesize); 
+         sscanf(p.size,"%o",&filesize);
     }
     
 
@@ -503,22 +504,46 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
 {
     //printf("CMD= %s fd=%d debut=%d dernier=%d\n",cmd,fd,debut,dernier);
     decoupe(cmd); // decoupe la commande proprement dans le tableau d'args
+
     if (args[0] != NULL) {
         //commandes SHELL
             //Implementation Exit
         if (strcmp(args[0], "exit") == 0) {
             printf("Bye ! \n");
+            free(pwdtar);
+            free(arboTar);
+            free(old_pwd);
+            free(pwdtmp);
             exit(0);
         }
+            //Implementation PWD pour tarball
+        else if (strcmp(args[0], "pwd2") == 0){ //pwd passe en tarball
+            printf("%s\n", pwd);
+        }
+
             //Implementation CD
-        else if (!strcmp(args[0], "cd")){
-            
-             if ((strcmp(args[1], "..")) == 0){//cd ..
+        else if (strcmp(args[0],"cd") == 0){
+
+            // cd <sans args> / go to HOME
+            if (args[1] == NULL ){ //determine the size of tableau args
+                strcpy(old_pwd, pwd);
+                strcpy(pwd, home_pwd);
+                chdir(pwd);
+            }
+            //cd - / go to previous
+            else if (strcmp(args[1], "-")== 0){
+                chdir(old_pwd);
+                strcpy(pwdtmp, pwd);
+                strcpy(pwd, old_pwd);
+                strcpy(old_pwd, pwdtmp); //permuter pwd et pwdtmp
+            }
+                   
+            else if ((strcmp(args[1], "..")) == 0){//cd ..
                  //si on sort du fichier.tar
                            if((pwdtar != NULL) && (strcmp(pwdtar, pwd) == 0)) {
                                estDansTar = 0;
                            }
-
+                           strcpy(old_pwd, pwd);
                            //si on fait <cd ..>,on lire a l'inverse juasq'a "/" et afficher tous ce qu'avant "/ "
                            for(int i = strlen(pwd); i > 0; i--){
                                if(pwd[i] == '/'){
@@ -534,19 +559,26 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                              chdir(pwd); //change repertoire reel
                            }
                        }
-                       else if (strcmp(args[1],"..") != 0 ) {
+            
+            //cd ~ / go to HOME
+            else if (strcmp(args[1], "~")== 0){
+                strcpy(old_pwd, pwd);
+                strcpy(pwd, home_pwd);
+                chdir(pwd);
+            }
+
+            else if (strcmp(args[1],"..") != 0 ) {
                           // cd arg
                            
                            //genere pwdtmp avec l argument et on essaye de chdir dessus
-                           pwdtmp = malloc(sizeof(char) * BUFFER);
 
                            strcpy(pwdtmp, pwd); //strcpy(dest, source);
-                           strcat(pwdtmp,"/");
+                           strcat(pwdtmp,"/"); //strcat append un string apres un string
                            strcat(pwdtmp,args[1]);
 
 
-                           if(estDansTar == 0){
-                               if(chdir(pwdtmp) == -1) {
+                           if(estDansTar == 0){ //0 --> NOT IN TARBALL
+                               if(chdir(pwdtmp) == -1) { // -1 --> FAIL
 
                                    //verifier si le fichier.tar existe
                                    fdt = open(pwdtmp, O_RDONLY);
@@ -554,11 +586,13 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                                        perror("Error : open");
                                    }else{
                                        //On est considere etre dans le fichier.tar
+                                       strcpy(old_pwd, pwd);
                                        strcpy(pwd, pwdtmp); //msj de pwd
                                        estDansTar = 1;
                                        strcpy(pwdtar, pwdtmp); //save le chemin du fichier.tar
                                    }
-                               }else{
+                               }else{ //0 --> SUCCESS
+                                   strcpy(old_pwd, pwd);
                                    strcpy(pwd, pwdtmp);
                                }
                                free(pwdtmp);
@@ -574,6 +608,7 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                                strcat(arboTarTmp,"/");
 
                                if(get_fichier_type(fdt, arboTarTmp) == '5'){
+                                   strcpy(old_pwd, pwd);
                                    strcat(pwd,"/");
                                    strcat(pwd, args[1]);
 
@@ -673,6 +708,10 @@ int main()
     pwd = getcwd(cwd, sizeof(cwd)); //un fois au debut : ou je suis
     pwdtar = malloc(sizeof(char) * BUFFER);
     arboTar = malloc(sizeof(char) * BUFFER);
+    old_pwd= malloc(sizeof(char) * BUFFER);
+    pwdtmp = malloc(sizeof(char) * BUFFER);
+    home_pwd = getenv("HOME");
+    strcpy(old_pwd, pwd);
     
     while (1) {
         // Prompt
@@ -701,7 +740,7 @@ int main()
         nettoyage(nbexecuteCmds);
         nbexecuteCmds = 0;
     }
-    free(pwdtar);
-    free(arboTar);
+    
+
     return 0;
 }
