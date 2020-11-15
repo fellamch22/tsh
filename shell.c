@@ -339,8 +339,9 @@ static void afficher_repertoire(int fd, off_t position, int mode){
        if( read (fd , &p, BLOCKSIZE) <= 0 ){
         perror(" ERREUR read ");
     }
-
-    while(strncmp(repname,p.name,strlen(repname)) == 0){
+    /** a corriger , il faut vancer jusqu'a la fin du .tar 
+     * la condition externe de while je la mets a l'interieur **/
+    while(strncmp(repname,p.name,strlen(repname)) == 0){ 
 
         if(mode == 1){
           

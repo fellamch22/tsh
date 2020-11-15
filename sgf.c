@@ -39,8 +39,17 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 		exit(2);
 	};
 
+	/* faire un fstat pour recuperer les informations necessaires a la creation de
+	la structure header du fichier */
+	
+	if ( fstat(fd,&s)  == -1 ){
+
+		perror(" fileToBlocks : Erreur fstat");
+		exit(2);
+	};
 
 /* remplissage du header correspondant au fichier source 'filename' */
+	memset(m.name,'\0',100);
 	strcpy(m.name,filename);
 	sprintf(m.uname,"%s",getpwuid(s.st_uid)->pw_name);
 	sprintf(m.gname,"%s",getgrgid(s.st_gid)->gr_name);
@@ -163,6 +172,126 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 
 }
 
+/** fonction qui cree un repertoire vide dans le tarball reference par l'ouverture 
+   fd , et le chemin du repertoire le fichier .tar , sans le "slash a la fin " ,
+   fd doit etre ouvert en lecture et ecriture  **/
+
+void newEmptyDirectory(int fd ,char * directoryPath ){
+
+
+    struct stat t ;
+
+  /** verifier si directoryPath existe deja et renvoyer un message 
+   * de warning a l'utilisateur  */
+
+  if (trouve(fd,directoryPath) >= 0)
+  {
+      char s [50] = "cannot create Directory , already exists \n";
+      write(1,s,strlen(s));
+
+  }else
+  { 
+	// verifier si le repertoire pere existe
+    // effectuer un analyse de path avant pour enlever le dernier nom directory a la fin
+    int pathlen = strlen(directoryPath);
+    char s1 [pathlen+1];
+	char pathpere [pathlen+1];
+    strcpy(s1,directoryPath);
+    s1[pathlen-1] ='\0';
+
+
+    while( (s1[pathlen] != '/') && (pathlen > 0) ){
+         pathlen --;
+    }
+
+	strncpy(pathpere,s1,pathlen);
+	printf("%s\n",pathpere);
+    if( (strcmp(pathpere,"") < 0 ) && (trouve(fd,pathpere) == -1) ){
+      /* repertoire pere n'existe pas */
+     	char s2 [100] = " cannot create Directory , No such file or directory  \n";
+     	 write(1,s2,strlen(s2));
+    }else
+    {
+      	/* faire un fstat pour recuperer les informations necessaires a la creation de
+	      la structure header du fichier */
+	
+	      if ( fstat(fd,&t)  == -1 ){
+
+		      perror(" newEmptyDirectory : Erreur fstat");
+		      exit(1);
+	      };
+
+      // on cree le header du repertoire et on l'insere a la fin du .tar
+
+      	struct posix_header p;
+		time_t current_time = time(NULL);
+		memset(p.name,'\0',100);
+      	strcpy(p.name,directoryPath);
+	    sprintf(p.uname,"%s",getpwuid(t.st_uid)->pw_name);
+	    sprintf(p.gname,"%s",getgrgid(t.st_gid)->gr_name);
+	    sprintf(p.size,"%011lo",(off_t)0);
+	    sprintf(p.mode,"%o",(mode_t)0755);
+	    sprintf(p.uid,"%d",t.st_uid);
+	    sprintf(p.gid,"%d",t.st_gid);
+	    sprintf(p.mtime,"%lo",current_time);
+      	p.typeflag ='5';
+	    sprintf(p.magic,"%s",TMAGIC);
+	    sprintf(p.version,"%s",TVERSION);
+	    set_checksum(&p);
+		printf("%s\n",p.name);
+      // se deplace a la fin du tarball , avant les deux blocks contenant
+
+	/*	if( lseek(fd,(off_t)-1024,SEEK_END) == -1 ){
+
+			perror(" newEmptyDirectory : Erreur seek");
+			exit(1);
+
+		}*/
+		if( lseek(fd,(off_t)0,SEEK_SET) == -1 ){
+
+			perror(" newEmptyDirectory : Erreur seek");
+			exit(1);
+		}
+		//char sauvegarde[1024];// 2 blocks de 512
+		//memset(sauvegarde,'\0',1024);
+		char sauvegarde[t.st_size];
+		// sauvegarder le contenu des deux derniers blocks
+
+		if(read(fd,sauvegarde,t.st_size) <= 0  ){
+
+			perror(" newEmptyDirectory : Erreur read ");
+			exit(1);
+		}
+
+		// revenir a la derniere position avant de faire le read
+		if( lseek(fd,(off_t)0,SEEK_SET) == -1 ){
+
+			perror(" newEmptyDirectory : Erreur seek");
+			exit(1);
+
+		}	
+		
+      	//inserer le header du repertoire
+		if(write(fd,&p,BLOCKSIZE) <= 0  ){
+
+			perror(" newEmptyDirectory : Erreur write ");
+			exit(1);
+		}
+
+		// remettre les derniers blocks de null apres le header inseré
+
+		if(write(fd,sauvegarde,t.st_size) <= 0  ){
+
+			perror(" newEmptyDirectory : Erreur write ");
+			exit(1);
+		}
+
+    }
+    
+  }
+  
+}
+
 /*********************************************************************/
 /* Partie  Suppression fichier et repertoire dans le fichier .tar   */
 /*******************************************************************/
@@ -265,6 +394,8 @@ void delete_repertoire(int fd, char *repname){
   // TANT QUE CA COMMENCE PAR repname ON CONTINUE
   strncpy(prefix,p.name,strlen(repname));
 
+/* a corriger  , la condition  du while je la mets a l'interieur et 
+ et la condition d'arret ser ala findu fichier */
   while(strcmp(repname,prefix)== 0 ){
     delete_fichier(fd,p.name);
     
@@ -472,10 +603,13 @@ int main( int argc , char * argv[]){
 
 	/* test d'insertion du fichier book1.txt au debut du fichier .tar */
 
+	struct stat t ;
 	int fd = open("book1.txt",O_RDONLY);
 	int fd1 = open("toto.tar",O_RDWR);
 
-	addFile(fd1,fd,"book1.txt",0);
+	//fstat(fd1,&t);
+	/*addFile(fd1,fd,"book1.txt/",(off_t)0);*/
+	newEmptyDirectory(fd1,"c/");
 	close(fd1);
 	/*test des fonction : trouve delete_fichier delete_repertoire
 	 * Décommenter pour tester
