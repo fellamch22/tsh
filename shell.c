@@ -528,7 +528,6 @@ static void cd(){
 			    				
 				//si pwdtmp contient ".tar" , on decoupe pwdtmp en pwdtmp2 + tarname + arboTar avec les "/"
 					if(strstr(pwdtmp, ".tar") != NULL) {	
-						  int len = strlen(pwdtmp);
 						  int t=0;
 						  char d[] = "/";
 						  char *p = strtok(pwdtmp, d);
@@ -653,10 +652,7 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
 				    	   strcat(pwdtmp,"/");
 				           strcat(pwdtmp,args[1]);
                            
-                           //decoupe 
-                           	int len = strlen(pwdtmp);
-						    int prevdist=0;
-						    int dist=0;
+                           //decoupe
 						    char d[] = "/";
 						    char *p = strtok(pwdtmp, d);
 						    strcat(pwdtmp2,"/") ;
