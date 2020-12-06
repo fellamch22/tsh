@@ -405,6 +405,7 @@ static void afficher_repertoire(int fd, off_t position, int mode){
  
 static int executeCmd(int fd, int debut, int dernier)
 {
+	printf("Execcmd => %d %d %d \n\n",fd,debut,dernier );
     //renvoi un FD
     int tubes[2];
  
@@ -423,25 +424,29 @@ static int executeCmd(int fd, int debut, int dernier)
         }
         
         printf("> fd=%d debut=%d dernier=%d\n",fd,debut,dernier);
-        
+        fflush(stdout);
         if (fd == 0 && debut == 1 && dernier == 0  ) {
             // pour la debut commande redirection de la sortie dans le tube
-            dup2( tubes[ECRITURE], STDOUT_FILENO );
+            dup2( tubes[ECRITURE], STDOUT_FILENO ); // on change la sortie standard par l'entrée du pipe
         } else if (fd != 0 && debut == 0 && dernier == 0 ) {
             // pour les commende du milieu, ecoute de l entree depuis fd,
             // redirection de la sortie dans tubes[ECRITURE]
-            dup2(fd, STDIN_FILENO);
-            dup2(tubes[ECRITURE], STDOUT_FILENO);
+            dup2(fd, STDIN_FILENO); // on change l'entrée standard  le fd pere
+            dup2(tubes[ECRITURE], STDOUT_FILENO); // on sochangert la sortie standard par l'entrée du pipe
         } else { // dernier=1
             // pour la dernier commande , ecoute de l entree depuis fd
-            dup2( fd, STDIN_FILENO );
+            dup2( fd, STDIN_FILENO ); // on change l'entrée standard  le fd pere
         }
         
 		if (strcmp(args[0], "pwd") == 0){ //pwd passe en tarball
-            printf("PWD INTERNE %s\n", pwd);
+        //    printf("PWD INTERNE %s\n", pwd);
+         //   write(tubes[ECRITURE], &pwd,strlen(pwd));
+            fprintf(stdout, "%s", pwd); 
         }
         else if (execvp( args[0], args) == -1) {
             printf("Commande Inconnue : %s\n",args[0]);
+            fflush(stdout); 
+			kill(getpid(),SIGTERM);
             return 1; // si l'exec fail
         }
     }
@@ -528,6 +533,7 @@ static void cd(){
 			    				
 				//si pwdtmp contient ".tar" , on decoupe pwdtmp en pwdtmp2 + tarname + arboTar avec les "/"
 					if(strstr(pwdtmp, ".tar") != NULL) {	
+						  int len = strlen(pwdtmp);
 						  int t=0;
 						  char d[] = "/";
 						  char *p = strtok(pwdtmp, d);
@@ -652,7 +658,10 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
 				    	   strcat(pwdtmp,"/");
 				           strcat(pwdtmp,args[1]);
                            
-                           //decoupe
+                           //decoupe 
+                           	int len = strlen(pwdtmp);
+						    int prevdist=0;
+						    int dist=0;
 						    char d[] = "/";
 						    char *p = strtok(pwdtmp, d);
 						    strcat(pwdtmp2,"/") ;
