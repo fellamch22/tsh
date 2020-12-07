@@ -24,7 +24,7 @@ static char* pwd; // current dir
 static char* pwdtmp; // copy pwd tmp dir
 static char* pwdtmp2; // copy pwd tmp dir
 static char* old_pwd; // copy old pwd
-static char* home_pwd; // copy home 
+static char* home_pwd; // copy home
 static char* tarname; // chemin du tar
 static char* arboTar; // arborescence tar
 static char* arboTarTmp; // arborescence tar
@@ -159,7 +159,7 @@ static void afficher_fichier(int fd, char *chemin){
 
 }
 
-/* transforme le champs mode et type flag du posix header en une suite de caracteres 
+/* transforme le champs mode et type flag du posix header en une suite de caracteres
     pour l'affichage de la commande ls -l*/
 char * modeToString(int mode, char type ){
 
@@ -285,7 +285,7 @@ void afficher_tar_content(int fd , int mode){
              exit(1);
          }
 
-         sscanf(p.size,"%o",&filesize); 
+         sscanf(p.size,"%o",&filesize);
     }
     
 
@@ -405,7 +405,7 @@ static void afficher_repertoire(int fd, off_t position, int mode){
  
 static int executeCmd(int fd, int debut, int dernier)
 {
-	printf("Execcmd => %d %d %d \n\n",fd,debut,dernier );
+    //Debug    printf("Execcmd => %d %d %d \n\n",fd,debut,dernier );
     //renvoi un FD
     int tubes[2];
  
@@ -438,15 +438,129 @@ static int executeCmd(int fd, int debut, int dernier)
             dup2( fd, STDIN_FILENO ); // on change l'entrée standard  le fd pere
         }
         
-		if (strcmp(args[0], "pwd") == 0){ //pwd passe en tarball
-        //    printf("PWD INTERNE %s\n", pwd);
-         //   write(tubes[ECRITURE], &pwd,strlen(pwd));
-            fprintf(stdout, "%s", pwd); 
+        //##### REDEFINITION COMMANDE PWD
+        if (strcmp(args[0], "pwd") == 0){ //pwd passe en tarball
+            fprintf(stdout, "%s", pwd);
+            fflush(stdout);
+            exit(0);
+        }
+        
+        //##### REDEFINITION COMMANDES LS  et CAT =>  uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar"
+        else if (
+            ( (strcmp(args[0], "ls") == 0) || (strcmp(args[0], "cat") == 0) ) &&  //si la commande est ls ou cat
+            (
+                (strstr(pwd, ".tar") != NULL ) // et que le pwd contient ".tar"
+                ||
+                ( (args[1] != NULL)  &&  (strstr(args[1], ".tar") != NULL ) )  // ou que arg1 existe avec un ".tar" dedans
+                ||
+                ( (args[1] != NULL)  &&  (strstr(args[2], ".tar") != NULL ) )  // ou que arg2 existe avec un ".tar" dedans (si arg1 = -l
+            )
+        ) { //on utilise la version redefinie de LS
+              printf("Commande REDEFINIE !\n");
+              
+            // RESET VARIABLES
+            strcpy(pwdtmp,"");
+            strcpy(arboTarTmp,"");
+            strcpy(tarname,"/");
+                
+              //on set pwdtmp comme le repertoire a analyser. si ls <chemin avec .tar> , pwdtmp = pwd (si chemin relatif) + <chemin avec .tar> . si ls alors que notre pwd contient ".tar" , alors pwdtmp = pwd current
+              if ( (args[1] != NULL) &&  (strstr(args[1], ".tar") != NULL) ) {
+                  if(  args[1][0] == '/' ) { // chemin absolu
+                    strcpy(pwdtmp,args[1]);
+                }
+                else { // chemin relatif
+                     strcpy(pwdtmp,pwd);
+                     strcat(pwdtmp,"/");
+                     strcat(pwdtmp,args[1]);
+                }
+                   
+            }
+            else if ( (args[2] != NULL) &&  (strstr(args[2], ".tar") != NULL) ) { // cas du ls -l
+                  if(  args[2][0] == '/' ) { // chemin absolu
+                    strcpy(pwdtmp,args[2]);
+                }
+                else { // chemin relatif
+                     strcpy(pwdtmp,pwd);
+                     strcat(pwdtmp,"/");
+                     strcat(pwdtmp,args[2]);
+                }
+            }
+            else if  (strstr(pwd, ".tar") != NULL ) {
+                strcpy(pwdtmp,pwd);
+                if      ( (args[1] != NULL) &&  (strcmp(args[1], "-l") != 0 ) )  {
+                    strcat(pwdtmp,"/");
+                    strcat(pwdtmp,args[1]);
+                }
+                if      (args[2] != NULL) {
+                    strcat(pwdtmp,"/");
+                    strcat(pwdtmp,args[2]);
+                }
+            }
+            //ici pwdtmp est a jour avec le bon chemin.
+            printf("pwdtmp = %s\n",pwdtmp);
+            
+            //Decoupe pwdtmp avec des / afin d'extraire le tarname et l'arborescence dans le tar
+                int len = strlen(pwdtmp);
+                int t=0;
+                char d[] = "/";
+                char *p = strtok(pwdtmp, d);
+                strcat(pwdtmp2,"/") ;
+                while(p != NULL)    {
+                    if(strstr(p,".tar") != 0) {
+                    //ajout tarname final : nom du tar, change la balise t a 1
+                        t=1;
+                        strcat(tarname,p); // ici tarname est a jour avec le bon nom du tar
+                    }
+                    else if (t == 0) {
+                    //ajout tarname
+                        strcat(tarname,p);
+                        strcat(tarname,"/") ;
+                    }
+                    else if (t==1) {
+                    //ajout arboTarTmp
+                        strcat(arboTarTmp,p) ;
+                        strcat(arboTarTmp,"/") ;
+                    }
+                    //Debug  printf("'%s'\n", p);
+                    p = strtok(NULL, d);
+                }
+            //FIN DECOUPE
+            printf("ls TARNAME %s ARBOTARTMP %s\n",tarname,arboTarTmp);
+            
+              //appel a la fonction d'affichage
+                 int fdxx;
+                //afficher repertoire et droit
+                if(  (args[1] != NULL) && (!strcmp(args[1], "-l")) ){   // si l'arg1 = -l
+                    fdxx = open(tarname, O_RDONLY);
+                    if (fdxx < 0){
+                        perror("open");
+                        return -1;
+                    }
+                   if  ( (strcmp(args[0], "ls") == 0)  && (strcmp(arboTarTmp, "") != 0) )  { afficher_repertoire(fdxx, trouve(fdxx,arboTarTmp), 1); }
+                   if ( (strcmp(args[0], "ls") == 0) && (strcmp(arboTarTmp, "") == 0) ) { afficher_tar_content(fdxx ,1);  } // ls a la racine du tar
+
+                }else{ // si l'arg1 n'est pas -l
+                    fdxx = open(tarname, O_RDONLY);
+                    if (fdxx < 0){
+                        perror("open");
+                        return -1;
+                    }
+                    // commandes LS avec ou sans arboTarTmp
+                     if ( (strcmp(args[0], "ls") == 0) && (strcmp(arboTarTmp, "") != 0) ) { afficher_repertoire(fdxx, trouve(fdxx,arboTarTmp), 0); } // ls plus loin que la racine du tar
+                     if ( (strcmp(args[0], "ls") == 0) && (strcmp(arboTarTmp, "") == 0) ) { afficher_tar_content(fdxx ,0);  } // ls a la racine du tar
+                    //commande cat
+                     if (strcmp(args[0], "cat") == 0) { afficher_fichier(fdxx, arboTarTmp); }
+                }
+                close(fdxx);
+            //fin appel
+              
+            fflush(stdout);
+            exit(0);
         }
         else if (execvp( args[0], args) == -1) {
-            printf("Commande Inconnue : %s\n",args[0]);
-            fflush(stdout); 
-			kill(getpid(),SIGTERM);
+            printf("Commande Inconnue : %s %s\n",args[0] , args[1]);
+            fflush(stdout);
+            kill(getpid(),SIGTERM);
             return 1; // si l'exec fail
         }
     }
@@ -509,96 +623,96 @@ static void decoupe(char* cmd)
 
 // Liste des commandes reconnues par le shell //
 static void cd(){
-            	//CD Arg
-            	
-            	//Reset temp
-            	strcpy(pwdtmp2,"");
-            	strcpy(arboTarTmp,"");
-            	
-            	//si arg = /*
-      			if(  args[1][0] == '/' ) {
-					strcpy(pwdtmp, args[1]); 
-				}
-				//si arg != /* , on ajoute l'arg au pwd actuel
-				else {
-				    strcpy(pwdtmp,pwd);
-				    strcat(pwdtmp,"/");
-				    strcat(pwdtmp,args[1]);
-				}	
-				
-				//DEBUG printf(">>>> %s\n",pwdtmp);
-				
-				//Parse command. On essaye deja de chdir dessus 
-				if(chdir(pwdtmp) == -1) { // -1 --> FAIL
-			    				
-				//si pwdtmp contient ".tar" , on decoupe pwdtmp en pwdtmp2 + tarname + arboTar avec les "/"
-					if(strstr(pwdtmp, ".tar") != NULL) {	
-						  int len = strlen(pwdtmp);
-						  int t=0;
-						  char d[] = "/";
-						  char *p = strtok(pwdtmp, d);
-						  strcat(pwdtmp2,"/") ;
-						  while(p != NULL)	{ 
-						        //ajout tarname
-							 if(strstr(p,".tar") != 0) {
-						 	 	t=1;
-						  		strcpy(tarname,p);
-						 		}
-							  else if (t==0) {
-							  	//ajout pwdtmp
-								  	strcat(pwdtmp2,p) ; 
-									strcat(pwdtmp2,"/") ; 
-								  }
-						      else {
-						      	//ajout arboTarTmp
-									strcat(arboTarTmp,p) ; 
-									strcat(arboTarTmp,"/") ; 
-						      }
-					    	  //Debug  printf("'%s'\n", p);
-						    p = strtok(NULL, d);
-						  }	
-				//Fin Decoupe			
-														   
-					/* DEBUG
-						   printf("\n");
-						   printf("PWDTMP = %s\n",pwdtmp2);
-						   printf("TARNAME = %s\n",tarname);
-						   printf("ARBOTARTmp = %s\n\n",arboTarTmp);
-					*/	   
-						   //update env
-						   if(chdir(pwdtmp2) == -1) {
-						   	perror("Error : Bad Dir name");
-						   }
-						   else {
-						   	   strcat(pwdtmp2,tarname) ;
-							   fdt = open(pwdtmp2, O_RDONLY);
+                //CD Arg
+                
+                //Reset temp
+                strcpy(pwdtmp2,"");
+                strcpy(arboTarTmp,"");
+                
+                //si arg = /*
+                  if(  args[1][0] == '/' ) {
+                    strcpy(pwdtmp, args[1]);
+                }
+                //si arg != /* , on ajoute l'arg au pwd actuel
+                else {
+                    strcpy(pwdtmp,pwd);
+                    strcat(pwdtmp,"/");
+                    strcat(pwdtmp,args[1]);
+                }
+                
+                //DEBUG printf(">>>> %s\n",pwdtmp);
+                
+                //Parse command. On essaye deja de chdir dessus
+                if(chdir(pwdtmp) == -1) { // -1 --> FAIL
+                                
+                //si pwdtmp contient ".tar" , on decoupe pwdtmp en pwdtmp2 + tarname + arboTar avec les "/"
+                    if(strstr(pwdtmp, ".tar") != NULL) {
+                          int len = strlen(pwdtmp);
+                          int t=0;
+                          char d[] = "/";
+                          char *p = strtok(pwdtmp, d);
+                          strcat(pwdtmp2,"/") ;
+                          while(p != NULL)    {
+                                //ajout tarname
+                             if(strstr(p,".tar") != 0) {
+                                  t=1;
+                                  strcpy(tarname,p);
+                                 }
+                              else if (t==0) {
+                                  //ajout pwdtmp
+                                      strcat(pwdtmp2,p) ;
+                                    strcat(pwdtmp2,"/") ;
+                                  }
+                              else {
+                                  //ajout arboTarTmp
+                                    strcat(arboTarTmp,p) ;
+                                    strcat(arboTarTmp,"/") ;
+                              }
+                              //Debug  printf("'%s'\n", p);
+                            p = strtok(NULL, d);
+                          }
+                //Fin Decoupe
+                                                           
+                    /* DEBUG
+                           printf("\n");
+                           printf("PWDTMP = %s\n",pwdtmp2);
+                           printf("TARNAME = %s\n",tarname);
+                           printf("ARBOTARTmp = %s\n\n",arboTarTmp);
+                    */
+                           //update env
+                           if(chdir(pwdtmp2) == -1) {
+                               perror("Error : Bad Dir name");
+                           }
+                           else {
+                                  strcat(pwdtmp2,tarname) ;
+                               fdt = open(pwdtmp2, O_RDONLY);
                                if (fdt < 0){
                                        perror("Error : open");
                                }else{
-	                               if(  ( arboTarTmp[0] == '\0' ) || ( get_fichier_type(fdt, arboTarTmp) == '5'  ) ) {
-	                                   strcpy(old_pwd, pwd);
-	                                   strcpy(pwd, pwdtmp2);
-	                                   strcat(pwd, "/");
-	                                   strcat(pwd, arboTarTmp);
-	                                   
-	                                   //Maj arbotar
-	                                   strcpy(arboTar, arboTarTmp);
-	                                   strcat(arboTar,"/");
-	                               }
-	                               else{
-	                                   perror("Error : Bad Dir name in tar");
-								   }
+                                   if(  ( arboTarTmp[0] == '\0' ) || ( get_fichier_type(fdt, arboTarTmp) == '5'  ) ) {
+                                       strcpy(old_pwd, pwd);
+                                       strcpy(pwd, pwdtmp2);
+                                       strcat(pwd, "/");
+                                       strcat(pwd, arboTarTmp);
+                                       
+                                       //Maj arbotar
+                                       strcpy(arboTar, arboTarTmp);
+                                       strcat(arboTar,"/");
+                                   }
+                                   else{
+                                       perror("Error : Bad Dir name in tar");
+                                   }
                                }
-						   }
+                           }
                         }
                         
                         //si pwdtmp ne contient pas .tar
                         else {
-                        	perror("Error : not found");
-						}
+                            perror("Error : not found");
+                        }
                     }
-					else{  // si on arrive a faire un chdir , 0 --> SUCCESS
-									//histo
+                    else{  // si on arrive a faire un chdir , 0 --> SUCCESS
+                                    //histo
                                    strcpy(old_pwd, pwd);
                                    
                                    //mise a jour pwd
@@ -606,20 +720,21 @@ static void cd(){
                                    
                                    //si le pwd restant ne contient plus .tar , on clean tarname et arbotar
                                    if(strstr(pwd,".tar") ==0 ) {
-                                   	    strcpy(tarname,"");
-                                  		strcpy(arboTar,"");
-								   }
+                                           strcpy(tarname,"");
+                                          strcpy(arboTar,"");
+                                   }
 
                     }
 }
+
 static int analyse(char* cmd, int fd, int debut, int dernier)
 {
     //printf("CMD= %s fd=%d debut=%d dernier=%d\n",cmd,fd,debut,dernier);
     decoupe(cmd); // decoupe la commande proprement dans le tableau d'args
 
     if (args[0] != NULL) {
-        //commandes SHELL
-            //Implementation Exit
+        //REDEFINED SHELL COMMANDS
+        //Implementation Exit
         if (strcmp(args[0], "exit") == 0) {
             printf("Bye ! \n");
             free(tarname);
@@ -628,16 +743,10 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
             free(pwdtmp);
             exit(0);
         }
-            //Implementation PWD pour tarball
-   //     else if (strcmp(args[0], "pwd") == 0){ //pwd passe en tarball
-   //         printf("%s\n", pwd);
-   //     }
-
-            //Implementation CD
-        else if (strcmp(args[0],"cd") == 0){
-
+        //Implementation CD redefinie ls
+        else if ( strcmp(args[0],"cd") == 0) {
             // cd <sans args> / go to HOME
-            if (args[1] == NULL ){ //determine the size of tableau args 
+            if (args[1] == NULL ){ //determine the size of tableau args
                 strcpy(old_pwd, pwd);
                 strcpy(pwd, home_pwd);
                 chdir(pwd);
@@ -648,47 +757,47 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                 strcpy(pwdtmp, pwd);
                 strcpy(pwd, old_pwd);
                 strcpy(old_pwd, pwdtmp); //permuter pwd et pwdtmp
-            } 
+            }
                    
             else if ((strstr(args[1], "..")) != 0){//cd ..
-							//on ajoute l'arg au pwd actuel dans pwdtmp , puis on decoupe la commande avec des / , pour supprimer ce qui se trouve avant les ".." avant de reconstruire la commande
+                            //on ajoute l'arg au pwd actuel dans pwdtmp , puis on decoupe la commande avec des / , pour supprimer ce qui se trouve avant les ".." avant de reconstruire la commande
                            strcpy(old_pwd, pwd);
                            strcpy(pwdtmp2, "");
                            strcpy(pwdtmp,pwd);
-				    	   strcat(pwdtmp,"/");
-				           strcat(pwdtmp,args[1]);
+                           strcat(pwdtmp,"/");
+                           strcat(pwdtmp,args[1]);
                            
-                           //decoupe 
-                           	int len = strlen(pwdtmp);
-						    int prevdist=0;
-						    int dist=0;
-						    char d[] = "/";
-						    char *p = strtok(pwdtmp, d);
-						    strcat(pwdtmp2,"/") ;
-						    while(p != NULL)	{ 
-						        //ajout tarname
-								if(strstr(p,"..") != 0 ) { 								  
-							        for(int i = strlen(pwdtmp2)-2; i > 0; i--){
-                            		   if(pwdtmp2[i] == '/'){
-                                   			pwdtmp2[i+1] = '\0';
-                                   			break;
-                               		   }
-									   else{
-                                   		  pwdtmp2[i] = '\0';
-                               			}
-                           			}
-								}
-								else{						
-									strcat(pwdtmp2 , p);
-									strcat(pwdtmp2 , "/");
-								//	printf("'%s' %s\n", p , pwdtmp2);
-								}
-							    p = strtok(NULL, d);
-						    }
-							//Fin Decoupe
-							strcpy(args[1],pwdtmp2);
-							cd();
-			
+                           //decoupe
+                               int len = strlen(pwdtmp);
+                            int prevdist=0;
+                            int dist=0;
+                            char d[] = "/";
+                            char *p = strtok(pwdtmp, d);
+                            strcat(pwdtmp2,"/") ;
+                            while(p != NULL)    {
+                                //ajout tarname
+                                if(strstr(p,"..") != 0 ) {
+                                    for(int i = strlen(pwdtmp2)-2; i > 0; i--){
+                                       if(pwdtmp2[i] == '/'){
+                                               pwdtmp2[i+1] = '\0';
+                                               break;
+                                          }
+                                       else{
+                                             pwdtmp2[i] = '\0';
+                                           }
+                                       }
+                                }
+                                else{
+                                    strcat(pwdtmp2 , p);
+                                    strcat(pwdtmp2 , "/");
+                                //    printf("'%s' %s\n", p , pwdtmp2);
+                                }
+                                p = strtok(NULL, d);
+                            }
+                            //Fin Decoupe
+                            strcpy(args[1],pwdtmp2);
+                            cd();
+            
                        }
             
             //cd ~ / go to HOME
@@ -696,10 +805,10 @@ static int analyse(char* cmd, int fd, int debut, int dernier)
                 strcpy(old_pwd, pwd);
                 strcpy(pwd, home_pwd);
                 chdir(pwd);
-            } 
+            }
 
             else {
-				cd();				
+                cd();
             }
         }
         
@@ -789,7 +898,7 @@ int main()
     pwd = getcwd(cwd, sizeof(cwd)); //un fois au debut : ou je suis
     
     tarname = malloc(sizeof(char) * BUFFER);
-    arboTar = malloc(sizeof(char) * BUFFER);  
+    arboTar = malloc(sizeof(char) * BUFFER);
     old_pwd= malloc(sizeof(char) * BUFFER);
     pwdtmp = malloc(sizeof(char) * BUFFER);
     pwdtmp2 = malloc(sizeof(char) * BUFFER);
@@ -798,12 +907,12 @@ int main()
     strcpy(old_pwd, pwd);
     
     while (1) {
-	    //suppression du dernier / dans la commande demandee => xx/toto.tar/ devient xx/toto.tar
-		if(  pwd[strlen(pwd)-1] == '/' ) {
-		   pwd[strlen(pwd)-1] = '\0';
-		}
-    	
-	
+        //suppression du dernier / dans la commande demandee => xx/toto.tar/ devient xx/toto.tar
+        if(  pwd[strlen(pwd)-1] == '/' ) {
+           pwd[strlen(pwd)-1] = '\0';
+        }
+        
+    
         // Prompt
         printf("\n%s$> ",pwd);
         fflush(NULL);
