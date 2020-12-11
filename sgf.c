@@ -292,7 +292,45 @@ void newEmptyDirectory(int fd ,char * directoryPath ){
   
 }
 
+/* copie le contenu d'un fichier  qui est a l'interieur d'un .tar  vers la destination */
+void block_to_file(int fd, char * src_path, char* dst_path){
 
+	// appeler trouv sur src_path
+    off_t position;
+
+	position = trouve(fd,src_path);
+
+	if (position == -1 ){
+
+			perror(" le fichier est inexistant \n");
+			exit(1);
+	}
+
+	// open with option create option
+
+	int fd1 ;
+	char buf [250];
+	memset(buf,0,250);
+	strcpy(buf,dst_path);
+	strcat(buf,src_path);
+
+	if (open(buf,O_WRONLY|O_CREAT)== -1 ){
+		perror("erreur open \n");
+		exit(1);
+
+	}
+	// rajoute la lecture du header pour donne st_mode a open
+ // lire le contenu du fichier et le copier dans fd
+
+
+}
+
+
+/* copie le contenu d'un repertoire qui est a l'interieur d'un .tar  vers la destination */
+void block_to_directory(int fd, char * src_path,char* dst_path){
+
+
+}
 
 /*cp*
     analyse les arguments source et destionation d'une commande
@@ -301,6 +339,74 @@ void newEmptyDirectory(int fd ,char * directoryPath ){
 	pwd -> la variable globale de notre programme , qui indique l'emplacement courant
 */
 
+/* execute la commande cp avec la source est soit un tarball entier ou un repertoire
+ou un fichier qui se trouve dans le tarball et la destination peut etre soit un tarball ou un repertoire normal 
+ src_path -> indique le chemin du fichier(ou repertoire) 
+src_fd -> ouverture relatif a la source ( le tarball ) / -- l'ouverture doit etre en lecture -- /
+dst_path -> chemin absolu menant vers la destination , sinon le chemin d'un repertoire a l'interieur d'un tarball sinon 
+vide si on copie dans un tarball.
+dst_fd -> ouverture drelatif a la destination si destination est un taball , sinon on le met a -1
+           / -- l'ouverture doit etre en lecture et ecriture --/
+
+option -> valeur est 1 si la commande est avec l'oprion -r , 0 sinon
+*/  
+
+int cp_srctar( char * src_path , int src_fd , char * dst_path  , int dst_fd , int option ){
+
+	char type ;
+
+	if ( dst_fd != -1){// destination n'est pas un tar 
+
+			struct stat s ;
+
+			if (stat(dst_path,&s) == -1 ){
+				perror("erreur stat ");
+				exit(1);
+
+			}
+
+			if ( !S_ISDIR(s.st_mode)){ // destination n'est pas un repertoire
+
+				perror(" la destinatination fournie n'est pas un repertoire");
+				return -1 ;
+			}
+
+			// la destination est bien un repertoire 
+		
+			// analyse de la source 
+
+			if(strcmp(src_path,"") != 0){
+				
+				type = get_fichier_type(src_fd,src_path);
+
+				if ( type == '5'){// un repetoire
+
+						if(!option){
+							perror(" veuillez utiliser l'option -r pour copier un repertoire \n");
+							exit(1);
+						}
+					// blocktodirectory
+
+				}else{ // un fichier
+
+					// blocktofile
+				}
+
+			}else{// la source est le fichier .tar entier , on le fait avec le cp qui existe deja dans le shell
+
+				return -1;
+			}
+			
+			
+
+
+	}else{ // destination est un fichier .tar 
+
+			// source est le fichier .tar entier 
+	}
+
+	return 0;
+}
 
 /*********************************************************************/
 /* Partie  Suppression fichier et repertoire dans le fichier .tar   */
