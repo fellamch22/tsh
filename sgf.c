@@ -297,6 +297,21 @@ void block_to_file(int fd, char * src_path, char* dst_path){
 
 	// appeler trouv sur src_path
     off_t position;
+	int fd1 ;
+	int cpt = strlen(src_path);
+	int filesize ;
+	char buf [250];
+	char databuf[BLOCKSIZE];
+	char filename[50];
+	struct posix_header h;
+
+	// recuperer le nom du fichier sans le chemin
+
+	memset(filename,0,50);
+
+	while (src_path[cpt] != '/' && cpt > 0 )	cpt -- ;
+
+	strncpy(filename,src_path+cpt,strlen(src_path)-cpt);
 
 	position = trouve(fd,src_path);
 
@@ -306,22 +321,56 @@ void block_to_file(int fd, char * src_path, char* dst_path){
 			exit(1);
 	}
 
+	// se positionner au debut du block du fichier dans le tarball 
+
+	if(lseek(fd,position,SEEK_SET) == -1 ){
+			perror(" erreur lseek \n");
+			exit(1);
+	}
+
+	if(read(fd,&h,BLOCKSIZE) == -1 ){
+
+		perror("erreur read \n");
+		exit(1);
+	}
+
+
+	sscanf(h.size,"%o",&filesize);
+
 	// open with option create option
 
-	int fd1 ;
-	char buf [250];
+	
 	memset(buf,0,250);
 	strcpy(buf,dst_path);
-	strcat(buf,src_path);
+	strcat(buf,filename);
 
-	if (open(buf,O_WRONLY|O_CREAT)== -1 ){
+	// ouvrir le fichier en ecriture et le creer a l'ouverture si il existe pas 
+	int fd_dst = open(buf,O_WRONLY|O_CREAT) ;
+
+	if (fd_dst == -1 ){
 		perror("erreur open \n");
 		exit(1);
 
 	}
-	// rajoute la lecture du header pour donne st_mode a open
- // lire le contenu du fichier et le copier dans fd
 
+ // lire le contenu du fichier et le copier dans fd1 ( la destination)
+
+   int i = 0 ;
+
+   while ( i < (filesize/BLOCKSIZE)){
+
+	   read(fd,databuf,BLOCKSIZE);
+	   write(fd1,databuf,BLOCKSIZE);
+	   i++;
+   }
+
+	if ( (filesize % 512) > 0){
+
+		read(fd,databuf,(filesize % 512));
+		write(fd1,databuf,(filesize % 512));
+	}
+
+	close(fd1);
 
 }
 
@@ -329,6 +378,43 @@ void block_to_file(int fd, char * src_path, char* dst_path){
 /* copie le contenu d'un repertoire qui est a l'interieur d'un .tar  vers la destination */
 void block_to_directory(int fd, char * src_path,char* dst_path){
 
+
+			struct posix_header h ;
+			int filesize;
+			char buf[250];
+
+			// creer le premier repertoire source dans la destination
+			
+
+			// parcourir le tarball en premier et creer tous
+			// les sous repertoires du repertoire source
+
+			if( lseek(fd,(off_t)0,SEEK_SET) == -1 ){
+
+					perror(" lseek error \n");
+					exit(1);
+			}
+
+			if( read(fd,&h,BLOCKSIZE) == -1 ){
+				perror("erreur read \n");
+				exit(1);
+			}
+
+			while (h.name[0] != '/0'){
+				
+				if(strncmp(src_path,h.name,strlen(src_path) == 0 
+				&& (strlen(h.name) > strlen(src_path))){
+
+				}
+
+
+			}
+			
+
+
+
+			// parcourir le tarball une deuxieme fois pour copier les fichiers du repertoire source
+			// et les fichiers de tout les sous repertoires
 
 }
 
