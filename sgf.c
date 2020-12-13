@@ -298,7 +298,7 @@ void block_to_file(int fd, char * src_path, char* dst_path){
 	// appeler trouv sur src_path
     off_t position;
 	int fd1 ;
-	int cpt = strlen(src_path);
+	int cpt = strlen(src_path) - 1 ;
 	int filesize ;
 	char buf [250];
 	char databuf[BLOCKSIZE];
@@ -309,9 +309,9 @@ void block_to_file(int fd, char * src_path, char* dst_path){
 
 	memset(filename,0,50);
 
-	while (src_path[cpt] != '/' && cpt > 0 )	cpt -- ;
+	while ( (src_path[cpt] != '/') && (cpt >= 0)  )	cpt -- ;
 
-	strncpy(filename,src_path+cpt,strlen(src_path)-cpt);
+	strncpy(filename,src_path+cpt+1,strlen(src_path)-(cpt+1));
 
 	position = trouve(fd,src_path);
 
@@ -380,11 +380,43 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 
 
 			struct posix_header h ;
+			off_t position;
 			int filesize;
+			mode_t mode;
 			char buf[250];
+			char directory_name [100];
+			char mkdir_path[250];
+
+			// recuperer le nom du repertoire a partir de src_path sans le caractere '/' a la fin
+			memset(directory_name,'\0',100);
+			int cpt  = strlen(src_path) - 2 ;// on fait -2 pour eviter le '/' a la fin de src_path
+
+			while( (src_path[cpt] != '/') && (cpt > 0 ) ) cpt -- ;
+
+			strncpy(directory_name,src_path+cpt+1,strlen(src_path)-(cpt+2));
 
 			// creer le premier repertoire source dans la destination
-			
+			memset(mkdir_path,'\0',250);
+			strcpy(mkdir_path,dst_path);
+			strcat(mkdir_path,"/");
+			strcat(mkdir_path,directory_name);
+
+			position = trouve(fd,src_path);
+
+			if( lseek(fd,position,SEEK_SET) == -1 ){
+					perror(" erreur lseek \n");
+					exit(1);
+			}
+
+			if(read(fd,&h,BLOCKSIZE) == -1){
+				perror(" erreur read \n");
+				exit(1);
+			}
+
+			sscanf(h.mode,"%o",&mode);
+
+			mkdir(mkdir_path,mode);
+
 
 			// parcourir le tarball en premier et creer tous
 			// les sous repertoires du repertoire source
@@ -402,9 +434,22 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 
 			while (h.name[0] != '/0'){
 				
-				if(strncmp(src_path,h.name,strlen(src_path) == 0 
-				&& (strlen(h.name) > strlen(src_path))){
+				if(strncmp(src_path,h.name,strlen(src_path)) == 0 
+				&& (strlen(h.name) > strlen(src_path)) ){
 
+						if(h.typeflag == '5'){ // un repertoire
+
+								// je recupere le nom du repertoire et on fait 
+
+								
+								// je fais un nouveau read pour verifier le block suivant
+
+						}else// autre type que repertoire
+						{
+
+
+						}
+						
 				}
 
 
