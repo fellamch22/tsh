@@ -614,25 +614,38 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 
 // copier le contenu d'un tarball source vers un tarball destination 
 //  fd_src -> ouvert avec droit de lecture 
-// fd_dst -> ouvert avec droit d'ecriture 
+// fd_dst -> ouvert avec droit lecture et d'ecriture 
 
 void copy_tarball_into_tarball(int fd_src , int fd_dst ){
 
 			// on parcourt le .tar entier
 			// copier les blocks un par un et les inserer a la fin du .tar de la destination
 
-			struct posix_header h ;
+			struct posix_header h ,h1;
 			int i , nb_blocks ;
 			int filesize ;
-			struct stat s;
 			char buffer[BLOCKSIZE];
 
 
-			fstat(fd_dst,&s);
 
+
+			if(read(fd_dst,&h1,BLOCKSIZE) == -1){
+
+				perror(" erreur read \n");
+				exit(1);
+			}
+
+			while (h1.name[0] != '\0'){
+
+				sscanf(h1.size,"%o",&filesize);
+				lseek(fd_dst, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+     			read(fd_dst, &h1, BLOCKSIZE);
+
+			}
+			
 			// se positionner a la fin du fichier destination
 
-			if( lseek(fd_dst,s.st_size,SEEK_SET) == -1 ){
+			if( lseek(fd_dst,-BLOCKSIZE,SEEK_CUR) == -1 ){
 
 				perror("erreur lseek \n");
 				exit(1);
@@ -761,7 +774,7 @@ int cp_srctar( char * src_path , int src_fd , char * dst_path  , int dst_fd , in
 				appeler copy_tarball_to_tarball pour effectuer la copie
 				du tarball source dans le tarball destination */
 		    
-			int fd_dst = open(dst_path,O_WRONLY);
+			int fd_dst = open(dst_path,O_RDWR);
 
 			copy_tarball_into_tarball(src_fd,fd_dst);
 
@@ -1086,7 +1099,7 @@ int main( int argc , char * argv[]){
 	struct stat t ;
 	//int fd = open("book1.txt",O_RDONLY);
 	int fd1 = open("toto.tar",O_RDWR);
-    int fd2 = open("tata.tar",O_WRONLY);
+    int fd2 = open("tata.tar",O_RDWR);
 
 	//fstat(fd1,&t);
 	/*addFile(fd1,fd,"book1.txt/",(off_t)0);*/
