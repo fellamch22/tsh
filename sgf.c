@@ -401,9 +401,10 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 			memset(directory_name,'\0',100);
 			int cpt  = strlen(src_path) - 2 ;// on fait -2 pour eviter le '/' a la fin de src_path
 
-			while( (src_path[cpt] != '/') && (cpt > 0 ) ) cpt -- ;
+			while( (src_path[cpt] != '/') && (cpt >= 0 ) ) cpt -- ;
 
-			strncpy(directory_name,src_path+cpt,strlen(src_path)-(cpt+1));
+			strncpy(directory_name,src_path+cpt+1,strlen(src_path)-(cpt+2));
+		printf(" directory name :  %s \n",directory_name);
 
 			// creer le premier repertoire source dans la destination
 			memset(mkdir_path,'\0',250);
@@ -562,12 +563,12 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 							block_to_file(fd,save_hname,path_buf);
 
 
+
 						}else// sauv_name contient le nom  d'un sous-repertoire dans le .tar , on le met dans path_buf
 						{
 
 						    strcat(path_buf,"/");
 							strcat(path_buf,save_name);
-							
 						}
 						
 					}
@@ -718,7 +719,7 @@ int cp_srctar( char * src_path , int src_fd , char * dst_path  , int dst_fd , in
 
 	char type ;
 
-	if ( dst_fd != -1){// destination n'est pas un tar 
+	if ( dst_fd == -1){// destination n'est pas un tar 
 
 			struct stat s ;
 
@@ -1107,9 +1108,10 @@ int main( int argc , char * argv[]){
 	//printf("%s\n",getpwuid(getuid())->pw_name);
 	//close(fd);
 	//block_to_file(fd1,"test.txt","/home/fella/Desktop");
-	//block_to_directory(fd1,"toto/","/home/fella/Desktop");
+    //block_to_directory(fd1,"toto/","/home/fella/Desktop");
 
-	copy_tarball_into_tarball(fd1,fd2);
+	//copy_tarball_into_tarball(fd1,fd2);
+	cp_srctar( "toto/a/" , fd1, "/home/fella/Desktop" , -1 , 1);
 	close(fd1);
 	close(fd2);
 	/*test des fonction : trouve delete_fichier delete_repertoire
