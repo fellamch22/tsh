@@ -13,5 +13,6 @@ void afficher_repertoire(int fd, off_t position);
 char get_fichier_type(int fd, char *chemin);
 void block_to_file(int fd, char * src_path, char* dst_path);
 void block_to_directory(int fd, char * src_path,char* dst_path);
+void copy_tarball_into_tarball(int fd_src , int fd_dst );
 int cp_srctar( char * src_path , int src_fd , char * dst_path  , int dst_fd , int option );
 #endif

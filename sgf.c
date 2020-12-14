@@ -297,7 +297,6 @@ void block_to_file(int fd, char * src_path, char* dst_path){
 
 	// appeler trouv sur src_path
     off_t position;
-	int fd1 ;
 	int cpt = strlen(src_path) - 1 ;
 	int filesize ;
 	char buf [250];
@@ -315,6 +314,7 @@ void block_to_file(int fd, char * src_path, char* dst_path){
 
 	position = trouve(fd,src_path);
 
+	printf(" src_path : %s \n",src_path);
 	if (position == -1 ){
 
 			perror(" le fichier est inexistant \n");
@@ -342,10 +342,13 @@ void block_to_file(int fd, char * src_path, char* dst_path){
 	
 	memset(buf,0,250);
 	strcpy(buf,dst_path);
+	strcat(buf,"/");
 	strcat(buf,filename);
 
+	printf("filename : %s  %ld    buffer : %s \n",filename,position,buf);
+
 	// ouvrir le fichier en ecriture et le creer a l'ouverture si il existe pas 
-	int fd_dst = open(buf,O_WRONLY|O_CREAT) ;
+	int fd_dst = open(buf,O_WRONLY|O_CREAT,0777) ;
 
 	if (fd_dst == -1 ){
 		perror("erreur open \n");
@@ -360,22 +363,24 @@ void block_to_file(int fd, char * src_path, char* dst_path){
    while ( i < (filesize/BLOCKSIZE)){
 
 	   read(fd,databuf,BLOCKSIZE);
-	   write(fd1,databuf,BLOCKSIZE);
+	   write(fd_dst,databuf,BLOCKSIZE);
 	   i++;
    }
 
 	if ( (filesize % 512) > 0){
 
 		read(fd,databuf,(filesize % 512));
-		write(fd1,databuf,(filesize % 512));
+		write(fd_dst,databuf,(filesize % 512));
 	}
 
-	close(fd1);
+	close(fd_dst);
 
 }
 
 
-/* copie le contenu d'un repertoire qui est a l'interieur d'un .tar  vers la destination */
+/* copie le contenu d'un repertoire qui est a l'interieur d'un tarball vers un repertoire externe 
+ ( equivalent au desarchivage d'un repertoire ) */
+
 void block_to_directory(int fd, char * src_path,char* dst_path){
 
 
@@ -383,9 +388,14 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 			off_t position;
 			int filesize;
 			mode_t mode;
-			char buf[250];
+			char path_buf[250];
 			char directory_name [100];
+			char * name;
+			char * save_name ;
+			char save_hname[100];
+			char last_read [100];
 			char mkdir_path[250];
+
 
 			// recuperer le nom du repertoire a partir de src_path sans le caractere '/' a la fin
 			memset(directory_name,'\0',100);
@@ -393,7 +403,7 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 
 			while( (src_path[cpt] != '/') && (cpt > 0 ) ) cpt -- ;
 
-			strncpy(directory_name,src_path+cpt+1,strlen(src_path)-(cpt+2));
+			strncpy(directory_name,src_path+cpt,strlen(src_path)-(cpt+1));
 
 			// creer le premier repertoire source dans la destination
 			memset(mkdir_path,'\0',250);
@@ -432,24 +442,70 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 				exit(1);
 			}
 
-			while (h.name[0] != '/0'){
+			while (h.name[0] != '\0'){
 				
+				sscanf(h.size,"%o",&filesize);
+
 				if(strncmp(src_path,h.name,strlen(src_path)) == 0 
 				&& (strlen(h.name) > strlen(src_path)) ){
 
+						memset(path_buf,'\0',250);
+						strcpy(path_buf,mkdir_path);
+						strcat(path_buf,"/");
+
 						if(h.typeflag == '5'){ // un repertoire
 
+							   name = strtok(h.name+strlen(src_path),"/");
 								// je recupere le nom du repertoire et on fait 
+					        while ( name != NULL)
+							{
+								strcat(path_buf,name);
+								mkdir(path_buf,mode);
+								strcat(path_buf,"/");
 
+								name = strtok(NULL,"/");
+							}
+							
 								
 								// je fais un nouveau read pour verifier le block suivant
+
+								if ( read(fd,&h,BLOCKSIZE) == -1 ){
+									perror("erreur read \n");
+									exit(1);
+								}
 
 						}else// autre type que repertoire
 						{
 
 
+							if( lseek(fd,((filesize % 512) == 0)?filesize:((filesize+512-1)/512)*512,SEEK_CUR) == -1){
+
+								perror(" erreur lseek \n");
+								exit(1);
+							}
+
+							if ( read(fd,&h,BLOCKSIZE) == -1 ){
+
+									perror("erreur read \n");
+									exit(1);
+							}
+
 						}
 						
+				}else{
+
+						if( lseek(fd,((filesize % 512) == 0)?filesize:((filesize+512-1)/512)*512,SEEK_CUR) == -1){
+
+								perror(" erreur lseek \n");
+								exit(1);
+							}
+
+							if ( read(fd,&h,BLOCKSIZE) == -1 ){
+
+									perror("erreur read \n");
+									exit(1);
+							}
+
 				}
 
 
@@ -460,6 +516,169 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 
 			// parcourir le tarball une deuxieme fois pour copier les fichiers du repertoire source
 			// et les fichiers de tout les sous repertoires
+
+			if(lseek(fd,(off_t)0,SEEK_SET) == -1 ){
+
+					perror("erreur lseek \n");
+					exit(1);
+			}
+
+		
+			if( read(fd,&h,BLOCKSIZE) == -1 ){
+				perror("erreur read \n");
+				exit(1);
+			}
+
+			while ( h.name[0] != '\0' ){
+
+				sscanf(h.size,"%o",&filesize);
+
+				if(strncmp(src_path,h.name,strlen(src_path)) == 0 
+				&& (strlen(h.name) > strlen(src_path)) ){
+
+				if ( h.typeflag != '5'){
+
+				// pourchaque fichier composer d'abord son chemin dans le .tar avec mkdir_path
+				// et l'envoyer a file_to_block pour le reste du traitement 
+
+
+					memset(path_buf,'\0',250);
+					strcpy(path_buf,mkdir_path);
+
+					memset(save_hname,'\0',100);
+					strcpy(save_hname,h.name);
+
+					name = strtok(h.name+strlen(src_path),"/");
+
+					while( name != NULL){
+
+						save_name = name;
+						name = strtok(NULL,"/");
+
+						if(name == NULL ){
+							 // sauv_name contient le nom d'un fichier
+							 // -> lancer la fonction block_to_file pour effectuer la copie du fichier
+
+							block_to_file(fd,save_hname,path_buf);
+
+
+						}else// sauv_name contient le nom  d'un sous-repertoire dans le .tar , on le met dans path_buf
+						{
+
+						    strcat(path_buf,"/");
+							strcat(path_buf,save_name);
+							
+						}
+						
+					}
+
+					// lecture du prochain header
+
+							// ajouter un lseek en cas ou la taille du fichier n'est pas divisible par 512
+
+					lseek(fd,BLOCKSIZE -(filesize % BLOCKSIZE),SEEK_CUR);
+
+					if( read(fd,&h,BLOCKSIZE) == -1 ){
+
+							perror(" erreur read \n ");
+							exit(1);
+
+					}
+
+				}else{ // un header repertoire , size = 0 -> on fait un read  directement pour passer au bloc suivant
+
+						if( read(fd,&h,BLOCKSIZE) == -1 ){
+
+							perror(" erreur read \n ");
+							exit(1);
+
+						}
+				}
+
+			}else{// on passe au fichier/repertoire suivant
+
+              lseek(fd, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+
+						if( read(fd,&h,BLOCKSIZE) == -1 ){
+
+							perror(" erreur read \n ");
+							exit(1);
+
+						}
+			}
+
+			
+		}
+
+}
+
+// copier le contenu d'un tarball source vers un tarball destination 
+//  fd_src -> ouvert avec droit de lecture 
+// fd_dst -> ouvert avec droit d'ecriture 
+
+void copy_tarball_into_tarball(int fd_src , int fd_dst ){
+
+			// on parcourt le .tar entier
+			// copier les blocks un par un et les inserer a la fin du .tar de la destination
+
+			struct posix_header h ;
+			int i , nb_blocks ;
+			int filesize ;
+			struct stat s;
+			char buffer[BLOCKSIZE];
+
+
+			fstat(fd_dst,&s);
+
+			// se positionner a la fin du fichier destination
+
+			if( lseek(fd_dst,s.st_size,SEEK_SET) == -1 ){
+
+				perror("erreur lseek \n");
+				exit(1);
+			}
+
+
+			if(read(fd_src,&h,BLOCKSIZE) == -1){
+
+				perror(" erreur read \n");
+				exit(1);
+			}
+
+            while( h.name[0] != '\0'){
+
+
+				write(fd_dst,&h,BLOCKSIZE);
+
+				i = 0 ;
+				sscanf(h.size,"%o",&filesize);
+
+				nb_blocks = (filesize % BLOCKSIZE == 0)? (filesize/BLOCKSIZE) : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE) ;
+
+				while (i <= nb_blocks ){
+					
+					read(fd_src,buffer,BLOCKSIZE);
+					write(fd_dst,buffer,BLOCKSIZE);
+					i++;
+				}
+				
+			
+				if(read(fd_src,&h,BLOCKSIZE) == -1){
+
+					perror(" erreur read \n");
+					exit(1);
+				}
+
+				   
+
+			}
+
+
+            // ajout des deux blocs nuls
+			memset(buffer,'\0',512);
+
+			write(fd_dst,buffer,BLOCKSIZE);
+			write(fd_dst,buffer,BLOCKSIZE);
 
 }
 
@@ -516,11 +735,16 @@ int cp_srctar( char * src_path , int src_fd , char * dst_path  , int dst_fd , in
 							perror(" veuillez utiliser l'option -r pour copier un repertoire \n");
 							exit(1);
 						}
+
 					// blocktodirectory
+					block_to_directory(src_fd,src_path,dst_path);
 
 				}else{ // un fichier
 
 					// blocktofile
+					block_to_file(src_fd,src_path,dst_path);
+
+
 				}
 
 			}else{// la source est le fichier .tar entier , on le fait avec le cp qui existe deja dans le shell
@@ -533,7 +757,16 @@ int cp_srctar( char * src_path , int src_fd , char * dst_path  , int dst_fd , in
 
 	}else{ // destination est un fichier .tar 
 
-			// source est le fichier .tar entier 
+			/* 	source est le fichier .tar entier 
+				appeler copy_tarball_to_tarball pour effectuer la copie
+				du tarball source dans le tarball destination */
+		    
+			int fd_dst = open(dst_path,O_WRONLY);
+
+			copy_tarball_into_tarball(src_fd,fd_dst);
+
+			close(fd_dst);
+
 	}
 
 	return 0;
@@ -851,15 +1084,21 @@ int main( int argc , char * argv[]){
 	/* test d'insertion du fichier book1.txt au debut du fichier .tar */
 
 	struct stat t ;
-	int fd = open("book1.txt",O_RDONLY);
+	//int fd = open("book1.txt",O_RDONLY);
 	int fd1 = open("toto.tar",O_RDWR);
+    int fd2 = open("tata.tar",O_WRONLY);
 
 	//fstat(fd1,&t);
 	/*addFile(fd1,fd,"book1.txt/",(off_t)0);*/
 	//newEmptyDirectory(fd1,"c/");
-	printf("%s\n",getpwuid(getuid())->pw_name);
-	close(fd);
+	//printf("%s\n",getpwuid(getuid())->pw_name);
+	//close(fd);
+	//block_to_file(fd1,"test.txt","/home/fella/Desktop");
+	//block_to_directory(fd1,"toto/","/home/fella/Desktop");
+
+	copy_tarball_into_tarball(fd1,fd2);
 	close(fd1);
+	close(fd2);
 	/*test des fonction : trouve delete_fichier delete_repertoire
 	 * Décommenter pour tester
 	 */
