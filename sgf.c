@@ -683,7 +683,7 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 
             while( h.name[0] != '\0'){
 
-
+					sscanf(h.size,"%o",&filesize);
 				if( strncmp(src_path,h.name,strlen(src_path)) == 0 ){
 
 					cpt = 0 ;
@@ -717,16 +717,16 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 					write(fd_dst,&h,BLOCKSIZE);
 
 					i = 0 ;
-					sscanf(h.size,"%o",&filesize);
 
 					nb_blocks = (filesize % BLOCKSIZE == 0)? (filesize/BLOCKSIZE) : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE) ;
 
-					while (i <= nb_blocks ){
+					while (i < nb_blocks ){
 					
 					read(fd_src,buffer,BLOCKSIZE);
 					write(fd_dst,buffer,BLOCKSIZE);
 					i++;
-				}
+
+				    }
 				
 				}else{
 
