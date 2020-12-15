@@ -613,21 +613,43 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 
 }
 
-// copier le contenu d'un tarball source vers un tarball destination 
-//  fd_src -> ouvert avec droit de lecture 
-// fd_dst -> ouvert avec droit lecture et d'ecriture 
+/* copier le contenu d'un tarball source vers un tarball destination 
+ - si on veut copier le tarball source tout entier on met src_path a vide , sinon on met le chemin 
+  ( le champ nom dans le tarball) du fichier ou repertoire concerné 
+ - si on veut copier dans le  tarball destination tout  on met dst_path a vide , sinon on met le chemin 
+  ( le champ nom dans le tarball) du repertoire concerné où on veut copier notre source.
+  fd_src -> ouvert avec droit de lecture 
+  fd_dst -> ouvert avec droit lecture et d'ecriture
+ */
 
-void copy_tarball_into_tarball(int fd_src , int fd_dst ){
+void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int fd_dst ){
 
 			// on parcourt le .tar entier
 			// copier les blocks un par un et les inserer a la fin du .tar de la destination
 
 			struct posix_header h ,h1;
-			int i , nb_blocks ;
-			int filesize ;
+			int i , nb_blocks , cpt ;
+			int filesize , lenpath;
+			char * word;
+			char name_buffer[100];
+			char source_name[100];
+			char src_path_adapter[100];
 			char buffer[BLOCKSIZE];
 
+			// recuperer la source precise et enlever tous les repertoires parents du chemin source
+			lenpath = strlen(src_path);
+			if (src_path[lenpath-1]=='/'){
+				cpt = lenpath -2 ;
+			}else
+			{
+				cpt = lenpath -1;
+			}
+			
+			while (src_path[cpt] != '/') cpt --;
+			
+			memset(source_name,'\0',100);
 
+			strncpy(source_name,src_path+cpt+1,lenpath-(cpt+1));
 
 
 			if(read(fd_dst,&h1,BLOCKSIZE) == -1){
@@ -662,21 +684,58 @@ void copy_tarball_into_tarball(int fd_src , int fd_dst ){
             while( h.name[0] != '\0'){
 
 
-				write(fd_dst,&h,BLOCKSIZE);
+				if( strncmp(src_path,h.name,strlen(src_path)) == 0 ){
 
-				i = 0 ;
-				sscanf(h.size,"%o",&filesize);
+					cpt = 0 ;
+					memset(name_buffer,'\0',100);
+					strcpy(name_buffer,dst_path);
+					strcat(name_buffer,source_name);
+					word = strtok(h.name,"/");
 
-				nb_blocks = (filesize % BLOCKSIZE == 0)? (filesize/BLOCKSIZE) : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE) ;
+					while(strncmp(word,source_name,strlen(word)) != 0 ){
 
-				while (i <= nb_blocks ){
+						word = strtok(NULL,"/");
+					}
+
+					word = strtok(NULL,"/");
+
+					while (word != NULL){
+
+						if(cpt != 0) strcat(name_buffer,"/");
+						strcat(name_buffer,word);
+						cpt ++;
+						word = strtok(NULL,"/");
+
+					}
+					
+					if(h.typeflag == '5' && cpt > 0 ) strcat(name_buffer,"/");
+
+					memset(h.name,'\0',100);
+					strcpy(h.name,name_buffer);
+					printf(" h.name : %s \n",h.name);
+
+					write(fd_dst,&h,BLOCKSIZE);
+
+					i = 0 ;
+					sscanf(h.size,"%o",&filesize);
+
+					nb_blocks = (filesize % BLOCKSIZE == 0)? (filesize/BLOCKSIZE) : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE) ;
+
+					while (i <= nb_blocks ){
 					
 					read(fd_src,buffer,BLOCKSIZE);
 					write(fd_dst,buffer,BLOCKSIZE);
 					i++;
 				}
 				
-			
+				}else{
+
+					lseek(fd_src, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+
+
+				}
+
+
 				if(read(fd_src,&h,BLOCKSIZE) == -1){
 
 					perror(" erreur read \n");
@@ -775,11 +834,9 @@ int cp_srctar( char * src_path , int src_fd , char * dst_path  , int dst_fd , in
 				appeler copy_tarball_to_tarball pour effectuer la copie
 				du tarball source dans le tarball destination */
 		    
-			int fd_dst = open(dst_path,O_RDWR);
 
-			copy_tarball_into_tarball(src_fd,fd_dst);
+			copy_tarball_into_tarball(src_path,src_fd,dst_path,dst_fd);
 
-			close(fd_dst);
 
 	}
 
@@ -1111,7 +1168,10 @@ int main( int argc , char * argv[]){
     //block_to_directory(fd1,"toto/","/home/fella/Desktop");
 
 	//copy_tarball_into_tarball(fd1,fd2);
-	cp_srctar( "toto/a/" , fd1, "/home/fella/Desktop" , -1 , 1);
+	//cp_srctar( "toto/a/" , fd1, "/home/fella/Desktop" , -1, 1);
+	cp_srctar( "toto/a/" , fd1, "" , fd2, 1);
+
+	//printf("%d\n",strncmp("","f",strlen("")));
 	close(fd1);
 	close(fd2);
 	/*test des fonction : trouve delete_fichier delete_repertoire
