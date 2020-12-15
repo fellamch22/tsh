@@ -1,18 +1,17 @@
-
 #include <stdlib.h>
 #include <stdio.h>
 #include <sys/types.h>
 #include <sys/stat.h>
+#include <sys/types.h>
 #include <unistd.h>
 #include <string.h>
 #include <time.h>
-#include <sys/types.h>
 #include <fcntl.h>
-#include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
 #include "sgf.h"
-
+#include "tar.h"
+#define BUFFER 1024
 
 /**********************************************/
 /*   Partie Ajout dans le fichier .tar       */
@@ -22,6 +21,59 @@
       en un ensemble de blocs compatible pour 
 	la representation des fichiers dans un fichier .tar */
 
+char * modeToString(int mode, char type ){
+
+    char* droits = malloc(10);
+    int d = 100;
+    if( type == '5'){
+        strcat(droits,"d");
+    }else{
+
+         strcat(droits,"-");
+    }
+
+    while( d != 0){
+
+        switch(mode / d){
+            case(0):
+                strcat(droits,"---");
+            break;
+             case(1):
+                 strcat(droits,"--x");
+            break;
+            case(2):
+                 strcat(droits,"-w-");
+
+            break;
+             case(3):
+                strcat(droits,"-wx");
+            break;
+             case(4):
+              strcat(droits,"r--");
+            break;
+             case(5):
+              strcat(droits,"r-x");
+            break;
+             case(6):
+              strcat(droits,"rw-");
+            break;
+             case(7):
+              strcat(droits,"rwx");
+            break;
+        }
+
+        mode = mode % d ;
+        d = d / 10;
+    }
+   
+
+    //
+
+
+
+    return droits;
+}
+
 char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 
 	ssize_t c =0;
@@ -30,8 +82,8 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 	struct posix_header m ;
 	struct stat s ;
 
-	/* faire un fstat pour recuperer les informations necessaires a la creation de
-	la structure header du fichier */
+	//faire un fstat pour recuperer les informations necessaires a la creation de
+	//la structure header du fichier 
 	
 	if ( fstat(fd,&s)  == -1 ){
 
@@ -40,7 +92,7 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 	};
 
 
-/* remplissage du header correspondant au fichier source 'filename' */
+ // remplissage du header correspondant au fichier source 'filename' 
 	strcpy(m.name,filename);
 	sprintf(m.uname,"%s",getpwuid(s.st_uid)->pw_name);
 	sprintf(m.gname,"%s",getgrgid(s.st_gid)->gr_name);
@@ -102,8 +154,8 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 
 	int nb_blocks = 0;
 
-	/* transformer le fichier refernce par l'ouverture fd1 en un ensemble de blocs compatible pour 
-	la representation des fichiers dans un fichier .tar */
+	// transformer le fichier refernce par l'ouverture fd1 en un ensemble de blocs compatible pour 
+	//la representation des fichiers dans un fichier .tar 
 	char * contenu = fileToBlocks(fd1,src_filename,&nb_blocks);
 
 	off_t  diff ;
@@ -140,18 +192,18 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 	};
 
 
-	/* inserer le contenu du fichier source a la position 'position' */
+	// inserer le contenu du fichier source a la position 'position' 
 
 	if( write(fd, contenu , nb_blocks * BLOCKSIZE ) <= 0){
 		perror(" addFile : Erreur write");
 		exit(2);
 	};
 
-    /* liberer l'espace alloe pour le contenu du fichier source */
+    // liberer l'espace alloe pour le contenu du fichier source 
 	free(contenu);
 
 
-	/* ecrire le contenu decalee juste apres l'insertion du contennu du nouveau fichier */
+	// ecrire le contenu decalee juste apres l'insertion du contennu du nouveau fichier 
 
 	if( write(fd, decalage , diff ) <= 0){
 		perror(" addFile : Erreur write");
@@ -232,9 +284,9 @@ void delete_fichier(int fd, char *filename){
 
 
 void delete_repertoire(int fd, char *repname){
-  /* le descripteur donne fd  doit etre un descripteur d'un fichier .tar et ouvert en lecture et ecriture.
-     repname est le nom du repertoire a supprimer suivi par '/' a la fin
-  */
+  // le descripteur donne fd  doit etre un descripteur d'un fichier .tar et ouvert en lecture et ecriture.
+  //   repname est le nom du repertoire a supprimer suivi par '/' a la fin
+  
 
   off_t position;		
   struct posix_header p ;
@@ -296,6 +348,9 @@ void afficher_fichier(int fd, char *chemin){
 
 	struct posix_header p;
 
+	//suppression du dernier / du chemin
+	if(  chemin[strlen(chemin)-1] == '/' ) {	 chemin[strlen(chemin)-1] = '\0'; }
+		
    	position = trouve(fd,chemin);
 
 	if ( position == -1 ){
@@ -334,191 +389,226 @@ void afficher_fichier(int fd, char *chemin){
 
 }
 
-void afficher_repertoire(int fd, off_t position){
+void afficher_repertoire(int fd, off_t position, int mode){
 
+    struct posix_header p;
+    unsigned int filesize ;
+    time_t time;
+    struct tm * m ;
+    char * droits ;
+    char  res [BUFFER] ;
+    char mdate [15];
 
-	struct posix_header p;
-	unsigned int filesize ;
+    if(lseek(fd , position, SEEK_SET) == -1 ){
+        perror(" ERREUR lseek ");
+    }
 
-	if(lseek(fd , position, SEEK_SET) == -1 ){
+    if( read (fd , &p, BLOCKSIZE) <= 0 ){
+        perror(" ERREUR read ");
+    }
 
-		perror(" ERREUR lseek ");
-		exit(1);
-
-	}
-
-	if( read (fd , &p, BLOCKSIZE) <= 0 ){
-
-		perror(" ERREUR read ");
-		exit(1);
-
-	}
-
-        char repname[strlen(p.name)+1];
-	
-	strcpy(repname,p.name);
-
-	repname[strlen(p.name)]='\0';
-
-		write(1,p.name,strlen(p.name));
-		write(1,"\n",1);
-
-   	if( read (fd , &p, BLOCKSIZE) <= 0 ){
-
-		perror(" ERREUR read ");
-		exit(1);
-
-	}
-
-
-
-	while(strncmp(repname,p.name,strlen(repname) )== 0){
-
-		
-		write(1,p.name,strlen(p.name));
-		write(1,"\n",1);
-
-		sscanf(p.size,"%o",&filesize);
-
-		if( lseek(fd,(filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR)== -1){
-
-			perror(" ERREUR read ");
-			exit(1);
-		}
-
-		if( read (fd , &p, BLOCKSIZE) <= 0 ){
-
-		perror(" ERREUR read ");
-		exit(1);
-
-	}
-
-
-	}
-
-
-	
+    char repname[strlen(p.name)+1];
     
+    strcpy(repname,p.name);
+
+    repname[strlen(p.name)]='\0';
+
+
+    if(mode == 1){
+        //typeflag [0/5/...]
+        droits = modeToString(atoi(p.mode),p.typeflag);
+      
+        sscanf(p.mtime,"%lo",&time);
+        m = localtime(&time);
+        strftime(mdate,15,"%b. %d %H:%M",m);
+        
+        sprintf(res,"%s %s %s %10d %s %s\n",droits,p.uname,p.gname,filesize,mdate,p.name);
+
+        free(droits);
+        
+        write(1, res, strlen(res));
+
+    }else{
+         char name[strlen(p.name)+2];
+            sprintf(name,"%s\n",p.name);
+            write(1, name, strlen(name));
+    }
+
+       if( read (fd , &p, BLOCKSIZE) <= 0 ){
+        perror(" ERREUR read ");
+    }
+
+    while(strncmp(repname,p.name,strlen(repname)) == 0){
+
+        if(mode == 1){
+          
+            droits = modeToString(atoi(p.mode),p.typeflag);
+            sscanf(p.mtime,"%lo",&time);
+
+            m = localtime(&time);
+
+            sscanf(p.size,"%o",&filesize);
+
+            if ( p.typeflag != '5'){
+
+            strftime(mdate,15,"%b. %d %Y",m);
+
+            }else{
+
+            strftime(mdate,15,"%b. %d %H:%M",m);
+
+            }
+        
+            sprintf(res,"%s %s %s %10d %s %s\n",droits,p.uname,p.gname,filesize,mdate,p.name);
+            
+             free(droits);
+
+            write(1,res,strlen(res));
+
+
+        }else{
+             char name[strlen(p.name)+2];
+            sprintf(name,"%s\n",p.name);
+            write(1, name, strlen(name));
+        }
+        
+
+        sscanf(p.size,"%o",&filesize);
+
+        if( lseek(fd,(filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR)== -1){
+            perror(" ERREUR read ");
+        }
+
+        if( read (fd , &p, BLOCKSIZE) <= 0 ){
+
+        perror(" ERREUR read ");
+        }
+    }
 }
 
-char get_fichier_type(int fd, char *chemin){
-
-	struct posix_header p;
- 	off_t position ;
-	
-	position = trouve(fd ,chemin);
-	
-	
-	if ( position == -1 ){
-
-		perror(" fichier inexistant ");
-		exit(1);
-
-	}
+void afficher_tar_content(int fd , int mode){
 
 
-	// la tete de lecture se trouve au bon endroit , par la fonction trouv
+    struct posix_header p;
+    unsigned int filesize ;
+    time_t time;
+    struct tm * m ;
+    char * droits ;
+    char  res [BUFFER] ;
+    char mdate [15];
 
-	if( read(fd,&p,BLOCKSIZE) <= 0 ){
+    if( lseek(fd,0,SEEK_SET) < 0 ){
+        perror(" erreur lseek ");
+    }
 
-		perror(" Erreur de lecture  ");
-		exit(1);
+    if(read(fd,&p,BLOCKSIZE) <= 0){
+        perror(" erreur de lecture ");
+    }
+    
+    sscanf(p.size,"%o",&filesize);
 
-		
-	}
-   
-	
+    while (p.name[0] != '\0'){
+        
+        if (mode == 1){// ls -l x.tar
+
+            //typeflag [0/5/...]
+            droits = modeToString(atoi(p.mode),p.typeflag);
+      
+            sscanf(p.mtime,"%lo",&time);
+            m = localtime(&time);
+
+            if ( p.typeflag != '5'){
+
+            strftime(mdate,15,"%b. %d %Y",m);
+
+            }else{
+
+            strftime(mdate,15,"%b. %d %H:%M",m);
+
+            }
+
+        
+        
+            sprintf(res,"%s %s %s %10d %s %s\n",droits,p.uname,p.gname,filesize,mdate,p.name);
+
+            free(droits);
+        
+            write(1, res, strlen(res));
+
+        }else{// ls x.tar 
+
+            char name[strlen(p.name)+2];
+            sprintf(name,"%s\n",p.name);
+            write(1, name, strlen(name));
+            
+
+        }
+
+        if(lseek(fd,(filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR) == -1){
+            perror(" erreur lseek ");
+            exit(1);
+        }
+
+         if(read(fd, &p, BLOCKSIZE) <= 0){
+             perror("erreur de lecture ");
+             exit(1);
+         }
+
+         sscanf(p.size,"%o",&filesize); 
+    }
+}
+
+char get_fichier_type(int fd, char *chemin,int debug){
+    struct posix_header p;
+     off_t position ;
+    
+    position = trouve(fd ,chemin);
+    
+    if ( position == -1 ){
+        perror(" fichier inexistant ");
+        return 0;
+    }
+
+    // la tete de lecture se trouve au bon endroit , par la fonction trouv
+
+    if( read(fd,&p,BLOCKSIZE) <= 0 ){
+
+        perror(" Erreur de lecture  ");
+        return 0;
+    }
+    
             switch(p.typeflag){
               case '0' :
-                printf("[%c] Le chemin mene a un Fichier\n",p.typeflag);
+                if ( debug == 1 ) printf("[%c] Le chemin mene a un Fichier\n",p.typeflag);
                 break;
               case '1' :
-                printf("[%c] Le chemin mene a un Lien materiel\n",p.typeflag);
+                if ( debug == 1 ) printf("[%c] Le chemin mene a un Lien materiel\n",p.typeflag);
                 break;
               case '2' :
-                printf("[%c] Le chemin mene a un Lien symbolique\n",p.typeflag);
+                if ( debug == 1 ) printf("[%c] Le chemin mene a un Lien symbolique\n",p.typeflag);
                 break;
               case '3' :
-                printf("[%c] Le chemin mene a un Fichier special caractere\n",p.typeflag);
+                if ( debug == 1 ) printf("[%c] Le chemin mene a un Fichier special caractere\n",p.typeflag);
                 break;
               case '4' :
-                printf("[%c] Le chemin mene a un Fichier special bloc\n",p.typeflag);
+                if ( debug == 1 ) printf("[%c] Le chemin mene a un Fichier special bloc\n",p.typeflag);
                 break;
               case '5' :
-                printf("[%c] Le chemin mene a un Repertoire\n",p.typeflag);
+                if ( debug == 1 ) printf("[%c] Le chemin mene a un Repertoire\n",p.typeflag);
                 break;
               case '6' :
-                printf("[%c] Le chemin mene a un Tube nomme\n",p.typeflag);
+                if ( debug == 1 ) printf("[%c] Le chemin mene a un Tube nomme\n",p.typeflag);
                 break;
               case '7' :
-                printf("[%c] Le chemin mene a un Fichier contigu\n",p.typeflag);
+                if ( debug == 1 ) printf("[%c] Le chemin mene a un Fichier contigu\n",p.typeflag);
                 break;
               default  :
-                printf("[%c] Le chemin mene a un autre type\n",p.typeflag);
+                if ( debug == 1 ) printf("[%c] Le chemin mene a un autre type\n",p.typeflag);
                 break;
             }
 
-
             return (p.typeflag);
        
-
-}
-
-
-/*******************************/
-/*        Partie main         */
-/******************************/
-int main( int argc , char * argv[]){
-
-	/* test d'insertion du fichier book1.txt au debut du fichier .tar */
-
-	int fd = open("book1.txt",O_RDONLY);
-	int fd1 = open("toto.tar",O_RDWR);
-
-	addFile(fd1,fd,"book1.txt",0);
-	close(fd1);
-	/*test des fonction : trouve delete_fichier delete_repertoire
-	 * Décommenter pour tester
-	 */
-	//int fd = open(argv[1], O_RDWR);
-	//printf("%ld\n" ,trouve(fd, argv[2]));
-	//delete_fichier(fd, argv[2]);
-	//delete_repertoire(fd, argv[2]);
-	//int fd3 = open(argv[1], O_RDWR);
-	//printf("%ld\n" ,trouve(fd3, argv[2]));
-	//delete_fichier(fd3, argv[2]);
-	//delete_repertoire(fd3, argv[2]);
-	//close(fd3);
-	  //close(fd1);
-	  //close(fd);
-
-	/*test pour afficher*/
-	//afficher_fichier(fd, argv[2]);
-	/*if (argc != 3)
-	  {
-	    printf("Wrong number of arguments\nUsage: ./afficher_fichier <file.tar> <chemin>\n");
-	    return 1;
-	  }
-
-	int fd = open(argv[1], O_RDONLY);
-	if (fd < 0)
-	  {
-	    perror("open\n");
-	    return -1;
-	  }
-	afficher_fichier(fd, argv[2]);
-	if (close(fd) == -1)
-	  {
-	    perror("close\n");
-	    return -1;
-	    }
-
-	    afficher_repertoire(fd, 0);
-	    get_fichier_type(fd, argv[2]);*/
-
-	return 0;
-	
-	
 }
 
 
