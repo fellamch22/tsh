@@ -633,7 +633,7 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 			char * word;
 			char name_buffer[100];
 			char source_name[100];
-			char src_path_adapter[100];
+			char source_adapter[100];
 			char buffer[BLOCKSIZE];
 
 			// recuperer la source precise et enlever tous les repertoires parents du chemin source
@@ -690,7 +690,10 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 					memset(name_buffer,'\0',100);
 					strcpy(name_buffer,dst_path);
 					strcat(name_buffer,source_name);
-					word = strtok(h.name,"/");
+
+					memset(source_adapter,'\0',100);
+					strcpy(source_adapter,h.name);
+					word = strtok(source_adapter,"/");
 
 					while(strncmp(word,source_name,strlen(word)) != 0 ){
 
@@ -711,11 +714,10 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 					if(h.typeflag == '5' && cpt > 0 ) strcat(name_buffer,"/");
 
 					memset(h.name,'\0',100);
-					strcpy(h.name,name_buffer);
-					printf(" h.name : %s \n",h.name);
-
+					sprintf(h.name,"%s",name_buffer);
+					set_checksum(&h);
+					//printf(" h.name : %s  %d\n",h.name,check_checksum(&h));
 					write(fd_dst,&h,BLOCKSIZE);
-
 					i = 0 ;
 
 					nb_blocks = (filesize % BLOCKSIZE == 0)? (filesize/BLOCKSIZE) : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE) ;
