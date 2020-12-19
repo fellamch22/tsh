@@ -558,7 +558,7 @@ void afficher_tar_content(int fd , int mode){
     }
 }
 
-char get_fichier_type(int fd, char *chemin,int debug){
+char get_fichier_type(int fd, char *chemin, int debug){
     struct posix_header p;
      off_t position ;
     
