@@ -28,7 +28,7 @@ int debug=0; // Debug mode disabled by default
         char* Temp = malloc(sizeof(char) * BUFFER);
         char* NewChemin = malloc(sizeof(char) * BUFFER);
         strcpy(Temp,"");
-        strcpy(NewChemin,chemin);
+        strcpy(NewChemin,chemin); //recopier Chemin pour √©viter le conflits
             	
         //si arg commence par '/' , chemin absolu
       	if(  NewChemin[0] == '/' ) {
@@ -36,25 +36,33 @@ int debug=0; // Debug mode disabled by default
 		}
 		//sinon chemin relatif , on ajoute l'arg a la suite du pwd actuel
 		else {
-			strcpy(Temp,pwd);
-			strcat(Temp,"/");
-			strcat(Temp,NewChemin);
+			strcpy(Temp,pwd); //copy pwd
+			strcat(Temp,"/"); //add / --> pwd/
+			strcat(Temp,NewChemin); //add NC --> pwd/NC 
 		}	
 		
 		strcpy(NewChemin,Temp);
-		//  chemin est ici le chemin complet ou on souhaite aller
-				
+		//  Newchemin est ici le chemin complet ou on souhaite aller
+		
 		//remove the ".."
 		strcpy(Temp,"");
-		char *p = strtok(NewChemin, "/");
+		char *p = strtok(NewChemin, "/"); //d√©couper NC avec "/", p prend le 1er argc 
+		// *p = strtok ([/home/user/vb/../toto], "/")
+		// p = home --> else, Temp=/home/ --> next = user 
+		// p = user --> else, Temp=/home/user/ --> next = vb 
+		// p = vb  --> else, Temp=/home/user/vb/ --> next = ..
+		// p = .. --> if, for (strlen(12 = b)), else b !=/ --> Temp[12] = '\0' --> Temp=/home/user/v\0
+		// 				  for (strlen(11 = v)), else v !=/ --> Temp[11] = '\0' --> Temp=/home/user/\0
+		// 				  for (strlen(10 = /)), if / = / --> break for
+		// p = toto --> else, Temp=/home/user/toto/ --> next = NULL
+		// p = NULL, fin du while
+		
 		strcat(Temp,"/") ;
 		while(p != NULL)	{ 
-						    
-			// des que l'on rencontre le motif "..", on efface la sous partie prÈcÈdente
+			// des que l'on rencontre le motif "..", on efface la sous partie prÔøΩcÔøΩdente
 			if(strstr(p,"..") != 0 ) { 								  
 				for(int i = strlen(Temp)-2; i > 0; i--){
 	                if(Temp[i] == '/'){
-	                    Temp[i+1] = '\0';
 	                    break;
 	                }
 					else{
@@ -67,17 +75,20 @@ int debug=0; // Debug mode disabled by default
 				strcat(Temp , p);
 				strcat(Temp , "/");
 			}
-			p = strtok(NULL, "/");
+			p = strtok(NULL, "/"); //reinitialize p with the next string
 		}
 		
+		//continue l'exemple : Temp=/home/user/toto/ strlen=16
+		//if Temp[15] == / final --> Temp[15] = '\0 --> Temp=/home/user/toto\0
+
 		//suppression du dernier / dans la commande demandee => xx/toto.tar/ devient xx/toto.tar
 		if(  Temp[strlen(Temp)-1] == '/' ) {
 		   Temp[strlen(Temp)-1] = '\0';
 		}
     	
     	//Cas si on est a la racinecd -
+		//la cas qu'on n'ajoute jamais p dedans (entrant jamais dans while)
     	if(strcmp(Temp,"") == 0) {strcpy(Temp,"/");}
-		
 		
 		return Temp;
 }
@@ -314,15 +325,15 @@ int debug=0; // Debug mode disabled by default
         //##### Gestion des divers processus fils tel un train
         if (fd == 0 && debut == 1 && dernier == 0  ) {
             // pour la debut commande redirection de la sortie dans le tube
-            dup2( tubes[ECRITURE], STDOUT_FILENO ); // on change la sortie standard par l'entrÈe du pipe
+            dup2( tubes[ECRITURE], STDOUT_FILENO ); // on change la sortie standard par l'entrÔøΩe du pipe
         } else if (fd != 0 && debut == 0 && dernier == 0 ) {
             // pour les commende du milieu, ecoute de l entree depuis fd,
             // redirection de la sortie dans tubes[ECRITURE]
-            dup2(fd, STDIN_FILENO); // on change l'entrÈe standard  le fd pere
-            dup2(tubes[ECRITURE], STDOUT_FILENO); // on sochangert la sortie standard par l'entrÈe du pipe
+            dup2(fd, STDIN_FILENO); // on change l'entrÔøΩe standard  le fd pere
+            dup2(tubes[ECRITURE], STDOUT_FILENO); // on sochangert la sortie standard par l'entrÔøΩe du pipe
         } else { // dernier=1
             // pour la dernier commande , ecoute de l entree depuis fd
-            dup2( fd, STDIN_FILENO ); // on change l'entrÈe standard  le fd pere
+            dup2( fd, STDIN_FILENO ); // on change l'entrÔøΩe standard  le fd pere
         }
         
         //##### REDEFINITION COMMANDE PWD
@@ -428,7 +439,7 @@ int debug=0; // Debug mode disabled by default
 
 				//On converti le chemin selon la Gestion chemin absolu et relatif dans tempPath
 				strcpy(tempPath,convertChemin(chemin));	
-										
+
 				//Parse command. On essaye deja de chdir dessus si on arrive a faire un chdir , 
 				if(chdir(tempPath) == 0){ 
 					//chdir(tempPath) => 0 --> SUCCESS
@@ -448,20 +459,20 @@ int debug=0; // Debug mode disabled by default
 						  strcat(finalPath,"/") ;
 						  while(p != NULL)	{ 
 						        //ajout tarname
-							 if(strstr(p,".tar") != 0) {
+							 if(strstr(p,".tar") != 0) { //toto.tar, NT = toto.tar, t=1
 						 	 		t=1;
 						  			strcpy(nomTar,p);
-						 		}
+						 	 }
 							 else if (t==0) {
 							  	//ajout pwdtmp
-								  	strcat(finalPath,p) ; 
-									strcat(finalPath,"/") ; 
-								  }
+								  	strcat(finalPath, p) ; 
+									strcat(finalPath,"/") ; // FP = /home/lifang/vb/v12
+							 }
 						     else {
 						      	//ajout arboTar
-									strcat(arboTar,p) ; 
+									strcat(arboTar,p) ; //t=1, AT=toto/
 									strcat(arboTar,"/") ; 
-						      }
+						     }
 					    	  //Debug  printf("'%s'\n", p);
 						    p = strtok(NULL, "/");
 						  }	
@@ -474,7 +485,7 @@ int debug=0; // Debug mode disabled by default
 				  
 						   //update env  on essaye de chdir sur le repertoire (avant le tar )
 						   if(chdir(finalPath) == -1) {
-						   	perror("Error : Bad Dir name");
+						   	perror("Error : Bad Directory name");
 						   }
 						   else {
 						   	   strcat(finalPath,nomTar) ;
@@ -487,10 +498,11 @@ int debug=0; // Debug mode disabled by default
 	                                   //on remplace pwd par finalPath + '/' + arboTar
 	                                   strcpy(pwd, finalPath);
 	                                   strcat(pwd, "/");
-	                                   strcat(pwd, arboTar);	                                   
+	                                   strcat(pwd, arboTar);
+									   strcpy(pwd, convertChemin(pwd));	                                   
 	                               }
 	                               else{
-	                                   perror("Error : Bad Dir name in tar");
+	                                   perror("Error : Bad Directory name in tar");
 								   }
                                }
 						   }
@@ -498,7 +510,7 @@ int debug=0; // Debug mode disabled by default
                         
                         //si pwdtmp ne contient pas .tar
                         else {
-                        	perror("Error : not found");
+                        	perror(" TSH Error ");
 						}
                     }
 
@@ -613,14 +625,21 @@ int debug=0; // Debug mode disabled by default
 
 int main(int argc, char *argv[])
 {
-	printf("(PID = %d) TSH Shell\n",getpid());
+	//Variable
+	char ligne[BUFFER]; // commande a analyser
+	pid_t pid = getpid();
+	char msg[BUFFER] = {0};
+	char buff[BUFFER] = { 0 };
+	int val_read = 0; //recuperer la valeur de retour de read
+	int val_write = 0;
 	
+	sprintf(msg, "(PID = %d) TSH Shell\n", pid);
+	val_write = write(STDOUT_FILENO, msg, sizeof(msg)/sizeof(msg[1]));
+	if(val_write == -1) perror(" Error write ");
+
 	//Enable Debug Mode	
 	if( (argv[1] != NULL)  && (strcmp(argv[1] ,"-debug")) == 0 ) { printf("< DEBUG MODE > \n"); debug =1;}
 			
-	//Variable
-	 char ligne[BUFFER]; // commande a analyser
-
 	//Premiere initialisation des variables pwd et old_pwd
     pwd = malloc(sizeof(char) * BUFFER);
     strcpy(pwd, getenv("PWD"));
@@ -631,23 +650,32 @@ int main(int argc, char *argv[])
     while (1) {	
 
         // Prompt
-        fprintf(stdout,"\n%s$> ",pwd);
-        fflush(NULL);
- 
+		sprintf(msg, "\n %s$> ", pwd);
+		val_write = write(STDOUT_FILENO, msg, (strlen(msg)*sizeof(char))/sizeof(msg[1]));
+		if(val_write == -1) perror(" Error write ");
+    
         // Lecture Commande
-        if (!fgets(ligne, BUFFER, stdin)) { return 0; }
- 
+		memset(buff, 0, BUFFER); //met ligne tout en 0
+		val_read = read(STDIN_FILENO, buff, sizeof(buff));
+        //buff[val_read] = '\0'; //g√©rer le retour a la ligne, neme cas dans mon buff sera eagle entre, on remplace ce cas par \0
+		if(val_read == -1) perror(" Error read ");
+        //if (!fgets(ligne, BUFFER, stdin)) { return 0; }
+
+		strcpy(ligne,buff);
+		
  		//Parsing de la commande, decoupage des sous commandes
  		//ex: la commande  "ls -lrt | grep f3" donne 2 sous commandes cmd : "ls -lrt" , puis "grep f3" qui vont dans analyse
-        int fd = 0;
+        int fd = 0; //chque fois fd doit = 0
         int debut = 1;
-        char* cmd = ligne;
-        char* next = strchr(cmd, '|'); // next = ce qu'il y a dans cmd apres le premier pipe
-        while (next != NULL) { // on rentre dans ce while uniquement si on a au moins un "|" dans la commande
+        char* cmd = "";
+		cmd = ligne;
+		char* next = strchr(cmd, '|'); // next = ce qu'il y a dans cmd apres le premier pipe
+		if (debug == 1 ) printf("next='%s', cmd='%s'\n", next, cmd);
+		while (next != NULL) { // on rentre dans ce while uniquement si on a au moins un "|" dans la commande
             *next = '\0'; // on remplace dans cmd tout ce qu'il y a apres le premier | par '\0'
             fd = analyse(cmd, fd, debut, 0); // on lance une analyse de chaque sous commande dans l'ordre, avec les bons attributs de fd , debut, fin 
             cmd = next + 1;
-            next = strchr(cmd, '|'); // prochain pipe
+			next = strchr(cmd, '|'); // prochain pipe
             debut = 0;
         }
         //derniere sous commande
