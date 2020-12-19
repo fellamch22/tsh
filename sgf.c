@@ -765,8 +765,8 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 */
 
 /* execute la commande cp avec la source est soit un tarball entier ou un repertoire
-ou un fichier qui se trouve dans le tarball et la destination peut etre soit un tarball ou un repertoire normal 
- src_path -> indique le chemin du fichier(ou repertoire) 
+ou un fichier qui se trouve dans le tarball et la destination peut etre soit un tarball ou un repertoire externe 
+src_path -> indique le chemin du fichier(ou repertoire) 
 src_fd -> ouverture relatif a la source ( le tarball ) / -- l'ouverture doit etre en lecture -- /
 dst_path -> chemin absolu menant vers la destination , sinon le chemin d'un repertoire a l'interieur d'un tarball sinon 
 vide si on copie dans un tarball.
@@ -843,6 +843,37 @@ int cp_srctar( char * src_path , int src_fd , char * dst_path  , int dst_fd , in
 	}
 
 	return 0;
+}
+
+
+/*
+implementation de la partie de la commande cp qui effectue 
+la copie a partir du source simple (ie , qui n'est pas un tarball)
+src_path -> donne le chemin absolu de la source 
+dst_path -> donne le chemin du repertoire destination a l'interieur du tarball, et si on veut
+copier dans le tarball ( ie inserer a la fin du tarball) on donne une chaine vide
+dst_fd ->  donne le descripteur du tarball destiantion 
+            /-- il doit etre ouvert en lecture et ecriture --/
+
+*/
+int cp_srcsimple( char * src_path , char * dst_path  , int dst_fd , int option ){
+
+
+
+		// faire un stat pour avoir le type de source
+
+		// si source est un repertoire 
+
+			// si l'option n'est pas faite on affiche une erreur
+
+			// sinon on fait une copie du repertoire vers le tarball
+			//--> j'implemente une fonction copy_tarball_to_directory
+
+		// sinon (un fichier)
+		// chercher la position de fin du tarball destination
+		// on appelle la fonction addFile
+
+
 }
 
 /*********************************************************************/
@@ -1171,7 +1202,7 @@ int main( int argc , char * argv[]){
 
 	//copy_tarball_into_tarball(fd1,fd2);
 	//cp_srctar( "toto/a/" , fd1, "/home/fella/Desktop" , -1, 1);
-	cp_srctar( "toto/a/" , fd1, "" , fd2, 1);
+	cp_srctar( "toto/a/sgf.c" , fd1, "" , fd2, 1);
 
 	//printf("%d\n",strncmp("","f",strlen("")));
 	close(fd1);
