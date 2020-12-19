@@ -10,5 +10,7 @@ void afficher_repertoire(int fd, off_t position, int mode);
 off_t trouve(int fd, char *filename);
 char get_fichier_type(int fd, char *chemin,int debug);
 char * modeToString(int mode, char type );
+void delete_fichier(int fd, char *filename);
+void delete_repertoire(int fd, char *repname);
 
 #endif
