@@ -138,7 +138,7 @@ int debug=0; // Debug mode disabled by default
  
  
 //getTarPath permet de recuperer le chemin vers un tar a partir d'un chemin
-// convert /home/lifang/Shell/toto.tar/toto/titi => /home/lifang/Shell/toto.tar 
+// convert /home/user/Shell/toto.tar/toto/titi => /home/user/Shell/toto.tar 
   char* getTarPath(char*chemin) {
  				char* tarname=malloc(sizeof(char) * BUFFER);
  				strcpy(tarname,"/");
@@ -163,7 +163,7 @@ int debug=0; // Debug mode disabled by default
  }
  
 //getTarArbo permet de recuperer l'arborescence d'un tar a partir d'un chemin
-// convert /home/lifang/Shell/toto.tar/toto/titi => toto/titi 
+// convert /home/user/Shell/toto.tar/toto/titi => toto/titi 
   char* getTarArbo(char*chemin) {
  				char* arboTar=malloc(sizeof(char) * BUFFER);
  				strcpy(arboTar,"");
@@ -186,6 +186,20 @@ int debug=0; // Debug mode disabled by default
 				return arboTar;
  }
  
+
+ int rmr(){
+	 
+   		 	if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); }  
+			return 0;
+			}
+
+ int rmdirr(){
+	 
+   		if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); }  
+		return 0;
+ }
+
+
 //Redefinition de la fonction cat 
  int cat(){
 			//VARIABLES du fils
@@ -201,7 +215,7 @@ int debug=0; // Debug mode disabled by default
 			strcpy(pwdtmp,findGoodPath());
 			if ( debug == 1 ) printf("PWDTMP = %s\n",pwdtmp);
 			
-			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/lifang/Shell/toto.tar/toto$> cat ../../f2
+			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/user/Shell/toto.tar/toto$> cat ../../f2
 			if(strstr(pwdtmp, ".tar") == NULL ) {
 				if ( debug == 1 ) {printf("on sort du TAR , commande normale %s\n",pwdtmp); }
 				strcpy(arguments[1],pwdtmp);
@@ -209,7 +223,7 @@ int debug=0; // Debug mode disabled by default
 			}
 			
 			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
-			//ex avec pwdtmp = /home/lifang/Shell/toto.tar/toto/titi => tarname = /home/lifang/Shell/toto.tar    arboTar = toto/titi  
+			//ex avec pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi  
 			strcpy(tarname,getTarPath(pwdtmp));
 		    strcpy(arboTar,getTarArbo(pwdtmp));
 		    
@@ -245,7 +259,7 @@ int debug=0; // Debug mode disabled by default
 			//ici pwdtmp est a jour avec le bon chemin.
 			 if ( debug == 1 ) { printf("pwdtmp = %s\n",pwdtmp); }
 
-			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/lifang/Shell/toto.tar/toto$> ls ../../f2
+			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/user/Shell/toto.tar/toto$> ls ../../f2
 			if(strstr(pwdtmp, ".tar") == NULL ) {
 				if ( debug == 1 ) {printf("on sort du TAR , commande normale %s\n",pwdtmp); }
 				strcpy(arguments[1],pwdtmp);
@@ -253,7 +267,7 @@ int debug=0; // Debug mode disabled by default
 			}
 			
 			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
-			//ex : pwdtmp = /home/lifang/Shell/toto.tar/toto/titi => tarname = /home/lifang/Shell/toto.tar    arboTar = toto/titi
+			//ex : pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi
 			 strcpy(tarname,getTarPath(pwdtmp));
 		     strcpy(arboTar,getTarArbo(pwdtmp));
 			
@@ -294,10 +308,12 @@ int debug=0; // Debug mode disabled by default
  // dernier: 1 si il s'agit de la derniere sous commande dans la commande principale
  //
  // EXEMPLE avec la commande "ls -l | head -n 2 | wc -l" :
+ // après avoir appelé 3 fois analyser, on a 3 sous commands : ls -l, head -n 2, wc -l en tab arguments
  //    fd1  = executeCmd(0, 1, 0), with args[0] = "ls" and args[1] = "-l"
  //    fd2  = executeCmd(fd1, 0, 0), with args[0] = "head" and args[1] = "-n" and args[2] = "2"
  //    fd3  = executeCmd(fd2, 0, 1), with args[0] = "wc" and args[1] = "-l"
- //
+ // 
+ 
  int executeCmd(int fd, int debut, int dernier)
 {
 	if ( debug == 1 ) printf("Le pere entre dans executeCMD - FD = %d , DEBUT = %d , DERNIER = %d pour y lancer %s\n",fd,debut,dernier,arguments[0]);
@@ -323,17 +339,33 @@ int debug=0; // Debug mode disabled by default
         fflush(stdout);
         
         //##### Gestion des divers processus fils tel un train
+		// exemple tube et dup2 : 
+		//    fd1  = executeCmd(0, 1, 0), with args[0] = "ls" and args[1] = "-l"
+ 		//    fd2  = executeCmd(fd1, 0, 0), with args[0] = "head" and args[1] = "-n" and args[2] = "2"
+ 		//    fd3  = executeCmd(fd2, 0, 1), with args[0] = "wc" and args[1] = "-l"
+		// Construction la communication entnre les fils
+		// 1er exC, 1er fork : (0, 1, 0) -->  if_first --> dup2(tubes[1], STDOUT) remplie STDOUT par le contenu de tubes[1] 
+		// if_sec --> NO --> on entre dans else if(execvp(ls, ls -l)) car il ne contient pas .tar --> fils dead
+		// le processus pere continue et refait le boucle while --> on a 2nd Analyser --> 2nd exC
+		// 2nd exC, 2nd fork : (fd1, 0, 0) --> else if --> dup2(fd_1er, STDIN) remplie STDIN par fd_1er
+		// 												   dup2(tubes[1], STDOUT) remplie STDOUT par le contenu de tubes[1] 
+		// if_sec --> NO --> on entre dans else if(execvp(head, head -n 2)) --> ferme fd, fils dead
+		// le processus pere (...) --> 3re exC
+		// 3rd exC, 3rd fork : (fd2, 0, 1) --> else --> dup2(fd_2nd, STDIN) remplie STDIN par le contenu de fd_2nd
+		// if_sec --> NO --> on entre dans else if(execvp(wc, wc -l)) --> ferme fd, return tube[0] pour lire ce que dedans, après fils dead
+
         if (fd == 0 && debut == 1 && dernier == 0  ) {
             // pour la debut commande redirection de la sortie dans le tube
-            dup2( tubes[ECRITURE], STDOUT_FILENO ); // on change la sortie standard par l'entr�e du pipe
+			// on change la sortie standard par l'entree du pipe--> rewrite tubes[1] par STDOUT
+            dup2( tubes[ECRITURE], STDOUT_FILENO ); 
         } else if (fd != 0 && debut == 0 && dernier == 0 ) {
             // pour les commende du milieu, ecoute de l entree depuis fd,
             // redirection de la sortie dans tubes[ECRITURE]
-            dup2(fd, STDIN_FILENO); // on change l'entr�e standard  le fd pere
-            dup2(tubes[ECRITURE], STDOUT_FILENO); // on sochangert la sortie standard par l'entr�e du pipe
+            dup2(fd, STDIN_FILENO); // on change l'entree standard  le fd pere
+            dup2(tubes[ECRITURE], STDOUT_FILENO); // on changert la sortie standard par l'entree du pipe
         } else { // dernier=1
             // pour la dernier commande , ecoute de l entree depuis fd
-            dup2( fd, STDIN_FILENO ); // on change l'entr�e standard  le fd pere
+            dup2( fd, STDIN_FILENO ); // on change l'entree standard  le fd pere
         }
         
         //##### REDEFINITION COMMANDE PWD
@@ -350,6 +382,19 @@ int debug=0; // Debug mode disabled by default
     		exit(ret); // kill le fils          
 		}
 
+        // ##### REDEFINITION COMMANDE RM   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" (UseRedefCmd)
+        else if ( (strcmp(arguments[0], "rm") == 0) && ( UseRedefCmd() == 1 ) ) {
+            int ret = rmr();
+			fflush(stdout);
+    		exit(ret); // kill le fils          
+		}
+         //##### REDEFINITION COMMANDE RMDIR   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" (UseRedefCmd)
+        else if ( (strcmp(arguments[0], "rmdir") == 0) && ( UseRedefCmd() == 1 ) ) {
+            int ret = rmdirr();
+			fflush(stdout);
+    		exit(ret); // kill le fils          
+		}
+
         //##### REDEFINITION COMMANDES LS   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" ou l'arg 2 existe et contient ".tar" (UseRedefCmd)
         else if (  (strcmp(arguments[0], "ls") == 0)  && ( UseRedefCmd() == 1 ))   //si la commande est ls ou cat et rempli les conditions de redef
 		 { 
@@ -357,7 +402,8 @@ int debug=0; // Debug mode disabled by default
 		    fflush(stdout);
     		exit(ret); // kill le fils
         }
-        else if (execvp( arguments[0], arguments) == -1) {
+        
+		else if (execvp( arguments[0], arguments) == -1) {
             perror("Commande Inconnue \n");
             fflush(stdout); 
 			kill(getpid(),SIGTERM);
@@ -391,11 +437,22 @@ int debug=0; // Debug mode disabled by default
 //fonction pour enlever les espaces multiples :  "ls     -l" => "ls -l"  
  char* removeSpace(char* str)
 {
-    while ( isspace(*str) ) { ++str; }
+    while (isspace(*str) ) { ++str; }
     return str;
 }
 
 // decoupe la sous commande  dans le tableau d'arguments. ex: ls -l => arguments[0] = "ls" , arguments[1] = "-l" 
+// exemple : ls -l --> removeSpace(ls -l) --> ls -l
+// *next = strchr(ls -l, ' ') --> next = " "-l, cmd = ls
+// i=0, tant que next != NULL, on entre dand while1 --> args[0]=ls, next[0] = \0 --> next = -l
+// i=1, nbargs=1, cmd = removeSpace('\0'-l + 1 ) -->  cmd = -l
+// next = strchr(-l, ' ') --> next = NULL, sort du while
+// cmd = -l, i=1, if cmd[0] != '\0', on entre dans if --> args[1] = -l
+// next = strchr(-l, '\n') --> cmd = -l, next = NULL
+// next[0] = '\0', nbargs = 2, i=2
+// args[2] = NULL;
+// Au final, on a arguments[0]= ls, arguments[1]= -l, arguments[2]=NULL
+ 
  void decoupe(char* cmd)
 {  
     cmd = removeSpace(cmd); // on enleve les espaces multiples
@@ -407,7 +464,7 @@ int debug=0; // Debug mode disabled by default
         next[0] = '\0';
         ++i;
         nbargs ++;
-        cmd = removeSpace(next + 1);
+        cmd = removeSpace(next + 1); //pour alller au char après '\0'
         next = strchr(cmd, ' ');
     }
  
@@ -466,7 +523,7 @@ int debug=0; // Debug mode disabled by default
 							 else if (t==0) {
 							  	//ajout pwdtmp
 								  	strcat(finalPath, p) ; 
-									strcat(finalPath,"/") ; // FP = /home/lifang/vb/v12
+									strcat(finalPath,"/") ; // FP = /home/user/vb/v12
 							 }
 						     else {
 						      	//ajout arboTar
@@ -522,11 +579,35 @@ int debug=0; // Debug mode disabled by default
 }
 
 //Analyse les sous commandes, si elles ne contiennent pas une fonction totalement redefinie, la sous commande va dans executeCmd
+//autre exemple : on a 3 appelé analyse, un par les sous commande de cmd : ls -l, grep shell, wc -l
+//1 decoupe ls -l dans le tab d'args --> args[0]=ls, args[1]=-l
+
+
  int analyse(char* cmd, int fd, int debut, int dernier)
 {
-
     // decoupe la sous commande  dans le tableau d'args : ls -l => arguments[0] = "ls" , arguments[1] = "-l"
     decoupe(cmd); 
+
+	// exemple1 : 1er appele analyse, on a arguments[0]= ls, arguments[1]= -l, arguments[2]=NULL
+	// args[0] != NULL, on entre dans if_outside 
+	// compare ls avec "exit", if match --> on entre if_inside --> NO
+	// compare ls avec "cd", if match --> on entre if_inside --> NO
+	// compare ls avec "cat2", if match --> on entre if_inside --> NO
+ 	// compare ls avec "ls2", if match --> on entre if_inside --> NO
+ 	// compare ls avec "gft", if match --> on entre if_inside --> NO
+	// else_outside --> nbexecuteCmds=1, executeCmd(0, 1, 0); (exemple dans main, 1er appele d'analyser)
+
+	// exemple2 : args[0] = exit, on entre dans if_outside
+	// compare args[0] avec "exit", if match --> on entre if_inside --> YES
+	// printf(Bye), free(), exit(0) --> finir le programme
+
+	// exemple3 : args[0] = cat2, args[1]= f2,  on entre dans if_outside
+	// compare args[0] avec "cat2", if match --> on entre if_inside --> YES
+	// fdx = open(f2, R); --> read f2
+	// appler afficher_fichier(num of free fd, f2); --> afficher le contenu de f2
+	// close(fdx);
+	// fin du premier analyser, commencer 2nd analyer
+
 
     if (arguments[0] != NULL) {
         //TOTALLY REDEFINED SHELL COMMANDS
@@ -567,10 +648,7 @@ int debug=0; // Debug mode disabled by default
         //afficher_fichier => cat
         else if (!strcmp(arguments[0], "cat2")){
              int fdx = open(arguments[1], O_RDONLY);
-             if (fdx < 0){
-                  perror("open");
-                  return -1;
-             }
+             if (fdx < 0){ perror(" Error open "); return -1; }
              afficher_fichier(fdx, arguments[2]);
              close(fdx);
         }
@@ -612,6 +690,48 @@ int debug=0; // Debug mode disabled by default
                 get_fichier_type(fdx, arguments[2],debug);
                 close(fdx);
         }
+
+		//delete_(fichier et repertoire)
+        else if(!strcmp(arguments[0], "find2")){
+            int fdx = open(arguments[1], O_RDONLY);
+            if (fdx < 0){
+                perror("Error open");
+                return -1;
+            }
+            printf("%ld", trouve(fdx, arguments[2]));
+            close(fdx);
+        }
+        else if(!strcmp(arguments[0], "rmdir2")){
+            int fdx = open(arguments[1], O_RDWR);
+            if (fdx < 0){
+                perror("Error open");
+                return -1;
+            }
+            delete_repertoire(fdx, arguments[2]);
+            close(fdx);
+        }
+
+        else if(!strcmp(arguments[0], "rm2")){
+            int fdx;
+            if(!strcmp(arguments[1], "-r")){
+                fdx = open(arguments[2], O_RDWR);
+                if (fdx < 0){
+                    perror("Error open");
+                    return -1;
+                }
+                delete_repertoire(fdx, arguments[3]);
+            }else{
+                fdx = open(arguments[1], O_RDWR);
+                if (fdx < 0){
+                    perror(" Error open");
+                    return -1;
+                }
+                delete_fichier(fdx, arguments[2]);
+            }
+            close(fdx);
+        }
+ 
+ 
  //########### FIN DES FONCTIONS DE TEST ###########
         
         //Execution commande
@@ -657,9 +777,7 @@ int main(int argc, char *argv[])
         // Lecture Commande
 		memset(buff, 0, BUFFER); //met ligne tout en 0
 		val_read = read(STDIN_FILENO, buff, sizeof(buff));
-        //buff[val_read] = '\0'; //gérer le retour a la ligne, neme cas dans mon buff sera eagle entre, on remplace ce cas par \0
 		if(val_read == -1) perror(" Error read ");
-        //if (!fgets(ligne, BUFFER, stdin)) { return 0; }
 
 		strcpy(ligne,buff);
 		
@@ -669,21 +787,38 @@ int main(int argc, char *argv[])
         int debut = 1;
         char* cmd = "";
 		cmd = ligne;
-		char* next = strchr(cmd, '|'); // next = ce qu'il y a dans cmd apres le premier pipe
+		char* next = strchr(cmd, '|'); // cherche 1er pipe dans cmd, return pointeur de sa position, next = ce qu'il y a dans cmd apres le premier pipe
 		if (debug == 1 ) printf("next='%s', cmd='%s'\n", next, cmd);
+
+		//exemple : cmd = ligne = ls | grep shell | wc, 
+		//*next = | grep shell | wc, 
+		//tant que next != NULL, on rentre dans while1 --> *next = '\0' --> cmd = ls
+		//fd = analyse(ls, 0, 1, 0) --> fd=0, debut=1, dernier=0 vont reprendre par executeCmd plus tard
+		//cmd = next + 1 --> cmd = grep shell | wc
+		//next = | wc, debut = 0
+		//tant que next != NULL, on rentre dans while2 --> *next ='\0' --> cmd = grep shell
+		//fd = analyse(grep shell, fd_precedent, 0, 0)
+		//cmd = next + 1 --> cmd = wc
+		//next = NULL, debut = 0
+		//fin du while
+		//fd = analyse(wc, fd_precedent, 0, 1)
+		//Au final, on a 3 appelé analyse, un par les sous commande de cmd : ls, grep shell, wc
+
 		while (next != NULL) { // on rentre dans ce while uniquement si on a au moins un "|" dans la commande
             *next = '\0'; // on remplace dans cmd tout ce qu'il y a apres le premier | par '\0'
+  			printf("w <%s\n>",cmd);
             fd = analyse(cmd, fd, debut, 0); // on lance une analyse de chaque sous commande dans l'ordre, avec les bons attributs de fd , debut, fin 
             cmd = next + 1;
 			next = strchr(cmd, '|'); // prochain pipe
             debut = 0;
         }
         //derniere sous commande
+		printf("last : <%s\n>",cmd);
         fd = analyse(cmd, fd, debut, 1); // on analyse la cmd avec dernier = 1
         
-        //cleanup
+        //cleanup : le processus pere wait ces fils termine
         attenteDuPere(nbexecuteCmds);
-        nbexecuteCmds = 0;
+        nbexecuteCmds = 0; //finir le traitement de ligne/cmd global, apres on fait new Prompt
     }  
 
     return 0;
