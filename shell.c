@@ -97,7 +97,7 @@ int debug=0; // Debug mode disabled by default
 //findGoodPath permet de renvoyer le chemin correct a utiliser selon si le motif ".tar" est present dans le pwd ou arg1 ou arg2
  char* findGoodPath() {
 		char* pwdtmp=malloc(sizeof(char) * BUFFER);
-				//si l'arg1 contient le motif ".tar" on copie l'arg1 (avec convertion chemin relatif/absolu)  dans pdwtmp 
+		    //si l'arg1 contient le motif ".tar" on copie l'arg1 (avec convertion chemin relatif/absolu)  dans pdwtmp 
   			if ( (arguments[1] != NULL) &&  (strstr(arguments[1], ".tar") != NULL) ) {
 				strcpy(pwdtmp,convertChemin(arguments[1]));  				 
 			}
@@ -108,15 +108,25 @@ int debug=0; // Debug mode disabled by default
 			// enfin si le pwd contient le motif ".tar" on le recopie dans pwdtmp
 			else if  (strstr(pwd, ".tar") != NULL ) { 
 				strcpy(pwdtmp,pwd); 
-				if 	 ( (arguments[1] != NULL) &&  (strcmp(arguments[1], "-l") != 0 ) )  { 
+				//Cas ou arg[1] est un chemin
+				if 	 ( (arguments[1] != NULL) &&  ( 
+					(strcmp(arguments[1], "-r") != 0) 
+					&& 
+					(strcmp(arguments[1], "-l") != 0 )  
+					) ) { 
+					
 				    strcat(pwdtmp,"/");
 					strcat(pwdtmp,arguments[1]);
 				}
-				if 	 (arguments[2] != NULL) {
+				//Cas ou arg[1] est un option 
+				else if (arguments[2] != NULL && arguments[1] != NULL) {
+				//if (arguments[2] != NULL) {
 					strcat(pwdtmp,"/");
 					strcat(pwdtmp,arguments[2]);
+					
 				}
 			}
+			
 			return convertChemin(pwdtmp);
 }
 
@@ -185,22 +195,133 @@ int debug=0; // Debug mode disabled by default
 				}
 				return arboTar;
  }
- 
-
- int rmr(){
-	 
-   		 	if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); }  
-			return 0;
-			}
 
  int rmdirr(){
 	 
-   		if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); }  
-		return 0;
+   			//VARIABLES du fils
+     		char* pwdtmp=malloc(sizeof(char) * BUFFER);
+			char* tarname=malloc(sizeof(char) * BUFFER);
+			char* arboTar=malloc(sizeof(char) * BUFFER);
+			strcpy(pwdtmp,"");
+			strcpy(tarname,"/");
+			strcpy(arboTar,"");
+
+   		 	if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); }  
+
+			strcpy(pwdtmp,findGoodPath());
+			if ( debug == 1 ) printf("PWDTMP = %s\n",pwdtmp);
+			
+			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/user/Shell/toto.tar/toto$> cat ../../f2
+			if(strstr(pwdtmp, ".tar") == NULL ) {
+				if ( debug == 1 ) {printf("on sort du TAR , commande normale %s\n",pwdtmp); }
+				strcpy(arguments[1],pwdtmp);
+				execvp( arguments[0], arguments);
+			}
+			
+			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
+			//ex avec pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi  
+			strcpy(tarname,getTarPath(pwdtmp));
+			if ( debug == 1 ) { printf("tarname=%s\n", tarname); }
+		    
+			strcpy(arboTar,getTarArbo(pwdtmp));
+		    
+			//la partie rm2
+			//Ajoute le "/" final du arboTar
+			if (arboTar[strlen(arboTar)-1] != '/'){
+				strcat(arboTar, "/");
+			}
+			if ( debug == 1 ) { printf("arboTar=%s\n", arboTar); }
+
+			int fdxx = open(tarname, O_RDWR);
+            if (fdxx < 0){ perror(" Error open "); return -1; }
+
+			delete_repertoire(fdxx, arboTar);
+
+			close(fdxx);	
+			free(pwdtmp);
+			free(tarname);
+			free(arboTar);	
+			return 0;
  }
 
+ int rmr(){
+	 		//VARIABLES du fils
+     		char* pwdtmp=malloc(sizeof(char) * BUFFER);
+			char* tarname=malloc(sizeof(char) * BUFFER);
+			char* arboTar=malloc(sizeof(char) * BUFFER);
+			strcpy(pwdtmp,"");
+			strcpy(tarname,"/");
+			strcpy(arboTar,"");
 
-//Redefinition de la fonction cat 
+   		 	if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); }  
+
+			strcpy(pwdtmp,findGoodPath());
+			if ( debug == 1 ) printf("PWDTMP = %s\n",pwdtmp);
+			
+			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/user/Shell/toto.tar/toto$> cat ../../f2
+			if(strstr(pwdtmp, ".tar") == NULL ) {
+				if ( debug == 1 ) {printf("on sort du TAR , commande normale %s\n",pwdtmp); }
+				strcpy(arguments[1],pwdtmp);
+				execvp( arguments[0], arguments);
+			}
+			
+			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
+			//ex avec pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi  
+			strcpy(tarname,getTarPath(pwdtmp));
+			if ( debug == 1 ) { printf("tarname=%s\n", tarname); }
+		    
+			strcpy(arboTar,getTarArbo(pwdtmp));
+		    
+			//la partie rm2
+			//enleve le "/" final du arboTar
+			if (arboTar[strlen(arboTar)-1] == '/'){
+				arboTar[strlen(arboTar)-1] = '\0';
+			}
+			if ( debug == 1 ) { printf("arboTar=%s\n", arboTar); }
+
+			int fdxx;
+            if(!strcmp(arguments[1], "-r")){ //il y a "-r" --> delete_rep
+				//rm --> rmdir, -r --> chemin, args[2]--> NULL
+
+				//Ajoute le "/" final du arboTar
+				if (arboTar[strlen(arboTar)-1] != '/'){
+					strcat(arboTar, "/");
+				}
+				if ( debug == 1 ) { printf("arboTar=%s\n", arboTar); }
+
+				int fdxx = open(tarname, O_RDWR);
+            	if (fdxx < 0){ perror(" Error open "); return -1; }
+
+				delete_repertoire(fdxx, arboTar);
+			
+
+				// strcat(arboTar, "/");
+				// if ( debug == 1 ) { printf("with - r arboTar=%s\n", arboTar); }
+                // fdxx = open(tarname, O_RDWR);
+                // if (fdxx < 0){ perror(" Error open "); return -1; }
+                // delete_repertoire(fdxx, arboTar);
+            }else{
+                fdxx = open(tarname, O_RDWR);
+                if (fdxx < 0){
+                    perror(" Error open");
+                    return -1;
+                }
+                delete_fichier(fdxx, arboTar);
+            }
+
+			close(fdxx);	
+			free(pwdtmp);
+			free(tarname);
+			free(arboTar);	
+			return 0;
+ }
+
+ 
+//Redefinition de la fonction cat
+// exemple : cat toto/tar.h
+// strcpy(pwdtmp, FGP) --> pwdtmp=/home/user/v12/toto.tar/toto/tar.h
+// remplie tarname=/home..../toto.tar et remplie arboTar=toto/tar.h
+
  int cat(){
 			//VARIABLES du fils
      		char* pwdtmp=malloc(sizeof(char) * BUFFER);
@@ -225,11 +346,13 @@ int debug=0; // Debug mode disabled by default
 			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
 			//ex avec pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi  
 			strcpy(tarname,getTarPath(pwdtmp));
+			if ( debug == 1 ) { printf("tarname=%s\n", tarname); }
 		    strcpy(arboTar,getTarArbo(pwdtmp));
-		    
+			if ( debug == 1 ) { printf("arboTar=%s\n", arboTar); }
+
 			int fdxx = open(tarname, O_RDONLY);
             if (fdxx < 0){
-	            perror("open");
+	            perror(" Error open ");
 	            return -1;
             }   
 			afficher_fichier(fdxx, arboTar);
@@ -268,16 +391,16 @@ int debug=0; // Debug mode disabled by default
 			
 			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
 			//ex : pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi
-			 strcpy(tarname,getTarPath(pwdtmp));
-		     strcpy(arboTar,getTarArbo(pwdtmp));
+			strcpy(tarname,getTarPath(pwdtmp));
+		    strcpy(arboTar,getTarArbo(pwdtmp));
 			
   			//appel aux fonctions d'affichage : afficher_tar_content si on est a la racine du tar , afficher_repertoire si on est plus loin , avec arboTar en argument
   			int fdxx;
-                //afficher repertoire et droit "ls -l" 
+                //affLSicher repertoire et droit "ls -l" 
                 if(  (arguments[1] != NULL) && (!strcmp(arguments[1], "-l")) ){   // si l'arg1 = -l , on lance les fonctions d'affichage repertoire ou du tar directement avec la valeur 1 en argument
                     fdxx = open(tarname, O_RDONLY);
                     if (fdxx < 0){
-	                    perror("open");
+	                    perror(" Error open ");
 	                    return -1;
                     }
                    if  ( (strcmp(arguments[0], "ls") == 0)  && (strcmp(arboTar, "") != 0) )  { afficher_repertoire(fdxx, trouve(fdxx,arboTar), 1); }
@@ -287,7 +410,7 @@ int debug=0; // Debug mode disabled by default
 				// si l'arg1 n'est pas -l
                     fdxx = open(tarname, O_RDONLY);
                     if (fdxx < 0){
-	                    perror("open");
+	                    perror(" Error open ");
 	                    return -1;
                     }
                      if ( (strcmp(arguments[0], "ls") == 0) && (strcmp(arboTar, "") != 0) ) { afficher_repertoire(fdxx, trouve(fdxx,arboTar), 0); } // ls plus loin que la racine du tar
@@ -455,6 +578,7 @@ int debug=0; // Debug mode disabled by default
  
  void decoupe(char* cmd)
 {  
+	//arguments[BUFFER] = ""; //init le tab arguemnts
     cmd = removeSpace(cmd); // on enleve les espaces multiples
     char* next = strchr(cmd, ' '); // on decoupe la string avec chaque espace
     int i = 0;
@@ -651,7 +775,7 @@ int debug=0; // Debug mode disabled by default
              if (fdx < 0){ perror(" Error open "); return -1; }
              afficher_fichier(fdx, arguments[2]);
              close(fdx);
-        }
+		}
         
         //afficher_repertoire => ls
         else if (!strcmp(arguments[0], "ls2")){
@@ -788,7 +912,6 @@ int main(int argc, char *argv[])
         char* cmd = "";
 		cmd = ligne;
 		char* next = strchr(cmd, '|'); // cherche 1er pipe dans cmd, return pointeur de sa position, next = ce qu'il y a dans cmd apres le premier pipe
-		if (debug == 1 ) printf("next='%s', cmd='%s'\n", next, cmd);
 
 		//exemple : cmd = ligne = ls | grep shell | wc, 
 		//*next = | grep shell | wc, 
@@ -806,14 +929,12 @@ int main(int argc, char *argv[])
 
 		while (next != NULL) { // on rentre dans ce while uniquement si on a au moins un "|" dans la commande
             *next = '\0'; // on remplace dans cmd tout ce qu'il y a apres le premier | par '\0'
-  			printf("w <%s\n>",cmd);
             fd = analyse(cmd, fd, debut, 0); // on lance une analyse de chaque sous commande dans l'ordre, avec les bons attributs de fd , debut, fin 
             cmd = next + 1;
 			next = strchr(cmd, '|'); // prochain pipe
             debut = 0;
         }
         //derniere sous commande
-		printf("last : <%s\n>",cmd);
         fd = analyse(cmd, fd, debut, 1); // on analyse la cmd avec dernier = 1
         
         //cleanup : le processus pere wait ces fils termine
