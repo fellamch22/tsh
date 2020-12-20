@@ -167,7 +167,7 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 /* Partie  Suppression fichier et repertoire dans le fichier .tar   */
 /*******************************************************************/
 
-off_t trouve(int fd, char *filename){
+off_t trouve_Delete(int fd, char *filename){
   int filesize = 0;
   struct posix_header p;
   lseek(fd, 0, SEEK_SET);
@@ -199,7 +199,7 @@ void delete_fichier(int fd, char *filename){
   off_t diff;
   struct stat s ;
   struct posix_header p;
-  position = trouve(fd, filename);
+  position = trouve_Delete(fd, filename);
   if(position == -1){
     perror("Fichier n'existe pas dans Fichiers.tar");
     exit(1);
@@ -241,7 +241,7 @@ void delete_repertoire(int fd, char *repname){
   char prefix[strlen(repname)+1] ;
   memset(prefix ,'\0',strlen(repname)+1);
 
-  position = trouve(fd, repname);
+  position = trouve_Delete(fd, repname);
   if(position == -1){
     perror("Repertoire n'existe pas dans Fichiers.tar");
     exit(1);
