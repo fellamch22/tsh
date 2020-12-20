@@ -1,19 +1,14 @@
 CC=gcc
 CFLAGS=-Wall -g
  
-ALL=shell sgf
+ALL=shell
 all: $(ALL)
 
-shell :
-	$(CC) -o shell.o -c shell.c $(CFLAGS) 
-	$(CC) -o shell  shell.o
+shell : shell.c sgf.c
+	$(CC) shell.c sgf.c $(CFLAGS) -o shell 
 
-sgf :
-	$(CC) -o sgf.o -c sgf.c $(CFLAGS) 
-	$(CC) -o sgf  sgf.o
-	
 clean:
 	rm -rf *.o
-	rm -rf shell sgf
+	rm -rf shell 
 	rm -rf $(ALL) 
 
