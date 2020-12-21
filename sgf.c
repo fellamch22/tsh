@@ -219,11 +219,16 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 /* Partie  Suppression fichier et repertoire dans le fichier .tar   */
 /*******************************************************************/
 
-off_t trouve_Delete(int fd, char *filename){
+off_t trouve(int fd, char *filename){
   int filesize = 0;
   struct posix_header p;
   lseek(fd, 0, SEEK_SET);
   
+  //on recopie le filename dans newFilename et enleve le / final
+  char* newFilename = malloc(sizeof(char) * BUFFER);
+  strcpy(newFilename,filename);	 
+  if(  newFilename[strlen(newFilename)-1] == '/' ) {  newFilename[strlen(newFilename)-1] = '\0';}	
+		
   if(fd < 0){
     perror("Fichier n'existe pas");
     exit(1);
@@ -231,15 +236,14 @@ off_t trouve_Delete(int fd, char *filename){
   read(fd, &p, BLOCKSIZE);
   sscanf(p.size,"%o",&filesize);
   while(p.name[0] != '\0' ){
-    if(strcmp(p.name , filename) == 0){
+  	//on compare a filename ( on cherche un repertoire precis) et a newfilename ( on cherche un fichier precis)
+    if  ( ( strcmp(p.name , filename) == 0) || (strcmp(p.name , newFilename) == 0)){
       return  lseek(fd,-512, SEEK_CUR);
     }else{ 
       lseek(fd, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
       read(fd, &p, BLOCKSIZE);
       sscanf(p.size,"%o",&filesize);
-      
     }
-     
   }
   return -1;
 }
@@ -251,7 +255,7 @@ void delete_fichier(int fd, char *filename){
   off_t diff;
   struct stat s ;
   struct posix_header p;
-  position = trouve_Delete(fd, filename);
+  position = trouve(fd, filename);
   if(position == -1){
     perror("Fichier n'existe pas dans Fichiers.tar");
     exit(1);
@@ -293,7 +297,7 @@ void delete_repertoire(int fd, char *repname){
   char prefix[strlen(repname)+1] ;
   memset(prefix ,'\0',strlen(repname)+1);
 
-  position = trouve_Delete(fd, repname);
+  position = trouve(fd, repname);
   if(position == -1){
     perror("Repertoire n'existe pas dans Fichiers.tar");
     exit(1);
@@ -342,7 +346,6 @@ void delete_repertoire(int fd, char *repname){
 /********************************************/
 
 void afficher_fichier(int fd, char *chemin){
-
 	off_t position ;
 	unsigned int filesize;
 
@@ -390,7 +393,6 @@ void afficher_fichier(int fd, char *chemin){
 }
 
 void afficher_repertoire(int fd, off_t position, int mode){
-
     struct posix_header p;
     unsigned int filesize ;
     time_t time;
@@ -401,10 +403,12 @@ void afficher_repertoire(int fd, off_t position, int mode){
 
     if(lseek(fd , position, SEEK_SET) == -1 ){
         perror(" ERREUR lseek ");
+        return;
     }
 
     if( read (fd , &p, BLOCKSIZE) <= 0 ){
         perror(" ERREUR read ");
+        return;
     }
 
     char repname[strlen(p.name)+1];
@@ -429,13 +433,14 @@ void afficher_repertoire(int fd, off_t position, int mode){
         write(1, res, strlen(res));
 
     }else{
-         char name[strlen(p.name)+2];
-            sprintf(name,"%s\n",p.name);
-            write(1, name, strlen(name));
+        char name[strlen(p.name)+2];
+        sprintf(name,"%s\n",p.name);
+        write(1, name, strlen(name));
     }
 
        if( read (fd , &p, BLOCKSIZE) <= 0 ){
         perror(" ERREUR read ");
+        return;
     }
 
     while(strncmp(repname,p.name,strlen(repname)) == 0){
@@ -467,7 +472,7 @@ void afficher_repertoire(int fd, off_t position, int mode){
 
 
         }else{
-             char name[strlen(p.name)+2];
+            char name[strlen(p.name)+2];
             sprintf(name,"%s\n",p.name);
             write(1, name, strlen(name));
         }
@@ -477,17 +482,18 @@ void afficher_repertoire(int fd, off_t position, int mode){
 
         if( lseek(fd,(filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR)== -1){
             perror(" ERREUR read ");
+            return;
         }
 
         if( read (fd , &p, BLOCKSIZE) <= 0 ){
-
-        perror(" ERREUR read ");
+	        perror(" ERREUR read ");
+        	return;
         }
     }
 }
 
 void afficher_tar_content(int fd , int mode){
-
+	printf("Afficher TAR CONTENT  \n");
 
     struct posix_header p;
     unsigned int filesize ;
