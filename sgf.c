@@ -11,6 +11,7 @@
 #include <sys/types.h>
 #include <pwd.h>
 #include <grp.h>
+#include <dirent.h>
 #include "sgf.h"
 
 
@@ -60,7 +61,7 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 	sprintf(m.mtime,"%lo",s.st_mtime);
 	m.typeflag =  (S_ISREG(s.st_mode))? '0': (S_ISDIR(s.st_mode))?'5' :(S_ISCHR(s.st_mode))? '3' : (S_ISLNK(s.st_mode))? '2' : '\0';
 	sprintf(m.magic,"%s",TMAGIC);
-	sprintf(m.version,"%s",TVERSION);
+	sprintf(m.version,"%s","");
 	set_checksum(&m);
 
 	taille = (s.st_size % 512 == 0)? s.st_size+512 : ((s.st_size/512)+2)*512;
@@ -180,6 +181,8 @@ void newEmptyDirectory(int fd ,char * directoryPath ){
 
 
     struct stat t ;
+    struct posix_header p , h;
+	int filesize ;
 
   /** verifier si directoryPath existe deja et renvoyer un message 
    * de warning a l'utilisateur  */
@@ -204,8 +207,10 @@ void newEmptyDirectory(int fd ,char * directoryPath ){
          pathlen --;
     }
 
+	memset(pathpere,'\0',pathlen+1);
 	strncpy(pathpere,s1,pathlen);
 	printf("%s\n",pathpere);
+
     if( (strcmp(pathpere,"") < 0 ) && (trouve(fd,pathpere) == -1) ){
       /* repertoire pere n'existe pas */
      	char s2 [100] = " cannot create Directory , No such file or directory  \n";
@@ -223,68 +228,74 @@ void newEmptyDirectory(int fd ,char * directoryPath ){
 
       // on cree le header du repertoire et on l'insere a la fin du .tar
 
-      	struct posix_header p;
 		time_t current_time = time(NULL);
+		 
+		struct passwd * pw = getpwuid(t.st_uid);
 		memset(p.name,'\0',100);
       	strcpy(p.name,directoryPath);
-	    sprintf(p.uname,"%s",getpwuid(t.st_uid)->pw_name);
+		memset(p.uname,'\0',32);
+	    sprintf(p.uname,"%s",pw->pw_name);
 	    sprintf(p.gname,"%s",getgrgid(t.st_gid)->gr_name);
 	    sprintf(p.size,"%011lo",(off_t)0);
 	    sprintf(p.mode,"%o",(mode_t)0755);
 	    sprintf(p.uid,"%d",t.st_uid);
 	    sprintf(p.gid,"%d",t.st_gid);
-	    sprintf(p.mtime,"%lo",current_time);
+	    sprintf(p.mtime,"%011lo",current_time);
       	p.typeflag ='5';
 	    sprintf(p.magic,"%s",TMAGIC);
-	    sprintf(p.version,"%s",TVERSION);
+		sprintf(p.version,"%s","");
 	    set_checksum(&p);
-		printf("%s\n",p.name);
       // se deplace a la fin du tarball , avant les deux blocks contenant
 
-	/*	if( lseek(fd,(off_t)-1024,SEEK_END) == -1 ){
-
-			perror(" newEmptyDirectory : Erreur seek");
-			exit(1);
-
-		}*/
+	
 		if( lseek(fd,(off_t)0,SEEK_SET) == -1 ){
 
 			perror(" newEmptyDirectory : Erreur seek");
 			exit(1);
 		}
-		//char sauvegarde[1024];// 2 blocks de 512
-		//memset(sauvegarde,'\0',1024);
-		char sauvegarde[t.st_size];
-		// sauvegarder le contenu des deux derniers blocks
 
-		if(read(fd,sauvegarde,t.st_size) <= 0  ){
+        
+			if(read(fd,&h,BLOCKSIZE) == -1){
 
-			perror(" newEmptyDirectory : Erreur read ");
-			exit(1);
-		}
+				perror(" erreur read \n");
+				exit(1);
+			}
 
-		// revenir a la derniere position avant de faire le read
-		if( lseek(fd,(off_t)0,SEEK_SET) == -1 ){
+			while (h.name[0] != '\0'){
 
-			perror(" newEmptyDirectory : Erreur seek");
-			exit(1);
+				sscanf(h.size,"%o",&filesize);
+				printf(" tversion : %s , t.magic : %s\n",h.version,h.magic);
+				lseek(fd, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+     			read(fd, &h, BLOCKSIZE);
 
-		}	
+			}
+			
+			// se positionner a la fin du fichier destination
+
+			if( lseek(fd,-BLOCKSIZE,SEEK_CUR) == -1 ){
+
+				perror("erreur lseek \n");
+				exit(1);
+			}
+
+			char nuls[1024];// 2 blocks de 512
+			memset(nuls,'\0',1024);
+
 		
-      	//inserer le header du repertoire
-		if(write(fd,&p,BLOCKSIZE) <= 0  ){
+      		//inserer le header du repertoire
+			if(write(fd,&p,BLOCKSIZE) <= 0  ){
+
+				perror(" newEmptyDirectory : Erreur write ");
+				exit(1);
+			}
+
+			// remettre les derniers blocks de null apres le header inseré
+
+			if(write(fd,nuls,1024) <= 0  ){
 
 			perror(" newEmptyDirectory : Erreur write ");
 			exit(1);
-		}
-
-		// remettre les derniers blocks de null apres le header inseré
-
-		if(write(fd,sauvegarde,t.st_size) <= 0  ){
-
-			perror(" newEmptyDirectory : Erreur write ");
-			exit(1);
-		}
+			}
 
     }
     
@@ -757,6 +768,19 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 
 }
 
+/*
+	effectue la copie d'un repertoire source ( et tout son contenu ) dans un tarball (ou sous-repertoire d'un
+	tarball )
+	- src_path -> indique le chemin absolu vers le repertoire source
+	- dst_path -> indique le chemin ( le nom ) du sous repetoire du tarball , on le met a vide si on veut copier
+	seulement dans le tarball.
+	- fd_dst -> descripteur du tarball destination /-- doit etre ouvert en lecture et ecriture --/ 
+*/
+void copy_directory_to_tarball(char * src_path ,char * dst_path , int fd_dst){
+
+		// readdir
+}
+
 /*cp*
     analyse les arguments source et destionation d'une commande
 	retourne -1 si les arguments ne satisfont pas les conditions
@@ -859,21 +883,91 @@ dst_fd ->  donne le descripteur du tarball destiantion
 int cp_srcsimple( char * src_path , char * dst_path  , int dst_fd , int option ){
 
 
-
+		struct stat s ;
+		struct posix_header h;
+		char filename[100] ;
+		char * word ;
+		char * save_word ;
+		int filesize ,file_fd;
+		off_t position;
 		// faire un stat pour avoir le type de source
+		if (stat(src_path,&s) == -1 ){
+			perror("erreur stat \n");
+			exit(1);
+		}
 
-		// si source est un repertoire 
+		if(S_ISDIR(s.st_mode)){
+			// si source est un repertoire 
 
-			// si l'option n'est pas faite on affiche une erreur
+			if(!option){
 
-			// sinon on fait une copie du repertoire vers le tarball
-			//--> j'implemente une fonction copy_tarball_to_directory
+				// si l'option n'est pas faite on affiche une erreur
+				perror(" veuillez utiliser l'option -r pour copier un repertoire \n");
+				exit(1);
+			}else{
 
-		// sinon (un fichier)
-		// chercher la position de fin du tarball destination
-		// on appelle la fonction addFile
+				// sinon on fait une copie du repertoire vers le tarball
+				copy_directory_to_tarball(src_path,dst_path,dst_fd);
+			}
 
+		}else{
 
+			// sinon (un fichier)
+			if(  lseek(dst_fd,0,SEEK_SET) == -1 ){
+
+				perror("erreur lseek \n");
+				exit(1);
+			}
+
+			// chercher la position de fin du tarball destination
+			if(read(dst_fd,&h,BLOCKSIZE) == -1){
+
+				perror(" erreur read \n");
+				exit(1);
+			}
+
+			while (h.name[0] != '\0'){
+
+				sscanf(h.size,"%o",&filesize);
+				lseek(dst_fd, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+     			read(dst_fd, &h, BLOCKSIZE);
+
+			}
+			
+			// se positionner a la fin du fichier destination
+			position = lseek(dst_fd,-BLOCKSIZE,SEEK_CUR);	
+
+			if(  position == -1 ){
+
+				perror("erreur lseek \n");
+				exit(1);
+			}
+
+			// on appelle la fonction addFile
+
+			file_fd = open(src_path,O_RDONLY);
+
+			if (file_fd == -1 ){
+
+				perror(" erreur open");
+				exit(1);
+			}
+
+			// recuperer le nom du fichier 
+			word = strtok(src_path,"/");
+
+			while( word != NULL ){
+
+				save_word = word ;
+				word = strtok(NULL,"/");
+			}
+
+			addFile(file_fd,dst_fd,save_word,position);
+			close(file_fd);
+
+		}
+
+	return 0;
 }
 
 /*********************************************************************/
@@ -1192,6 +1286,10 @@ int main( int argc , char * argv[]){
 	int fd1 = open("toto.tar",O_RDWR);
     int fd2 = open("tata.tar",O_RDWR);
 
+
+	newEmptyDirectory(fd2,"newd/");
+	newEmptyDirectory(fd2,"newd/d1/");
+
 	//fstat(fd1,&t);
 	/*addFile(fd1,fd,"book1.txt/",(off_t)0);*/
 	//newEmptyDirectory(fd1,"c/");
@@ -1202,7 +1300,7 @@ int main( int argc , char * argv[]){
 
 	//copy_tarball_into_tarball(fd1,fd2);
 	//cp_srctar( "toto/a/" , fd1, "/home/fella/Desktop" , -1, 1);
-	cp_srctar( "toto/a/sgf.c" , fd1, "" , fd2, 1);
+	//cp_srctar( "toto/a/sgf.c" , fd1, "" , fd2, 1);
 
 	//printf("%d\n",strncmp("","f",strlen("")));
 	close(fd1);
@@ -1245,6 +1343,24 @@ int main( int argc , char * argv[]){
 
 	    afficher_repertoire(fd, 0);
 	    get_fichier_type(fd, argv[2]);*/
+
+		// test for directories
+
+		DIR * d;
+		struct dirent * dt ;
+
+		d = opendir("/home/fella/Desktop/a");
+
+		while  ((dt = readdir(d))  != NULL)
+		{
+			printf("file : %s  , char :  %d  %ld\n",dt->d_name,dt->d_type == DT_DIR,dt->d_ino);
+		}
+		
+		free(dt);
+		closedir(d);
+	
+		
+
 
 	return 0;
 	
