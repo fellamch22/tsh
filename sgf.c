@@ -73,7 +73,6 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 		exit(1);
 	}
 	
-	printf(" %ld / %ld\n",s.st_size, ((s.st_size+2*512)/512)*512);
 
 	memcpy(contenu,&m,sizeof(struct posix_header) );
 
@@ -209,7 +208,6 @@ void newEmptyDirectory(int fd ,char * directoryPath ){
 
 	memset(pathpere,'\0',pathlen+1);
 	strncpy(pathpere,s1,pathlen);
-	printf("%s\n",pathpere);
 
     if( (strcmp(pathpere,"") < 0 ) && (trouve(fd,pathpere) == -1) ){
       /* repertoire pere n'existe pas */
@@ -325,7 +323,6 @@ void block_to_file(int fd, char * src_path, char* dst_path){
 
 	position = trouve(fd,src_path);
 
-	printf(" src_path : %s \n",src_path);
 	if (position == -1 ){
 
 			perror(" le fichier est inexistant \n");
@@ -356,7 +353,6 @@ void block_to_file(int fd, char * src_path, char* dst_path){
 	strcat(buf,"/");
 	strcat(buf,filename);
 
-	printf("filename : %s  %ld    buffer : %s \n",filename,position,buf);
 
 	// ouvrir le fichier en ecriture et le creer a l'ouverture si il existe pas 
 	int fd_dst = open(buf,O_WRONLY|O_CREAT,0777) ;
@@ -415,7 +411,6 @@ void block_to_directory(int fd, char * src_path,char* dst_path){
 			while( (src_path[cpt] != '/') && (cpt >= 0 ) ) cpt -- ;
 
 			strncpy(directory_name,src_path+cpt+1,strlen(src_path)-(cpt+2));
-		printf(" directory name :  %s \n",directory_name);
 
 			// creer le premier repertoire source dans la destination
 			memset(mkdir_path,'\0',250);
@@ -727,7 +722,6 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 					memset(h.name,'\0',100);
 					sprintf(h.name,"%s",name_buffer);
 					set_checksum(&h);
-					//printf(" h.name : %s  %d\n",h.name,check_checksum(&h));
 					write(fd_dst,&h,BLOCKSIZE);
 					i = 0 ;
 
@@ -778,7 +772,139 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 */
 void copy_directory_to_tarball(char * src_path ,char * dst_path , int fd_dst){
 
+
+		char directory_name [100];
+		char directory_path_src[100];
+		char mkdir_path[100];
+		char file_path_src[100];
+		char file_path_dst[100];
+
+		struct posix_header h ;
+		int filesize;
+		off_t position ;
+
+		int fd_file;
+
+		int len = strlen(src_path)-1;
+
+		// recuperer le nom du repertoire à copier
+
+		while(src_path[len] != '/' && len > 0){
+					len -- ;
+		}
+
+		memset(directory_name,'\0',100);
+		strncpy(directory_name,src_path+len+1,strlen(src_path)-(len+1));
+
+		// creer le repertoire dans le tarball destination
+		memset(mkdir_path,'\0',100);
+
+		strcpy(mkdir_path,dst_path);
+		printf("directory_name : %s \n",directory_name);
+		strcat(mkdir_path,directory_name);
+		strcat(mkdir_path,"/");
+
+		newEmptyDirectory(fd_dst,mkdir_path);
+
 		// readdir
+		// copie des fichiers dansla destination + une copie recursif des sous repertoires
+
+		DIR * d = 	NULL;
+		struct dirent * dt ;
+
+		d = opendir(src_path);
+
+		if (d == NULL){
+
+			perror(" erreur opendir ");
+			exit(1);
+		}
+
+		while  ((dt = readdir(d))  != NULL) 
+		{
+
+			// eviter les repertoires . et .. pour ne pas tomber dans une boucle infinie
+		 	if((strcmp(dt->d_name,".") != 0) && (strcmp(dt->d_name,"..") != 0)){ 
+
+				if(dt->d_type != DT_DIR){ // un fichier
+
+					// construire le chemin vers le fichier source
+					memset(file_path_src,'\0',100);
+					strcpy(file_path_src,src_path);
+					strcat(file_path_src,"/");
+					strcat(file_path_src,dt->d_name);
+
+					fd_file = open(file_path_src,O_RDONLY);
+
+					if(fd_file == -1 ){
+						perror("erreur open \n");
+						exit(1);
+					}
+
+					// construire le chemin du fichier dans le tarball destination
+					memset(file_path_dst,'\0',100);
+					if(strcmp(dst_path,"") == 0){
+				        strcpy(file_path_dst,directory_name);
+						strcat(file_path_dst,"/");
+						strcat(file_path_dst,dt->d_name);
+					}else
+					{
+						strcpy(file_path_dst,dst_path);
+						strcat(file_path_dst,directory_name);
+						strcat(file_path_dst,"/");
+						strcat(file_path_dst,dt->d_name);
+
+					}
+
+					
+					// chercher la position de fin du tarball 
+					if(  lseek(fd_dst,0,SEEK_SET) == -1 ){
+
+						perror("erreur lseek \n");
+						exit(1);
+					}
+
+					// chercher la position de fin du tarball destination
+					if(read(fd_dst,&h,BLOCKSIZE) == -1){
+
+						perror(" erreur read \n");
+						exit(1);
+					}
+
+					while (h.name[0] != '\0'){
+
+						sscanf(h.size,"%o",&filesize);
+						lseek(fd_dst, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+     					read(fd_dst, &h, BLOCKSIZE);
+
+					}
+			
+					// se positionner a la fin du fichier destination
+					position = lseek(fd_dst,-BLOCKSIZE,SEEK_CUR);
+					// ouvrir le fichier en lecture
+					addFile(fd_dst,fd_file,file_path_dst,position);
+
+					close(fd_file);
+
+				}else{// un repertoire 
+
+					// construire le chemin vers le repertoire source 
+					memset(directory_path_src,'\0',100);
+					strcpy(directory_path_src,src_path);
+					strcat(directory_path_src,"/");
+					strcat(directory_path_src,dt->d_name);
+
+					copy_directory_to_tarball(directory_path_src,mkdir_path,fd_dst);
+
+				}
+			
+		 	}
+		}
+		 free(dt);
+		closedir(d);
+
+
+	
 }
 
 /*cp*
@@ -904,6 +1030,7 @@ int cp_srcsimple( char * src_path , char * dst_path  , int dst_fd , int option )
 				// si l'option n'est pas faite on affiche une erreur
 				perror(" veuillez utiliser l'option -r pour copier un repertoire \n");
 				exit(1);
+
 			}else{
 
 				// sinon on fait une copie du repertoire vers le tarball
@@ -1289,6 +1416,7 @@ int main( int argc , char * argv[]){
 
 	newEmptyDirectory(fd2,"newd/");
 	newEmptyDirectory(fd2,"newd/d1/");
+	copy_directory_to_tarball("/home/fella/Desktop/a","",fd1);
 
 	//fstat(fd1,&t);
 	/*addFile(fd1,fd,"book1.txt/",(off_t)0);*/
