@@ -60,6 +60,7 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 	sprintf(m.gid,"%d",s.st_gid);
 	sprintf(m.mtime,"%lo",s.st_mtime);
 	m.typeflag =  (S_ISREG(s.st_mode))? '0': (S_ISDIR(s.st_mode))?'5' :(S_ISCHR(s.st_mode))? '3' : (S_ISLNK(s.st_mode))? '2' : '\0';
+	memset(m.prefix,'\0',155);
 	sprintf(m.magic,"%s",TMAGIC);
 	sprintf(m.version,"%s","");
 	set_checksum(&m);
@@ -240,6 +241,7 @@ void newEmptyDirectory(int fd ,char * directoryPath ){
 	    sprintf(p.gid,"%d",t.st_gid);
 	    sprintf(p.mtime,"%011lo",current_time);
       	p.typeflag ='5';
+		memset(p.prefix,'\0',155);
 	    sprintf(p.magic,"%s",TMAGIC);
 		sprintf(p.version,"%s","");
 	    set_checksum(&p);
@@ -1414,8 +1416,8 @@ int main( int argc , char * argv[]){
     int fd2 = open("tata.tar",O_RDWR);
 
 
-	newEmptyDirectory(fd2,"newd/");
-	newEmptyDirectory(fd2,"newd/d1/");
+	//newEmptyDirectory(fd2,"newd/");
+	//newEmptyDirectory(fd2,"newd/d1/");
 	copy_directory_to_tarball("/home/fella/Desktop/a","",fd1);
 
 	//fstat(fd1,&t);
