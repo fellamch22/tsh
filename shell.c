@@ -402,16 +402,6 @@ char *analyse_redirection_sortante(char *argu[32]){
     }
     return redirec;
 }
-
-void free_args(){
-    int i = 0;
-    while(arguments[i] != NULL){
-        free(arguments[i]);
-        i++;
-    }
-}
-
-
  
 //Redefinition de la fonction cat
 // exemple : cat toto/tar.h
