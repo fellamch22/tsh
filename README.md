@@ -105,4 +105,78 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
     - Partie  Suppression fichier et repertoire dans le fichier .tar : delete_repertoire / delete_fichier / trouve
         - ./sgf < fichier.tar > < fichier >
         
-        ########
+    
+# Rapport partie suppession:
+
+    Tout d'abord j'ai commencé par créer dans notre systeme de gestion de fichiers trois fonctions utilisant la structure posix et les conditions pour pouvoir manipuler les fichiers ".tar" ayant chacun ces fonctionalités et agissant sur les commandes concernées telles que : 
+     
+        -rmdir
+        -rm
+        -rm -r
+
+        # Les fonctions pour suppression dans SGF:
+
+            * off_t trouve(int fd, char *filename) 
+                - Cette fonction permet de donner la position d’un fichier dans le fichier .tar
+                - Si le fichier passé en argument existe celle ci renvoie une valeur de retour positive désignant la position du fichier sinon retourne -1
+            * void delete_fichier(int fd, char *filename)
+                - Cette fonction utilise la fonction trouve(int fd, char *filename) pour obtenir la position du fichier passer en argument
+                - Si elle a sa position elle supprime le fichier
+                - La suppression se fait avec decalage dans le fichier fichier .tar
+    
+            * void delete_repertoire(int fd, char *repname)
+                - Cette fonction utilise la fonction trouve(int fd, char *filename) et la     fonction delete_fichier(int fd, char *repname)
+
+        # L'intégration des fonctions dans Shell :
+            
+            En effet, j'ai utilisé ces fonctions pour faire les différentes commandes ci dessous :
+
+                *rmdir() :
+                    Cette commande permet de supprimer un repertoire mis en argument.
+                    Ainsi, je fais appel à la fonction void delete_repertoire(int fd, char *repname) qui permet à partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en suivant la structure d'un fichier ".tar" :
+                    Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie la position du fichier en argument et ensuite suivre le reste des instructions fait dans la fonction void delete_repertoire(int fd, char *repname) pour la suppression.
+                
+
+                *rm() :
+
+                    Cette commande permet de supprimer un fichier simple mis en argument.
+                    Ainsi, je fais appel à la fonction void delete_fichier(int fd, char *filename) qui permet à partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en suivant la structure d'un fichier ".tar" :
+                    Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie la position du fichier en argument et ensuite suivre le reste des instructions fait dans la fonction void delete_filename(int fd, char *repname) pour la suppression.
+                    Ce qui fait la meme procéder pour la suppression d'un repertoire sauf qu'ici les deux fonctions dans le SGF sont differente.
+                    Cependant il y'a une autre perpective avec rm() que l'on va decrire ci dessous sa fonctionalité.
+
+                *rmr():
+
+                    Cette commande permet de faire la suppression recursive.
+                    Cependant dans le shell elle utilise les deux fonctions en même temps qui suit le même procedé au depart mais ici la différence est qu'il permet de supprimer un repertoire contenant d'autres repertoires ou des fichiers.
+                    En effet la commande regarde si c'est un repertoire elle parcours recursivement le repertoire avec une suppression recursive si:
+                        Le reppetoire contient un fichier ou des fichiers elle utilise la fonction void delete_fichier(int fd, char *filename) qui va lui permettre de supprimer c/ces dernier(s)
+                        Le repertoir ccontient un repertoire ou des repertoires elle utilise la fonction  void delete_repertoire(int fd, char *repname) pour faire la suppression, et enfin supprimer le repertoire courant.
+
+        # Mode d'utilisation :
+            Après  avoir compiler pour acceder dans notre shell on utilise les commandes comme montré ci dessous :
+
+                    Exemple :
+
+                        -rmdir() :
+                             
+                             rmdir fichier.tar repertoire/
+
+                        -rm() :
+
+                            rm fichier.tar fichier
+
+                        -rmr() :
+
+                            rm -r fichier.tar repertoire/
+                            le repertoir peut contenir des fichier ou pas il sera supprimer
+
+
+        # Problèmes rencontrés :
+
+            J'ai eu a rencontré quelques problème   d'inattention pour la réalisation de mes commandes qui a un peu duré mais avec le travail d'équipe j'ai fini par le résoudre.
+            J'avais ouvert le fichier descripteur en lecture seulement alors que je devais le faire en lecture ecriture.
+
+            Pour les fonctions dans le SGF j'ai eu en rencontré plusieurs prblème mais ça concernait l'incompréhension de la structure d'un fichier ".tar"
+            et cela pu être resouds avec l'aides de mes coéquipiés.
+            Ainsi des problèmes de temps comme la majeur partie des étudiants vu le déroulement de cette année. 
