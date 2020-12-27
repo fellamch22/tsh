@@ -196,7 +196,7 @@ int debug=0; // Debug mode disabled by default
 				return arboTar;
  }
 
- int rmdirr(){
+ int rmdir_redefinir(){
 	 
    			//VARIABLES du fils
      		char* pwdtmp=malloc(sizeof(char) * BUFFER);
@@ -244,7 +244,7 @@ int debug=0; // Debug mode disabled by default
 			return 0;
  }
 
- int rmr(){
+ int rm_redefinir(){
 	 		//VARIABLES du fils
      		char* pwdtmp=malloc(sizeof(char) * BUFFER);
 			char* tarname=malloc(sizeof(char) * BUFFER);
@@ -316,8 +316,61 @@ int debug=0; // Debug mode disabled by default
 			return 0;
  }
  
+<<<<<<< HEAD
  //////////////////////////////////////////////////////////////////////////////////
  void place_str(char *chaine, char* recherche, char*remplace){
+=======
+ int mkdir_redefinir(){
+
+	 		//VARIABLES du fils
+     		char* pwdtmp=malloc(sizeof(char) * BUFFER);
+			char* tarname=malloc(sizeof(char) * BUFFER);
+			char* arboTar=malloc(sizeof(char) * BUFFER);
+			strcpy(pwdtmp,"");
+			strcpy(tarname,"/");
+			strcpy(arboTar,"");
+
+   		 	if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); } 
+
+			strcpy(pwdtmp,findGoodPath());
+			if ( debug == 1 ) printf("PWDTMP = %s\n",pwdtmp);
+			
+			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/user/Shell/toto.tar/toto$> cat ../../f2
+			if(strstr(pwdtmp, ".tar") == NULL ) {
+				if ( debug == 1 ) { printf("on sort du TAR , commande normale %s\n",pwdtmp); }
+				strcpy(arguments[1],pwdtmp);
+				execvp(arguments[0], arguments);
+			}
+			
+			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
+			//ex avec pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi  
+			strcpy(tarname,getTarPath(pwdtmp));
+			if ( debug == 1 ) { printf("tarname=%s\n", tarname); }
+		    
+			strcpy(arboTar,getTarArbo(pwdtmp));
+		    
+			if (arboTar[strlen(arboTar)-1] != '/'){
+				strcat(arboTar, "/");
+			}
+			if ( debug == 1 ) { printf("arboTar=%s\n", arboTar); }
+
+			int fdxx = open(tarname, O_RDWR);
+            if (fdxx < 0){ perror(" Error open "); return -1; }
+
+			newEmptyDirectory(fdxx, arboTar);
+
+			close(fdxx);	
+			free(pwdtmp);
+			free(tarname);
+			free(arboTar);	
+			return 0;
+ }
+ 
+ 
+ /******************************************************Redirections************************************************************************/
+//Permet de placer un string 
+void place_str(char *chaine, char* recherche, char*remplace){
+>>>>>>> ab34fba4f9932b808cd245a934357b854fa96d6c
 
     int nbr  = 0;
     char *p = chaine;
@@ -403,9 +456,122 @@ char *analyse_redirection_sortante(char *argu[32]){
     return redirec;
 }
 
+<<<<<<< HEAD
 
 
 
+=======
+void free_args(){
+    int i = 0;
+    while(arguments[i] != NULL){
+        free(arguments[i]);
+        i++;
+    }
+}
+
+void traitrement_redirection(char *cmd, char **argv){
+
+  char *cmd1, *cmd2;
+  char *fd_sortant1, *fd_entrant1;
+  char *fd_sortant2, *fd_entrant2;
+  int pipefd[2];
+  cmd2 = NULL;
+  
+  place_str(cmd, " <", "<");
+  place_str(cmd, "< ", "<");
+  place_str(cmd, "<", " < ");
+  place_str(cmd, " >", ">");
+  place_str(cmd, "> ", ">");
+  place_str(cmd, ">", " > ");
+  place_str(cmd, " > > ", " >> ");
+  
+  cmd1 = strdup(cmd);
+  
+  fd_sortant1 = analyse_redirection_sortante(arguments);
+  fd_entrant1 = analyse_redirection_entrante(arguments);
+  
+  if(cmd2 != NULL){
+    fd_sortant2 = analyse_redirection_sortante(arguments);
+    fd_entrant2 = analyse_redirection_entrante(arguments);
+  }
+  
+  pipe(pipefd);
+  pid_t r = fork();
+  
+  if(r == 0){
+    if(cmd2 != NULL)
+      dup2(pipefd[0], STDIN_FILENO);
+    if(fd_entrant1 != NULL){
+      int manip = open(fd_entrant1, O_RDONLY, stdin);
+      if(manip == -1){
+	perror("errno");
+	exit(0);
+      }
+      if(fd_sortant1 != NULL){
+	char *type_red = strndup(fd_sortant1, 1);
+	int manip = open(fd_entrant1, O_RDONLY, type_red, stdout);
+	if(manip == -1){
+	  perror("errno");
+	  exit(0);
+	}
+	free(type_red);
+      }
+      int res = execvp(arguments[0], arguments);
+      if(res == -1){
+	perror("Execvp failed");
+	exit(0);
+      }
+    }
+    else{
+      wait(&r);
+    }
+
+
+    if(cmd2 != NULL){
+      
+      pid_t r2 = fork();
+      if(r2 == 0){
+	dup2(pipefd[0], STDIN_FILENO);
+	if(fd_entrant2 != NULL){
+	  int manip =open(fd_entrant2, O_RDONLY, stdin);
+	  if(manip == -1){
+	    perror("errno");
+	    exit(0);
+	  }
+	  if(fd_sortant2 != NULL){
+	    char *type_red = strndup(fd_sortant1, 1);
+	    int manip = open(fd_entrant2+1, O_RDONLY ,type_red, stdout);
+	    if(manip == -1){
+	      perror("errno");
+	      exit(0);
+	    }
+	    free(type_red);
+	  }
+	  int res = execvp(arguments[0], arguments);
+	  if(res == -1){
+	    perror("Execvp failed");
+	    exit(0);
+	  }
+	}
+	else{
+	  wait(&r2);
+	}
+
+	if(cmd2 != NULL){
+	  if(fd_sortant2 != NULL) free(fd_sortant2);
+	  if(fd_entrant2 !=  NULL) free(fd_entrant2);
+	  free_args(arguments);
+	  free(cmd2);
+	  cmd2 = NULL;
+	}
+	if(fd_entrant1 != NULL) free(fd_entrant1);
+	if(fd_sortant1 != NULL) free(fd_sortant2);
+	free(cmd1);
+      }
+    }
+  }
+}
+>>>>>>> ab34fba4f9932b808cd245a934357b854fa96d6c
 
  
 //Redefinition de la fonction cat
@@ -413,7 +579,7 @@ char *analyse_redirection_sortante(char *argu[32]){
 // strcpy(pwdtmp, FGP) --> pwdtmp=/home/user/v12/toto.tar/toto/tar.h
 // remplie tarname=/home..../toto.tar et remplie arboTar=toto/tar.h
 
- int cat(){
+ int cat_redefinir(){
 			//VARIABLES du fils
      		char* pwdtmp=malloc(sizeof(char) * BUFFER);
 			char* tarname=malloc(sizeof(char) * BUFFER);
@@ -455,7 +621,7 @@ char *analyse_redirection_sortante(char *argu[32]){
 }
 
 //Redefinition de la fonction ls
- int ls(){
+ int ls_redefinir(){
         	//VARIABLES du fils
      		char* pwdtmp=malloc(sizeof(char) * BUFFER);
 			char* tarname=malloc(sizeof(char) * BUFFER);
@@ -535,6 +701,7 @@ char *analyse_redirection_sortante(char *argu[32]){
 	//Variables
     int tubes[2];
  	pid_t pid;
+	char msg[BUFFER]={0};
  	
     //creation des pipe et fils
     pipe(tubes);
@@ -549,9 +716,7 @@ char *analyse_redirection_sortante(char *argu[32]){
 	        }	        
 	        printf("> fd=%d debut=%d dernier=%d\n",fd,debut,dernier); 
    		}
-   		
-        fflush(stdout);
-        
+   		        
         //##### Gestion des divers processus fils tel un train
 		// exemple tube et dup2 : 
 		//    fd1  = executeCmd(0, 1, 0), with args[0] = "ls" and args[1] = "-l"
@@ -584,42 +749,41 @@ char *analyse_redirection_sortante(char *argu[32]){
         
         //##### REDEFINITION COMMANDE PWD
 		if (strcmp(arguments[0], "pwd") == 0){ //pwd passe en tarball
-            fprintf(stdout, "%s\n", pwd);
-		    fflush(stdout);
+			sprintf(msg, "%s\n", pwd);
+			write(STDOUT_FILENO, msg, sizeof(msg));
     		exit(0);
         }
         
          //##### REDEFINITION COMMANDE CAT   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" (UseRedefCmd)
         else if ( (strcmp(arguments[0], "cat") == 0) && ( UseRedefCmd() == 1 ) ) {
-            int ret = cat();
-			fflush(stdout);
+            int ret = cat_redefinir();
     		exit(ret); // kill le fils          
 		}
 
         // ##### REDEFINITION COMMANDE RM   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" (UseRedefCmd)
         else if ( (strcmp(arguments[0], "rm") == 0) && ( UseRedefCmd() == 1 ) ) {
-            int ret = rmr();
-			fflush(stdout);
+            int ret = rm_redefinir();
     		exit(ret); // kill le fils          
 		}
          //##### REDEFINITION COMMANDE RMDIR   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" (UseRedefCmd)
         else if ( (strcmp(arguments[0], "rmdir") == 0) && ( UseRedefCmd() == 1 ) ) {
-            int ret = rmdirr();
-			fflush(stdout);
+            int ret = rmdir_redefinir();
     		exit(ret); // kill le fils          
 		}
 
         //##### REDEFINITION COMMANDES LS   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" ou l'arg 2 existe et contient ".tar" (UseRedefCmd)
         else if (  (strcmp(arguments[0], "ls") == 0)  && ( UseRedefCmd() == 1 ))   //si la commande est ls ou cat et rempli les conditions de redef
 		 { 
-            int ret = ls();
-		    fflush(stdout);
+            int ret = ls_redefinir();
     		exit(ret); // kill le fils
         }
         
+		else if ( (strcmp(arguments[0], "mkdir") == 0) && ( UseRedefCmd() == 1)) {
+			int ret = mkdir_redefinir();
+			exit(ret);
+		}
 		else if (execvp( arguments[0], arguments) == -1) {
             perror("Commande Inconnue \n");
-            fflush(stdout); 
 			kill(getpid(),SIGTERM);
             return 1; // kill le fils pour eviter zombie
         }
@@ -945,6 +1109,19 @@ char *analyse_redirection_sortante(char *argu[32]){
             }
             close(fdx);
         }
+		//mkdir 
+		//$> mkdir2 toto.tar toto/lili
+		else if(!strcmp(arguments[0], "mkdir2")){
+			int fdx = open(arguments[1], O_RDWR);
+			if (fdx < 0){
+				perror("Error open");
+            	return -1;
+            }
+			if(debug == 1) printf("Testing MKDIR\n");
+			newEmptyDirectory(fdx, arguments[2]);
+			close(fdx);
+
+		}
  
  
  //########### FIN DES FONCTIONS DE TEST ###########
@@ -985,7 +1162,7 @@ int main(int argc, char *argv[])
     while (1) {	
 
         // Prompt
-		sprintf(msg, "\n %s$> ", pwd);
+		sprintf(msg, "\n%s$> ", pwd);
 		val_write = write(STDOUT_FILENO, msg, (strlen(msg)*sizeof(char))/sizeof(msg[1]));
 		if(val_write == -1) perror(" Error write ");
     

@@ -215,6 +215,132 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 
 }
 
+void newEmptyDirectory(int fd ,char * directoryPath ){
+
+
+    struct stat t ;
+    struct posix_header p , h;
+	int filesize ;
+
+  /** verifier si directoryPath existe deja et renvoyer un message 
+   * de warning a l'utilisateur  */
+
+  if (trouve(fd,directoryPath) >= 0)
+  {
+      char s [50] = "cannot create Directory , already exists \n";
+      write(1,s,strlen(s));
+
+  }else
+  { 
+	// verifier si le repertoire pere existe
+    // effectuer un analyse de path avant pour enlever le dernier nom directory a la fin
+    int pathlen = strlen(directoryPath);
+    char s1 [pathlen+1];
+	char pathpere [pathlen+1];
+    strcpy(s1,directoryPath);
+    s1[pathlen-1] ='\0';
+
+
+    while( (s1[pathlen] != '/') && (pathlen > 0) ){
+         pathlen --;
+    }
+
+	memset(pathpere,'\0',pathlen+1);
+	strncpy(pathpere,s1,pathlen);
+
+    if( (strcmp(pathpere,"") < 0 ) && (trouve(fd,pathpere) == -1) ){
+      /* repertoire pere n'existe pas */
+     	char s2 [100] = " cannot create Directory , No such file or directory  \n";
+     	 write(1,s2,strlen(s2));
+    }else
+    {
+      	/* faire un fstat pour recuperer les informations necessaires a la creation de
+	      la structure header du fichier */
+	
+	      if ( fstat(fd,&t)  == -1 ){
+
+		      perror(" newEmptyDirectory : Erreur fstat");
+		      exit(1);
+	      };
+
+      // on cree le header du repertoire et on l'insere a la fin du .tar
+
+		time_t current_time = time(NULL);
+		 
+		struct passwd * pw = getpwuid(t.st_uid);
+		memset(p.name,'\0',100);
+      	strcpy(p.name,directoryPath);
+		memset(p.uname,'\0',32);
+	    sprintf(p.uname,"%s",pw->pw_name);
+	    sprintf(p.gname,"%s",getgrgid(t.st_gid)->gr_name);
+	    sprintf(p.size,"%011lo",(off_t)0);
+	    sprintf(p.mode,"%o",(mode_t)0755);
+	    sprintf(p.uid,"%d",t.st_uid);
+	    sprintf(p.gid,"%d",t.st_gid);
+	    sprintf(p.mtime,"%011lo",current_time);
+      	p.typeflag ='5';
+	    sprintf(p.magic,"%s",TMAGIC);
+		sprintf(p.version,"%s","");
+	    set_checksum(&p);
+      // se deplace a la fin du tarball , avant les deux blocks contenant
+
+	
+		if( lseek(fd,(off_t)0,SEEK_SET) == -1 ){
+
+			perror(" newEmptyDirectory : Erreur seek");
+			exit(1);
+		}
+
+        
+			if(read(fd,&h,BLOCKSIZE) == -1){
+
+				perror(" erreur read \n");
+				exit(1);
+			}
+
+			while (h.name[0] != '\0'){
+
+				sscanf(h.size,"%o",&filesize);
+				printf(" tversion : %s , t.magic : %s\n",h.version,h.magic);
+				lseek(fd, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+     			read(fd, &h, BLOCKSIZE);
+
+			}
+			
+			// se positionner a la fin du fichier destination
+
+			if( lseek(fd,-BLOCKSIZE,SEEK_CUR) == -1 ){
+
+				perror("erreur lseek \n");
+				exit(1);
+			}
+
+			char nuls[1024];// 2 blocks de 512
+			memset(nuls,'\0',1024);
+
+		
+      		//inserer le header du repertoire
+			if(write(fd,&p,BLOCKSIZE) <= 0  ){
+
+				perror(" newEmptyDirectory : Erreur write ");
+				exit(1);
+			}
+
+			// remettre les derniers blocks de null apres le header inseré
+
+			if(write(fd,nuls,1024) <= 0  ){
+
+			perror(" newEmptyDirectory : Erreur write ");
+			exit(1);
+			}
+
+    }
+    
+  }
+  
+}
+
+
 /*********************************************************************/
 /* Partie  Suppression fichier et repertoire dans le fichier .tar   */
 /*******************************************************************/
