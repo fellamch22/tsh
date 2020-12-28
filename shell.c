@@ -8,6 +8,7 @@
 #include <sys/stat.h>
 #include <fcntl.h>
 #include <time.h>
+#include "syntaxe.h"
 #include "sgf.h"
 #define BUFFER 1024
 #define LECTURE  0
@@ -316,6 +317,118 @@ int debug=0; // Debug mode disabled by default
 			return 0;
  }
  
+ // redefintion de la fonction cp
+
+
+ int cp_redefinir(){
+
+	 int option ; 
+	 char * src_path = NULL;
+	 char * dst_path = NULL ;
+	 char * src_arbotar = NULL ;
+	 char * dst_arbotar = NULL ;
+     int fd_src = -1 ;
+	 int fd_dst = -1;
+	 // voir le nombre d'arguments 
+
+	
+	 if( nbargs == 3 ){// commande cp sans option
+
+		option = 0 ;
+
+	 }else if ( nbargs == 4 ){ // commande cp avec option
+
+		option = 1 ;
+
+		 if( (option == 1) && (strcmp(arguments[1],"-r") != 0)){
+		 
+			 execvp(arguments[0],arguments);
+	    }
+
+	 }else
+	 {
+		 // nombre incompatible d'arguments
+		 perror(" veuillez introduire le bon nombre d'arguments pour la commande 'cp' \n");
+		 exit(1);
+	 }
+	 
+	 
+		src_path = convertChemin(arguments[nbargs - 2]);
+		dst_path = convertChemin(arguments[nbargs-1]);
+
+		//printf("nb : %d , conversion source : %s , conversion destination : %s \n",nbargs,src_path,dst_path);
+
+
+		src_arbotar = analyser_path(src_path,&fd_src);
+		dst_arbotar = analyser_path(dst_path,&fd_dst);
+
+		//printf(" source arb : %s ,  destination arb : %s \n",src_arbotar,dst_arbotar);
+
+		if(fd_src != -1 ){// la source est un tarball
+
+			if(fd_dst != -1 ){// destination tarball 
+
+				if(strcmp(src_arbotar,"") == 0){// la copier concerne le fichier avec extension .tar
+
+					perror(" imbriquation de tarballs impossible \n");
+					return -1 ;
+
+				}else{
+					cp_srctar(src_arbotar,fd_src,dst_arbotar,fd_dst,option);
+				}
+
+			}else{// destination exterieur
+
+				if(strcmp(src_arbotar,"") == 0){// la copier concerne le fichier avec extension .tar
+
+					free(src_path);
+					free(src_arbotar);
+					free(dst_path);
+					free(dst_arbotar);
+					close(fd_src);
+					close(fd_dst);
+					execvp(arguments[0],arguments);
+
+				}else{// destintion tar
+					
+					cp_srctar(src_arbotar,fd_src,dst_path,fd_dst,option);
+				}
+			}
+		}else // une source simple ( fichier ou repertoire exterieur )
+		{
+
+			if(fd_dst != -1){// destination tarball
+
+				cp_srcsimple(src_path,dst_arbotar,fd_dst,option);
+
+			}else // destination simple
+			{
+					free(src_path);
+					free(src_arbotar);
+					free(dst_path);
+					free(dst_arbotar);
+					close(fd_src);
+					close(fd_dst);
+				execvp(arguments[0],arguments);
+				
+			}
+			
+		}
+		
+
+
+
+
+		free(src_path);
+		free(src_arbotar);
+		free(dst_path);
+		free(dst_arbotar);
+		close(fd_src);
+		close(fd_dst);
+		return 1;
+
+ }
+
  int mkdir_redefinir(){
 
 	 		//VARIABLES du fils
@@ -569,6 +682,11 @@ int debug=0; // Debug mode disabled by default
         
 		else if ( (strcmp(arguments[0], "mkdir") == 0) && ( UseRedefCmd() == 1)) {
 			int ret = mkdir_redefinir();
+			exit(ret);
+		}
+
+		else if ( (strcmp(arguments[0], "cp") == 0) && ( UseRedefCmd() == 1)) {
+			int ret = cp_redefinir();
 			exit(ret);
 		}
 		else if (execvp( arguments[0], arguments) == -1) {
