@@ -528,6 +528,7 @@ void decoupePwdtmp(){
     int tubes[2];
      pid_t pid;
     char msg[BUFFER]={0};
+    int val_op;
      
     //creation des pipe et fils
     pipe(tubes);
@@ -582,7 +583,7 @@ void decoupePwdtmp(){
                 //cas hors tar : redirection >
                 if ( (UseRedefCmd() == 0) && (redirFlag == 1) ) {
                     //open
-                    int val_op = open(convertChemin(redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+                    val_op = open(convertChemin(redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
                     if(val_op == -1) { perror(" Error open "); }
 
                     dup2(val_op, STDOUT_FILENO);
@@ -590,7 +591,7 @@ void decoupePwdtmp(){
                 //cas hors tar : redirection double >>
                 else if ( (UseRedefCmd() == 0) && (redirFlag == 2) ) {
                     //open
-                    int val_op = open(convertChemin(redirection), O_RDWR | O_APPEND | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+                    val_op = open(convertChemin(redirection), O_RDWR | O_APPEND | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
                     if(val_op == -1) { perror(" Error open "); }
 
                     dup2(val_op, STDOUT_FILENO);
@@ -598,7 +599,7 @@ void decoupePwdtmp(){
                 //cas hors tar : redirection double >>
                 else if ( (UseRedefCmd() == 0) && (redirFlag == 3) ) {
                     //open
-                    int val_op = open(convertChemin(redirection), O_RDONLY);
+                    val_op = open(convertChemin(redirection), O_RDONLY);
                     if(val_op == -1) { perror(" Error open "); }
 
                     dup2(val_op, STDIN_FILENO);
@@ -628,21 +629,22 @@ void decoupePwdtmp(){
 
                     // // on ajoute le fichier local dans le tar a la bonne position
                     // // /!\ FIXME /!\ la position est mal set et corrompt le TARBALL !
-                    // off_t position = lseek(fd_fichier, BLOCKSIZE, SEEK_SET);
-                    // struct posix_header h;
-                    // int filesize;
-                    // if( lseek(fd,(off_t)0,SEEK_SET) == -1 ){
-                    //     perror(" newEmptyDirectory : Erreur seek");
-                    // }
-                    // if(read(fd,&h,BLOCKSIZE) == -1){
-                    //     perror(" erreur read \n");
-                    // }
-                    // while (h.name[0] != '\0'){
-                    //     sscanf(h.size,"%o",&filesize);
-                    //     lseek(fd_du_tar, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
-                    //     read(fd_du_tar, &h, BLOCKSIZE);
-                    // }
-                    // addFile( fd_du_tar, fd_fichier , redirection ,  position);
+                    off_t position;
+                    struct posix_header h;
+                    int filesize;
+                    if( lseek(fd_du_tar,(off_t)0,SEEK_SET) == -1 ){
+                        perror(" newEmptyDirectory : Erreur seek");
+                    }
+                    if(read(fd_du_tar,&h,BLOCKSIZE) == -1){
+                        perror(" erreur read \n");
+                    }
+                    while (h.name[0] != '\0'){
+                        sscanf(h.size,"%o",&filesize);
+                        lseek(fd_du_tar, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+                        read(fd_du_tar, &h, BLOCKSIZE);
+                    }
+                    position = lseek(fd_du_tar,-BLOCKSIZE,SEEK_SET);
+                    addFile( fd_du_tar, fd_fichier , redirection ,  position);
 
                 }
             
