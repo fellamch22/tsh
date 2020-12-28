@@ -27,76 +27,110 @@ char* pwdtmp;
 char* tarname;
 char* arboTar;
 
+struct posix_header
+{                              /* byte offset */
+  char name[100];               /*   0 */
+  char mode[8];                 /* 100 */
+  char uid[8];                  /* 108 */
+  char gid[8];                  /* 116 */
+  char size[12];                /* 124 */
+  char mtime[12];               /* 136 */
+  char chksum[8];               /* 148 */
+  char typeflag;                /* 156 */
+  char linkname[100];           /* 157 */
+  char magic[6];                /* 257 */
+  char version[2];              /* 263 */
+  char uname[32];               /* 265 */
+  char gname[32];               /* 297 */
+  char devmajor[8];             /* 329 */
+  char devminor[8];             /* 337 */
+  char prefix[155];             /* 345 */
+  char junk[12];                /* 500 */
+};  
+
+
+char* removePointPoint(char* NewChemin , char* begin) {
+	
+		printf("RPP => %s\n",NewChemin);
+	    char* Temp = malloc(sizeof(char) * BUFFER);
+		strcpy(Temp,"");
+		char *p = strtok(NewChemin, "/"); //découper NC avec "/", p prend le 1er argc 
+		// *p = strtok ([/home/user/vb/../toto], "/")
+		// p = home --> else, Temp=/home/ --> next = user 
+		// p = user --> else, Temp=/home/user/ --> next = vb 
+		// p = vb  --> else, Temp=/home/user/vb/ --> next = ..
+		// p = .. --> if, for (strlen(12 = b)), else b !=/ --> Temp[12] = '\0' --> Temp=/home/user/v\0
+		// 				  for (strlen(11 = v)), else v !=/ --> Temp[11] = '\0' --> Temp=/home/user/\0
+		// 				  for (strlen(10 = /)), if / = / --> break for
+		// p = toto --> else, Temp=/home/user/toto/ --> next = NULL
+		// p = NULL, fin du while
+		
+		strcat(Temp,begin) ;
+		while(p != NULL)	{ 
+			// des que l'on rencontre le motif "..", on efface la sous partie pr?c?dente
+			if(strstr(p,"..") != 0 ) { 								  
+				for(int i = strlen(Temp)-2; i > 0; i--){
+	                if(Temp[i] == '/'){
+	                    break;
+	                }
+					else{
+	                	Temp[i] = '\0';
+	                }
+	            }
+			}
+			else{
+				//si on ne rencontre pas le motif ".." , on ajoute la suite de la sous partie p a la commande finale pwdtmp2						
+				strcat(Temp , p);
+				strcat(Temp , "/");
+			}
+			p = strtok(NULL, "/"); //reinitialize p with the next string
+		}
+		
+		
+		//suppression du dernier / dans la commande demandee => xx/toto.tar/ devient xx/toto.tar
+		if(  Temp[strlen(Temp)-1] == '/' ) {
+		   Temp[strlen(Temp)-1] = '\0';
+		}
+		
+		return Temp;
+}
+
 //convertChemin permet la Convertion chemin absolu (si relatif) ,  la Gestion des ".." et supprime le "/" final si present
 // "toto.tar/toto/titi/../titi/f3/" =>  "<pwd>/toto.tar/toto/titi/f3"
- char* convertChemin(char* chemin){
-    //VARIABLES
+ char* convertChemin(char* chemin, char* charfinal){	
+	//VARIABLES
         char* Temp = malloc(sizeof(char) * BUFFER);
         char* NewChemin = malloc(sizeof(char) * BUFFER);
         strcpy(Temp,"");
-        strcpy(NewChemin,chemin); //recopier Chemin pour Ã©viter le conflits
-                
+        strcpy(NewChemin,chemin); //recopier Chemin pour éviter le conflits
+            	
         //si arg commence par '/' , chemin absolu
-          if(  NewChemin[0] == '/' ) {
-            strcpy(Temp, NewChemin);
-        }
-        //sinon chemin relatif , on ajoute l'arg a la suite du pwd actuel
-        else {
-            strcpy(Temp,pwd); //copy pwd
-            strcat(Temp,"/"); //add / --> pwd/
-            strcat(Temp,NewChemin); //add NC --> pwd/NC
-        }
-        
-        strcpy(NewChemin,Temp);
-        //  Newchemin est ici le chemin complet ou on souhaite aller
-        
-        //remove the ".."
-        strcpy(Temp,"");
-        char *p = strtok(NewChemin, "/"); //dÃ©couper NC avec "/", p prend le 1er argc
-        // *p = strtok ([/home/user/vb/../toto], "/")
-        // p = home --> else, Temp=/home/ --> next = user
-        // p = user --> else, Temp=/home/user/ --> next = vb
-        // p = vb  --> else, Temp=/home/user/vb/ --> next = ..
-        // p = .. --> if, for (strlen(12 = b)), else b !=/ --> Temp[12] = '\0' --> Temp=/home/user/v\0
-        //                   for (strlen(11 = v)), else v !=/ --> Temp[11] = '\0' --> Temp=/home/user/\0
-        //                   for (strlen(10 = /)), if / = / --> break for
-        // p = toto --> else, Temp=/home/user/toto/ --> next = NULL
-        // p = NULL, fin du while
-        
-        strcat(Temp,"/") ;
-        while(p != NULL)    {
-            // des que l'on rencontre le motif "..", on efface la sous partie prï¿½cï¿½dente
-            if(strstr(p,"..") != 0 ) {
-                for(int i = strlen(Temp)-2; i > 0; i--){
-                    if(Temp[i] == '/'){
-                        break;
-                    }
-                    else{
-                        Temp[i] = '\0';
-                    }
-                }
-            }
-            else{
-                //si on ne rencontre pas le motif ".." , on ajoute la suite de la sous partie p a la commande finale pwdtmp2
-                strcat(Temp , p);
-                strcat(Temp , "/");
-            }
-            p = strtok(NULL, "/"); //reinitialize p with the next string
-        }
-        
-        //continue l'exemple : Temp=/home/user/toto/ strlen=16
-        //if Temp[15] == / final --> Temp[15] = '\0 --> Temp=/home/user/toto\0
+      	if(  NewChemin[0] == '/' ) {
+			strcpy(Temp, NewChemin); 
+		}
+		//sinon chemin relatif , on ajoute l'arg a la suite du pwd actuel
+		else {
+			strcpy(Temp,pwd); //copy pwd
+			strcat(Temp,"/"); //add / --> pwd/
+			strcat(Temp,NewChemin); //add NC --> pwd/NC 
+		}	
+		
+		strcpy(NewChemin,Temp);
+		//  Newchemin est ici le chemin complet ou on souhaite aller
+		
+		strcpy(Temp,removePointPoint(NewChemin,"/"));
+		//remove the ".."
+	
+		
+		//continue l'exemple : Temp=/home/user/toto/ strlen=16
+		//if Temp[15] == / final --> Temp[15] = '\0 --> Temp=/home/user/toto\0
 
-        //suppression du dernier / dans la commande demandee => xx/toto.tar/ devient xx/toto.tar
-        if(  Temp[strlen(Temp)-1] == '/' ) {
-           Temp[strlen(Temp)-1] = '\0';
-        }
-        
-        //Cas si on est a la racinecd -
-        //la cas qu'on n'ajoute jamais p dedans (entrant jamais dans while)
-        if(strcmp(Temp,"") == 0) {strcpy(Temp,"/");}
-        
-        return Temp;
+    	
+    	//Cas si on est a la racinecd -
+		//la cas qu'on n'ajoute jamais p dedans (entrant jamais dans while)
+    	if(strcmp(Temp,"") == 0) {strcpy(Temp,"/");}
+		strcat(Temp,charfinal);
+		return Temp;
 }
 
 //findGoodPath permet de renvoyer le chemin correct a utiliser selon si le motif ".tar" est present dans le pwd ou arg1 ou arg2
@@ -104,11 +138,11 @@ char* arboTar;
         char* pwdtmp=malloc(sizeof(char) * BUFFER);
             //si l'arg1 contient le motif ".tar" on copie l'arg1 (avec convertion chemin relatif/absolu)  dans pdwtmp
               if ( (arguments[1] != NULL) &&  (strstr(arguments[1], ".tar") != NULL) ) {
-                strcpy(pwdtmp,convertChemin(arguments[1]));
+                strcpy(pwdtmp,convertChemin(arguments[1],""));
             }
             // cas du ls -l     : on regarde l'arg2 => si l'arg2 contient le motif ".tar" on copie l'arg2 (avec convertion chemin relatif/absolu)  dans pdwtmp
             else if ( (arguments[2] != NULL) &&  (strstr(arguments[2], ".tar") != NULL) ) {
-                strcpy(pwdtmp,convertChemin(arguments[2]));
+                strcpy(pwdtmp,convertChemin(arguments[2],""));
             }
             // enfin si le pwd contient le motif ".tar" on le recopie dans pwdtmp
             else if  (strstr(pwd, ".tar") != NULL ) {
@@ -132,7 +166,7 @@ char* arboTar;
                 }
             }
             
-            return convertChemin(pwdtmp);
+            return convertChemin(pwdtmp,"");
 }
 
 //UseRedefCmd permet de voir si pwd ou arg1 ou arg2 contient le motif ".tar" , et si oui renvoi 1
@@ -361,8 +395,8 @@ void decoupePwdtmp(){
      }
      
      
-        src_path = convertChemin(arguments[nbargs - 2]);
-        dst_path = convertChemin(arguments[nbargs-1]);
+        src_path = convertChemin(arguments[nbargs - 2],"");
+        dst_path = convertChemin(arguments[nbargs-1],"");
 
         //printf("nb : %d , conversion source : %s , conversion destination : %s \n",nbargs,src_path,dst_path);
 
@@ -490,7 +524,7 @@ void decoupePwdtmp(){
                         perror(" Error open ");
                         return -1;
                     }
-                   if  ( (strcmp(arguments[0], "ls") == 0)  && (strcmp(arboTar, "") != 0) )  { afficher_repertoire(fdxx, trouve(fdxx,arboTar), 1); }
+                   if  ( (strcmp(arguments[0], "ls") == 0)  && (strcmp(arboTar, "") != 0) )  { afficher_repertoire(fdxx, trouve(fdxx,arboTar), 1,arboTar); }
                    if ( (strcmp(arguments[0], "ls") == 0) && (strcmp(arboTar, "") == 0) ) { afficher_tar_content(fdxx ,1);  } // ls a la racine du tar
 
                 }else{
@@ -500,7 +534,7 @@ void decoupePwdtmp(){
                         perror(" Error open ");
                         return -1;
                     }
-                     if ( (strcmp(arguments[0], "ls") == 0) && (strcmp(arboTar, "") != 0) ) { afficher_repertoire(fdxx, trouve(fdxx,arboTar), 0); } // ls plus loin que la racine du tar
+                     if ( (strcmp(arguments[0], "ls") == 0) && (strcmp(arboTar, "") != 0) ) { afficher_repertoire(fdxx, trouve(fdxx,arboTar), 0,arboTar); } // ls plus loin que la racine du tar
                      if ( (strcmp(arguments[0], "ls") == 0) && (strcmp(arboTar, "") == 0) ) { afficher_tar_content(fdxx ,0);  } // ls a la racine du tar
                 }
             close(fdxx);
@@ -578,12 +612,12 @@ void decoupePwdtmp(){
                 for (int i=0;i<strlen(redirection);i++) {
                     if(redirection[i] == '\n' ) { redirection[i] =  '\0'; break;}
                 }
-                if (debug == 1) printf("Redirection Chemin = <%s> \n",convertChemin(redirection)) ;
+                if (debug == 1) printf("Redirection Chemin = <%s> \n",convertChemin(redirection,"")) ;
                 
                 //cas hors tar : redirection >
                 if ( (UseRedefCmd() == 0) && (redirFlag == 1) ) {
                     //open
-                    val_op = open(convertChemin(redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+                    val_op = open(convertChemin(redirection,""), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
                     if(val_op == -1) { perror(" Error open "); }
 
                     dup2(val_op, STDOUT_FILENO);
@@ -591,7 +625,7 @@ void decoupePwdtmp(){
                 //cas hors tar : redirection double >>
                 else if ( (UseRedefCmd() == 0) && (redirFlag == 2) ) {
                     //open
-                    val_op = open(convertChemin(redirection), O_RDWR | O_APPEND | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+                    val_op = open(convertChemin(redirection,""), O_RDWR | O_APPEND | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
                     if(val_op == -1) { perror(" Error open "); }
 
                     dup2(val_op, STDOUT_FILENO);
@@ -599,7 +633,7 @@ void decoupePwdtmp(){
                 //cas hors tar : redirection double >>
                 else if ( (UseRedefCmd() == 0) && (redirFlag == 3) ) {
                     //open
-                    val_op = open(convertChemin(redirection), O_RDONLY);
+                    val_op = open(convertChemin(redirection,""), O_RDONLY);
                     if(val_op == -1) { perror(" Error open "); }
 
                     dup2(val_op, STDIN_FILENO);
@@ -607,7 +641,7 @@ void decoupePwdtmp(){
                 // cas stderr
                 else if ( (UseRedefCmd() == 0) && (redirFlag == 4) ) {
                     //open
-                    int val_op = open(convertChemin(redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+                    int val_op = open(convertChemin(redirection,""), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
                     if(val_op == -1) { perror(" Error open "); }
 
                     dup2(val_op, STDERR_FILENO);
@@ -623,14 +657,41 @@ void decoupePwdtmp(){
                         return -1;
                     }
                     // on cree un fichier temporaire local avec le resultat des commandes
-                    printf("CREATING LOCAL FILE : %s\n",strcat(getTarParentDir(tarname),redirection) );
-                    int fd_fichier = open(strcat(getTarParentDir(tarname),redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
-                    dup2(fd_fichier, STDOUT_FILENO);
+					printf("CREATING LOCAL FILE : %s\n",strcat(getTarParentDir(tarname),redirection) );
+					printf("REDIRECTION = %s RES=%s RES2=%s\n ",redirection,strcat(strcat(getTarArbo(pwd),"/"),redirection),removePointPoint(redirection,""));
+					int fd_fichier = open(strcat(getTarParentDir(tarname),redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+					dup2(fd_fichier, STDOUT_FILENO);
 
-                    // on ajoute le fichier local dans le tar a la bonne position
-                    off_t position;
-                    position = get_end_position(fd_du_tar);
-                    addFile( fd_du_tar, fd_fichier , redirection ,  position);
+					// on ajoute le fichier local dans le tar a la bonne position 
+					// /!\ FIXME /!\ la position est mal set et corrompt le TARBALL !
+					off_t position;
+					struct posix_header h;
+					int filesize;
+					if( lseek(fd_du_tar,(off_t)0,SEEK_SET) == -1 ){
+						perror(" newEmptyDirectory : Erreur seek");
+					}
+					if(read(fd_du_tar,&h,BLOCKSIZE) == -1){
+						perror(" erreur read \n");
+					}
+					while (h.name[0] != '\0'){
+						sscanf(h.size,"%o",&filesize);
+						lseek(fd_du_tar, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+						read(fd_du_tar, &h, BLOCKSIZE);
+					}
+					// se positionner a la fin du fichier destination
+                    position = lseek(fd_du_tar,-BLOCKSIZE,SEEK_CUR);
+					// on ajoute ../ a arbotar , puis la redirection 
+					//ex : pwd = ~/toto.tar/toto/f2 > cat f1 > f3   => arboTar = toto/f2/f1/../f5 => toto/f2/f5 grace a removepointpoint()
+
+					if(strcmp(getTarArbo(pwd), "") != 0 ) {
+						//si on a un arboTar
+					addFile( fd_du_tar, fd_fichier , removePointPoint(strcat(strcat(getTarArbo(pwd),"/"),redirection),"") ,  position);
+					}
+					else {
+						// si il n'y a pas d'arboTar
+					addFile( fd_du_tar, fd_fichier , removePointPoint(redirection,"") ,  position);
+					}
+
                 }
             
             }
@@ -813,7 +874,7 @@ void decoupePwdtmp(){
                 
 
                 //On converti le chemin selon la Gestion chemin absolu et relatif dans tempPath
-                strcpy(tempPath,convertChemin(chemin));
+                strcpy(tempPath,convertChemin(chemin,""));
 
                 //Parse command. On essaye deja de chdir dessus si on arrive a faire un chdir ,
                 if(chdir(tempPath) == 0){
@@ -874,7 +935,7 @@ void decoupePwdtmp(){
                                        strcpy(pwd, finalPath);
                                        strcat(pwd, "/");
                                        strcat(pwd, arboTar);
-                                       strcpy(pwd, convertChemin(pwd));
+                                       strcpy(pwd, convertChemin(pwd,""));
                                    }
                                    else{
                                        perror("Error : Bad Directory name in tar");
@@ -979,7 +1040,7 @@ void decoupePwdtmp(){
                     perror("open");
                     return -1;
                     }
-                    if ( nbargs == 4) afficher_repertoire(fdx, trouve(fdx,arguments[3]), 1);
+                    if ( nbargs == 4) afficher_repertoire(fdx, trouve(fdx,arguments[3]), 1,arguments[3]);
                     if ( nbargs == 3) afficher_tar_content(fdx ,1);
 
                 }else{
@@ -988,7 +1049,7 @@ void decoupePwdtmp(){
                     perror("open");
                     return -1;
                     }
-                    if ( nbargs == 3) afficher_repertoire(fdx, trouve(fdx,arguments[2]), 0);
+                    if ( nbargs == 3) afficher_repertoire(fdx, trouve(fdx,arguments[2]), 0,arguments[2]);
                     if ( nbargs == 2) afficher_tar_content(fdx ,0);
 
                 }
