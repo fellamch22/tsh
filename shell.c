@@ -54,7 +54,7 @@ char* removePointPoint(char* NewChemin , char* begin) {
 		printf("RPP => %s\n",NewChemin);
 	    char* Temp = malloc(sizeof(char) * BUFFER);
 		strcpy(Temp,"");
-		char *p = strtok(NewChemin, "/"); //découper NC avec "/", p prend le 1er argc 
+		char *p = strtok(NewChemin, "/"); //dï¿½couper NC avec "/", p prend le 1er argc 
 		// *p = strtok ([/home/user/vb/../toto], "/")
 		// p = home --> else, Temp=/home/ --> next = user 
 		// p = user --> else, Temp=/home/user/ --> next = vb 
@@ -102,7 +102,7 @@ char* removePointPoint(char* NewChemin , char* begin) {
         char* Temp = malloc(sizeof(char) * BUFFER);
         char* NewChemin = malloc(sizeof(char) * BUFFER);
         strcpy(Temp,"");
-        strcpy(NewChemin,chemin); //recopier Chemin pour éviter le conflits
+        strcpy(NewChemin,chemin); //recopier Chemin pour ï¿½viter le conflits
             	
         //si arg commence par '/' , chemin absolu
       	if(  NewChemin[0] == '/' ) {
@@ -125,10 +125,10 @@ char* removePointPoint(char* NewChemin , char* begin) {
 		//continue l'exemple : Temp=/home/user/toto/ strlen=16
 		//if Temp[15] == / final --> Temp[15] = '\0 --> Temp=/home/user/toto\0
 
-    	
     	//Cas si on est a la racinecd -
 		//la cas qu'on n'ajoute jamais p dedans (entrant jamais dans while)
     	if(strcmp(Temp,"") == 0) {strcpy(Temp,"/");}
+        printf("temp %s \n",Temp);
 		strcat(Temp,charfinal);
 		return Temp;
 }
@@ -372,7 +372,6 @@ void decoupePwdtmp(){
      int fd_src = -1 ;
      int fd_dst = -1;
      // voir le nombre d'arguments
-
     
      if( nbargs == 3 ){// commande cp sans option
 
@@ -391,14 +390,14 @@ void decoupePwdtmp(){
      {
          // nombre incompatible d'arguments
          perror(" veuillez introduire le bon nombre d'arguments pour la commande 'cp' \n");
-         exit(1);
+         return -1;
      }
      
      
-        src_path = convertChemin(arguments[nbargs - 2],"");
-        dst_path = convertChemin(arguments[nbargs-1],"");
+        src_path = convertChemin(arguments[nbargs - 2],(arguments[nbargs - 2][strlen(arguments[nbargs - 2])-1] == '/')?"/":"");
+        dst_path  = convertChemin(arguments[nbargs-1],"");
 
-        //printf("nb : %d , conversion source : %s , conversion destination : %s \n",nbargs,src_path,dst_path);
+        //printf("nb : %d , conversion source : %s , conversion destination : %s \n\n",nbargs,src_path,dst_path);
 
 
         src_arbotar = analyser_path(src_path,&fd_src);
