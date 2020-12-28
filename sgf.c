@@ -162,6 +162,12 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 
 	i+=512;
 
+  if(lseek(fd,(off_t)0,SEEK_SET)== -1){
+    
+    perror("erreur lseek \n");
+    exit(1);
+  }
+
 	while( (c = read(fd,contenu+i ,512)) == 512){
 	
 
