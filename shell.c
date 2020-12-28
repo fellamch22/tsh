@@ -27,34 +27,11 @@ char* pwdtmp;
 char* tarname;
 char* arboTar;
 
-struct posix_header
-{                              /* byte offset */
-  char name[100];               /*   0 */
-  char mode[8];                 /* 100 */
-  char uid[8];                  /* 108 */
-  char gid[8];                  /* 116 */
-  char size[12];                /* 124 */
-  char mtime[12];               /* 136 */
-  char chksum[8];               /* 148 */
-  char typeflag;                /* 156 */
-  char linkname[100];           /* 157 */
-  char magic[6];                /* 257 */
-  char version[2];              /* 263 */
-  char uname[32];               /* 265 */
-  char gname[32];               /* 297 */
-  char devmajor[8];             /* 329 */
-  char devminor[8];             /* 337 */
-  char prefix[155];             /* 345 */
-  char junk[12];                /* 500 */
-};  
-
-
 char* removePointPoint(char* NewChemin , char* begin) {
 	
-		printf("RPP => %s\n",NewChemin);
 	    char* Temp = malloc(sizeof(char) * BUFFER);
 		strcpy(Temp,"");
-		char *p = strtok(NewChemin, "/"); //découper NC avec "/", p prend le 1er argc 
+		char *p = strtok(NewChemin, "/"); //dï¿½couper NC avec "/", p prend le 1er argc 
 		// *p = strtok ([/home/user/vb/../toto], "/")
 		// p = home --> else, Temp=/home/ --> next = user 
 		// p = user --> else, Temp=/home/user/ --> next = vb 
@@ -102,7 +79,7 @@ char* removePointPoint(char* NewChemin , char* begin) {
         char* Temp = malloc(sizeof(char) * BUFFER);
         char* NewChemin = malloc(sizeof(char) * BUFFER);
         strcpy(Temp,"");
-        strcpy(NewChemin,chemin); //recopier Chemin pour éviter le conflits
+        strcpy(NewChemin,chemin); //recopier Chemin pour ï¿½viter le conflits
             	
         //si arg commence par '/' , chemin absolu
       	if(  NewChemin[0] == '/' ) {
@@ -255,6 +232,7 @@ char* removePointPoint(char* NewChemin , char* begin) {
                     //Debug  printf("'%s'\n", p);
                     p = strtok(NULL, "/");
                 }
+
                 return arboTar;
  }
 
@@ -657,40 +635,25 @@ void decoupePwdtmp(){
                         return -1;
                     }
                     // on cree un fichier temporaire local avec le resultat des commandes
-					printf("CREATING LOCAL FILE : %s\n",strcat(getTarParentDir(tarname),redirection) );
-					printf("REDIRECTION = %s RES=%s RES2=%s\n ",redirection,strcat(strcat(getTarArbo(pwd),"/"),redirection),removePointPoint(redirection,""));
-					int fd_fichier = open(strcat(getTarParentDir(tarname),redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+					printf("CREATING LOCAL FILE : %s\n",strcat(getTarParentDir(tarname),"temporaire") );
+					
+					//Mise a jour de la redirection via le chemin absolu, reprise uniquement de l'arbo du tar , suppression dernier / de l'arbo
+
+					redirection = getTarArbo(convertChemin(redirection,""));
+					if(  redirection[strlen(redirection)-1] == '/' ) {
+						redirection[strlen(redirection)-1] = '\0';
+					}
+				
+					if ( debug == 1 ) printf("REDIRECTION = %s \n ",redirection);
+					int fd_fichier = open(strcat(getTarParentDir(tarname),"temporaire"), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
 					dup2(fd_fichier, STDOUT_FILENO);
 
 					// on ajoute le fichier local dans le tar a la bonne position 
 					// /!\ FIXME /!\ la position est mal set et corrompt le TARBALL !
 					off_t position;
-					struct posix_header h;
-					int filesize;
-					if( lseek(fd_du_tar,(off_t)0,SEEK_SET) == -1 ){
-						perror(" newEmptyDirectory : Erreur seek");
-					}
-					if(read(fd_du_tar,&h,BLOCKSIZE) == -1){
-						perror(" erreur read \n");
-					}
-					while (h.name[0] != '\0'){
-						sscanf(h.size,"%o",&filesize);
-						lseek(fd_du_tar, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
-						read(fd_du_tar, &h, BLOCKSIZE);
-					}
-					// se positionner a la fin du fichier destination
-                    position = lseek(fd_du_tar,-BLOCKSIZE,SEEK_CUR);
-					// on ajoute ../ a arbotar , puis la redirection 
-					//ex : pwd = ~/toto.tar/toto/f2 > cat f1 > f3   => arboTar = toto/f2/f1/../f5 => toto/f2/f5 grace a removepointpoint()
+                    position = get_end_position(fd_du_tar);
+					addFile( fd_du_tar, fd_fichier , redirection ,  position);
 
-					if(strcmp(getTarArbo(pwd), "") != 0 ) {
-						//si on a un arboTar
-					addFile( fd_du_tar, fd_fichier , removePointPoint(strcat(strcat(getTarArbo(pwd),"/"),redirection),"") ,  position);
-					}
-					else {
-						// si il n'y a pas d'arboTar
-					addFile( fd_du_tar, fd_fichier , removePointPoint(redirection,"") ,  position);
-					}
 
                 }
             
