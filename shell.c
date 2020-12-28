@@ -12,6 +12,7 @@
 #define BUFFER 1024
 #define LECTURE  0
 #define ECRITURE 1
+#define BLOCKSIZE 512
 
 char *redirection; // Redirection output file
 char* arguments[BUFFER]; // tableau d'arguments de chaque sous commande
@@ -147,6 +148,31 @@ char* arboTar;
 	}
 	return 0;	
 } 
+
+//getTarPath permet de recuperer le chemin vers un tar a partir d'un chemin
+// convert /home/user/Shell/toto.tar/toto/titi => /home/user/Shell
+  char* getTarParentDir(char*chemin) {
+ 				char* tarDir=malloc(sizeof(char) * BUFFER);
+ 				strcpy(tarDir,"/");
+ 				char* newchemin = malloc(sizeof(char) * BUFFER);
+ 				strcpy(newchemin,chemin);
+ 				int t=0;
+				char *p = strtok(newchemin, "/");
+				while(p != NULL)	{ 
+					if(strstr(p,".tar") != 0) {
+						t=1; // t = flag to switch the result on tarDir or on arbotar
+					}
+					else if (t == 0) {
+					//ajout tarDir
+						strcat(tarDir,p);
+						strcat(tarDir,"/") ;
+					}	
+					//Debug  printf("'%s'\n", p);
+					p = strtok(NULL, "/");
+				}
+				return tarDir;
+ }
+ 
 
 //getTarPath permet de recuperer le chemin vers un tar a partir d'un chemin
 // convert /home/user/Shell/toto.tar/toto/titi => /home/user/Shell/toto.tar 
@@ -386,8 +412,7 @@ void decoupePwdtmp(){
  //    fd1  = executeCmd(0, 1, 0), with args[0] = "ls" and args[1] = "-l"
  //    fd2  = executeCmd(fd1, 0, 0), with args[0] = "head" and args[1] = "-n" and args[2] = "2"
  //    fd3  = executeCmd(fd2, 0, 1), with args[0] = "wc" and args[1] = "-l"
- int executeCmd(int fd, int debut, int dernier)
-{
+ int executeCmd(int fd, int debut, int dernier) {
 	if ( debug == 1 ) printf("Le pere entre dans executeCMD - FD = %d , DEBUT = %d , DERNIER = %d pour y lancer %s\n",fd,debut,dernier,arguments[0]);
 	
 	//Variables
@@ -450,7 +475,7 @@ void decoupePwdtmp(){
 					//open
 					int val_op = open(convertChemin(redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
 					if(val_op == -1) { perror(" Error open "); }
-					
+
 					dup2(val_op, STDOUT_FILENO);
 				}
 				//cas hors tar : redirection double >>
@@ -469,13 +494,38 @@ void decoupePwdtmp(){
 
 					dup2(val_op, STDIN_FILENO);
 				}
-				else {
-					printf(" Redirection dans un Tar\n");
-					//void addFile( int fd, int fd1 , char * src_filename , off_t position){
+				// cas stderr
+				else if ( (UseRedefCmd() == 0) && (redirFlag == 4) ) {
+					//open
+					int val_op = open(convertChemin(redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+					if(val_op == -1) { perror(" Error open "); }
+
+					dup2(val_op, STDERR_FILENO);
 				}
-			}
+				//DANS UN TAR
+				else if ( (UseRedefCmd() == 1) && (redirFlag == 1) ) {
+					printf(" Redirection dans un Tar\n");
+					decoupePwdtmp();
+					//on ouvre le fd du tar
+					int fd_du_tar = open(tarname, O_RDWR);
+					if (fd < 0){
+						perror(" Error open ");
+						return -1;
+					}
+					// on cree un fichier temporaire local avec le resultat des commandes
+					printf("CREATING LOCAL FILE : %s\n",strcat(getTarParentDir(tarname),redirection) );
+					int fd_fichier = open(strcat(getTarParentDir(tarname),redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+					dup2(fd_fichier, STDOUT_FILENO);
+
+					// on ajoute le fichier local dans le tar a la bonne position 
+					// /!\ FIXME /!\ la position est mal set et corrompt le TARBALL !
+					off_t position = lseek(fd_fichier, BLOCKSIZE, SEEK_SET);
+					addFile( fd_du_tar, fd_fichier , redirection ,  position);
+
+				}
 			
-        }
+			}
+		}
         
         //##### REDEFINITION COMMANDE PWD
 		if (strcmp(arguments[0], "pwd") == 0){ //pwd passe en tarball
@@ -594,6 +644,24 @@ void decoupePwdtmp(){
 			redirection=cmd;
 			arguments[i]=NULL;
 			redirFlag=3; // 1 = overwrite , 2 = append, 3 = write into
+			return;
+		}
+		else if(strcmp(cmd,"2") == 0 ) { 
+			cmd = removeSpace(next + 1);
+			next = strchr(cmd, ' ');
+			cmd = removeSpace(next + 1);			
+			if(debug == 1)  printf ("Redirection on file : <%s>\n",cmd);
+			redirection=cmd;
+			arguments[i]=NULL;
+			redirFlag=4; // 1 = overwrite , 2 = append , 3 = write into , 4 = err
+			return;
+		}
+		else if(strcmp(cmd,"2>") == 0 ) { ;
+			cmd = removeSpace(next + 1);			
+			if(debug == 1)  printf ("Redirection on file : <%s>\n",cmd);
+			redirection=cmd;
+			arguments[i]=NULL;
+			redirFlag=4; // 1 = overwrite , 2 = append , 3 = write into , 4 = err
 			return;
 		}
 		else{
