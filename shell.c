@@ -236,6 +236,24 @@ char* removePointPoint(char* NewChemin , char* begin) {
                 return arboTar;
  }
 
+//get nom du fichier
+char* getTmpFileName(char*chemin) {
+                char* FileName=malloc(sizeof(char) * BUFFER);
+                strcpy(FileName,"");
+                char* newchemin = malloc(sizeof(char) * BUFFER);
+                strcpy(newchemin,chemin);
+                char *p = strtok(newchemin, "/");
+                while(p != NULL)    {
+                    //ajout FileName
+                        strcpy(FileName, "/tmp/");
+                        strcat(FileName,p) ;
+                    //Debug  printf("'%s'\n", p);
+                    p = strtok(NULL, "/");
+                }
+
+                return FileName;
+ }
+
 void decoupePwdtmp(){
     //decoupe pwdtmp en tarname + arbotar
 
@@ -626,32 +644,37 @@ void decoupePwdtmp(){
                 //DANS UN TAR
                 else if ( (UseRedefCmd() == 1) && (redirFlag == 1) ) {
                     printf(" Redirection dans un Tar\n");
-                    decoupePwdtmp();
-                    //on ouvre le fd du tar
-                    int fd_du_tar = open(tarname, O_RDWR);
-                    if (fd < 0){
-                        perror(" Error open ");
-                        return -1;
-                    }
-                    // on cree un fichier temporaire local avec le resultat des commandes
-					printf("CREATING LOCAL FILE : %s\n",strcat(getTarParentDir(tarname),"temporaire") );
-					
-					//Mise a jour de la redirection via le chemin absolu, reprise uniquement de l'arbo du tar , suppression dernier / de l'arbo
+                        decoupePwdtmp();
+                        //on ouvre le fd du tar
+                        int fd_du_tar = open(tarname, O_RDWR);
+                        if (fd < 0){
+                            perror(" Error open ");
+                            return -1;
+                        }
+                        char* FileName = malloc(sizeof(char) * BUFFER);
+                        strcpy(FileName, getTmpFileName(redirection)) ;
 
-					redirection = getTarArbo(convertChemin(redirection,""));
-					if(  redirection[strlen(redirection)-1] == '/' ) {
-						redirection[strlen(redirection)-1] = '\0';
-					}
-				
-					if ( debug == 1 ) printf("REDIRECTION = %s \n ",redirection);
-					int fd_fichier = open(strcat(getTarParentDir(tarname),"temporaire"), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
-					dup2(fd_fichier, STDOUT_FILENO);
+                        // on cree un fichier temporaire local avec le resultat des commandes
+                        
+                        //Mise a jour de la redirection via le chemin absolu, reprise uniquement de l'arbo du tar , suppression dernier / de l'arbo
 
-					// on ajoute le fichier local dans le tar a la bonne position 
-					// /!\ FIXME /!\ la position est mal set et corrompt le TARBALL !
-					off_t position;
-                    position = get_end_position(fd_du_tar);
-					addFile( fd_du_tar, fd_fichier , redirection ,  position);
+                        redirection = getTarArbo(convertChemin(redirection,""));
+                        if(  redirection[strlen(redirection)-1] == '/' ) {
+                            redirection[strlen(redirection)-1] = '\0';
+                        }
+                        printf("CREATING LOCAL FILE : %s, redirection = %s\n", FileName, redirection);
+
+                    
+                        if ( debug == 1 ) printf("REDIRECTION = %s \n ",redirection);
+                        int fd_fichier = open(FileName, O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+                        dup2(fd_fichier, STDOUT_FILENO);
+
+                        // on ajoute le fichier local dans le tar a la bonne position
+                        // /!\ FIXME /!\ la position est mal set et corrompt le TARBALL !
+                        off_t position;
+                        position = get_end_position(fd_du_tar);
+                        addFile( fd_du_tar, fd_fichier , redirection ,  position);
+                        free(FileName);
 
 
                 }
