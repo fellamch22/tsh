@@ -546,7 +546,14 @@ void afficher_fichier(int fd, char *chemin){
 
 }
 
-void afficher_repertoire(int fd, off_t position, int mode){
+// renvoi 1 si le prefix est inclus au debut de str
+int startWith(const char *prefix, const char *str) {
+	//printf("StartWith %s %s %d\n",str,prefix,strncmp(prefix,str,strlen(prefix)));
+	if ( strncmp(prefix,str,strlen(prefix)) == 1 ) { return 1; }
+	return 0;
+}
+
+void afficher_repertoire(int fd, off_t position, int mode , char* arboTar){
     struct posix_header p;
     unsigned int filesize ;
     time_t time;
@@ -597,9 +604,8 @@ void afficher_repertoire(int fd, off_t position, int mode){
         return;
     }
 
-    while(strncmp(repname,p.name,strlen(repname)) == 0){
-
-        if(mode == 1){
+	  while(strcmp(p.name,"") != 0 ) {
+			if(mode == 1){
           
             droits = modeToString(atoi(p.mode),p.typeflag);
             sscanf(p.mtime,"%lo",&time);
@@ -622,13 +628,13 @@ void afficher_repertoire(int fd, off_t position, int mode){
             
              free(droits);
 
-            write(1,res,strlen(res));
+             if(startWith(p.name,arboTar) == 1 ) write(1,res,strlen(res));
 
 
         }else{
             char name[strlen(p.name)+2];
             sprintf(name,"%s\n",p.name);
-            write(1, name, strlen(name));
+             if(startWith(p.name,arboTar) == 1 ) write(1, name, strlen(name));
         }
         
 
@@ -643,8 +649,9 @@ void afficher_repertoire(int fd, off_t position, int mode){
 	        perror(" ERREUR read ");
         	return;
         }
-    }
+	}
 }
+
 
 void afficher_tar_content(int fd , int mode){
 	printf("Afficher TAR CONTENT  \n");
