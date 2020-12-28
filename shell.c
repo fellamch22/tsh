@@ -627,25 +627,10 @@ void decoupePwdtmp(){
                     int fd_fichier = open(strcat(getTarParentDir(tarname),redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
                     dup2(fd_fichier, STDOUT_FILENO);
 
-                    // // on ajoute le fichier local dans le tar a la bonne position
-                    // // /!\ FIXME /!\ la position est mal set et corrompt le TARBALL !
+                    // on ajoute le fichier local dans le tar a la bonne position
                     off_t position;
-                    struct posix_header h;
-                    int filesize;
-                    if( lseek(fd_du_tar,(off_t)0,SEEK_SET) == -1 ){
-                        perror(" newEmptyDirectory : Erreur seek");
-                    }
-                    if(read(fd_du_tar,&h,BLOCKSIZE) == -1){
-                        perror(" erreur read \n");
-                    }
-                    while (h.name[0] != '\0'){
-                        sscanf(h.size,"%o",&filesize);
-                        lseek(fd_du_tar, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
-                        read(fd_du_tar, &h, BLOCKSIZE);
-                    }
-                    position = lseek(fd_du_tar,-BLOCKSIZE,SEEK_SET);
+                    position = get_end_position(fd_du_tar);
                     addFile( fd_du_tar, fd_fichier , redirection ,  position);
-
                 }
             
             }
