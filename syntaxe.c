@@ -86,12 +86,11 @@ char * analyser_path ( char * path , int * fd ){
 	
 	if( trouv_tar){// si on est dans un tar , 
 
-
 		//si l'interieur different du vide on verifie le slash '/'  a la fin du path (celui des repertoires)
-
-		if( (path_interieur_tarball[0] !='\0') && (path[strlen(path)-1] == '/') )
+		if( (path_interieur_tarball[0] !='\0') && (path[strlen(path)-1] == '/') ){
 				 strcat(path_interieur_tarball,"/");
 
+		}
 
 
 		// ouvrir le fichier ( en lecture et ecriture)

@@ -1103,7 +1103,6 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 
 			// on parcourt le .tar entier
 			// copier les blocks un par un et les inserer a la fin du .tar de la destination
-
 			struct posix_header h ,h1;
 			int i , nb_blocks , cpt ;
 			int filesize , lenpath;
@@ -1171,7 +1170,6 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 					memset(name_buffer,'\0',100);
 					strcpy(name_buffer,dst_path);
 					strcat(name_buffer,source_name);
-          if(strlen(src_path) - (cpt+1) - strlen(source_name) > 0 )  strcat(name_buffer,"/");
 					memset(source_adapter,'\0',100);
 					strcpy(source_adapter,h.name);
 					word = strtok(source_adapter,"/");
@@ -1185,14 +1183,14 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 
 					while (word != NULL){
 
-						if(cpt != 0) strcat(name_buffer,"/");
+						if( (cpt != 0) || (strcmp(name_buffer,"")!= 0) )strcat(name_buffer,"/");
 						strcat(name_buffer,word);
 						cpt ++;
 						word = strtok(NULL,"/");
 
 					}
 
-					if(h.typeflag == '5' && cpt > 0 ) strcat(name_buffer,"/");
+					if(h.typeflag == '5' ) strcat(name_buffer,"/");
 
 					memset(h.name,'\0',100);
 					sprintf(h.name,"%s",name_buffer);
@@ -1429,7 +1427,6 @@ int cp_srctar( char * src_path , int src_fd , char * dst_path  , int dst_fd , in
 			if(strcmp(src_path,"") != 0){
 				
 				type = get_fichier_type(src_fd,src_path,0);
-
 				if ( type == '5'){// un repetoire
 
 						if(!option){
@@ -1461,6 +1458,19 @@ int cp_srctar( char * src_path , int src_fd , char * dst_path  , int dst_fd , in
 			/* 	source est le fichier .tar entier 
 				appeler copy_tarball_to_tarball pour effectuer la copie
 				du tarball source dans le tarball destination */
+
+      if(strcmp(src_path,"") != 0){
+				
+				type = get_fichier_type(src_fd,src_path,0);
+				if ( type == '5'){// un repetoire
+
+						if(!option){
+							perror(" veuillez utiliser l'option -r pour copier un repertoire \n");
+							exit(1);
+						}
+        }
+      }
+
 			copy_tarball_into_tarball(src_path,src_fd,dst_path,dst_fd);
 
 
