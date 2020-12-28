@@ -325,7 +325,6 @@ void decoupePwdtmp(){
 			return 0;
  }
  
-<<<<<<< shell.c
  // redefintion de la fonction cp
 
 
@@ -438,32 +437,9 @@ void decoupePwdtmp(){
 
  }
 
- int mkdir_redefinir(){
-
-	 		//VARIABLES du fils
-     		char* pwdtmp=malloc(sizeof(char) * BUFFER);
-			char* tarname=malloc(sizeof(char) * BUFFER);
-			char* arboTar=malloc(sizeof(char) * BUFFER);
-			strcpy(pwdtmp,"");
-			strcpy(tarname,"/");
-			strcpy(arboTar,"");
-
-   		 	if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); } 
-
-			strcpy(pwdtmp,findGoodPath());
-			if ( debug == 1 ) printf("PWDTMP = %s\n",pwdtmp);
-			
-			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/user/Shell/toto.tar/toto$> cat ../../f2
-			if(strstr(pwdtmp, ".tar") == NULL ) {
-				if ( debug == 1 ) { printf("on sort du TAR , commande normale %s\n",pwdtmp); }
-				strcpy(arguments[1],pwdtmp);
-				execvp(arguments[0], arguments);
-			}
-=======
  int mkdir_redefini(){
 	 		
 			decoupePwdtmp();
->>>>>>> shell.c
 			
 			if (arboTar[strlen(arboTar)-1] != '/'){
 				strcat(arboTar, "/");
@@ -700,15 +676,12 @@ void decoupePwdtmp(){
 			int ret = mkdir_redefini();
 			exit(ret);
 		}
-<<<<<<< shell.c
 
 		else if ( (strcmp(arguments[0], "cp") == 0) && ( UseRedefCmd() == 1)) {
 			int ret = cp_redefinir();
 			exit(ret);
 		}
-=======
 		
->>>>>>> shell.c
 		else if (execvp( arguments[0], arguments) == -1) {
             perror("Commande Inconnue \n");
 			kill(getpid(),SIGTERM);
