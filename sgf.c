@@ -538,7 +538,7 @@ void afficher_fichier(int fd, char *chemin){
 	
 	char content [filesize];
 
-	if( read(fd,content,filesize) <= 0 ){
+	if( read(fd,content,filesize) < 0 ){
 
 		perror(" Erreur de lecture  ");
 		exit(1);
