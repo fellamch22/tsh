@@ -5,10 +5,9 @@ ALL=shell
 all: $(ALL)
 
 shell : shell.c sgf.c
-	$(CC) shell.c sgf.c $(CFLAGS) -o shell 
+	$(CC) shell.c sgf.c $(CFLAGS) -o shell
 
 clean:
 	rm -rf *.o
-	rm -rf shell 
 	rm -rf $(ALL) 
 

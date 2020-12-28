@@ -82,17 +82,16 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 	struct posix_header m ;
 	struct stat s ;
 
-	//faire un fstat pour recuperer les informations necessaires a la creation de
-	//la structure header du fichier 
+	/* faire un fstat pour recuperer les informations necessaires a la creation de
+	la structure header du fichier */
 	
 	if ( fstat(fd,&s)  == -1 ){
 
 		perror(" fileToBlocks : Erreur fstat");
 		exit(2);
 	};
-
-
- // remplissage du header correspondant au fichier source 'filename' 
+  
+/* remplissage du header correspondant au fichier source 'filename' */
 	strcpy(m.name,filename);
 	sprintf(m.uname,"%s",getpwuid(s.st_uid)->pw_name);
 	sprintf(m.gname,"%s",getgrgid(s.st_gid)->gr_name);
@@ -115,7 +114,7 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 		exit(1);
 	}
 	
-	printf(" %ld / %ld\n",s.st_size, ((s.st_size+2*512)/512)*512);
+	//printf(" %ld / %ld\n",s.st_size, ((s.st_size+2*512)/512)*512);
 
 	memcpy(contenu,&m,sizeof(struct posix_header) );
 
@@ -129,18 +128,11 @@ char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 	}
 
 	if ( c > 0 ){
-
 		// le dernier block lu n'atteint pas 512 bits , on complete la zone restante par le caractere '\0'
 
 		memset( contenu+i+c , '\0' , 512 - c );
-
-
 	}
-
-
 	// retourner le nombre de blocks en devisant la totalite des caracter lus par 512 (taille d'un seul block)
-
-	
 
 	(*nb_blocks) = ( c > 0)? (( i + 512)/ 512) : (i / 512) ;
 
@@ -154,8 +146,8 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 
 	int nb_blocks = 0;
 
-	// transformer le fichier refernce par l'ouverture fd1 en un ensemble de blocs compatible pour 
-	//la representation des fichiers dans un fichier .tar 
+	/* transformer le fichier refernce par l'ouverture fd1 en un ensemble de blocs compatible pour 
+	la representation des fichiers dans un fichier .tar */
 	char * contenu = fileToBlocks(fd1,src_filename,&nb_blocks);
 
 	off_t  diff ;
@@ -167,7 +159,6 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 		exit(2);
 	};
 
-
 	diff = s.st_size - position ;
 
 	char decalage[diff];
@@ -177,8 +168,6 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 		perror(" addFile : Erreur seek");
 		exit(2);
 	};
-
-	
 	
 	if ( read(fd , decalage , diff ) < 0 ){
 
@@ -191,29 +180,25 @@ void addFile( int fd, int fd1 , char * src_filename , off_t position){
 		exit(2);
 	};
 
-
-	// inserer le contenu du fichier source a la position 'position' 
+	/* inserer le contenu du fichier source a la position 'position' */
 
 	if( write(fd, contenu , nb_blocks * BLOCKSIZE ) <= 0){
 		perror(" addFile : Erreur write");
 		exit(2);
 	};
 
-    // liberer l'espace alloe pour le contenu du fichier source 
+    /* liberer l'espace alloe pour le contenu du fichier source */
 	free(contenu);
 
 
-	// ecrire le contenu decalee juste apres l'insertion du contennu du nouveau fichier 
+	/* ecrire le contenu decalee juste apres l'insertion du contennu du nouveau fichier */
 
 	if( write(fd, decalage , diff ) <= 0){
 		perror(" addFile : Erreur write");
 		exit(2);
 	};
-
-
-
-
 }
+
 
 void newEmptyDirectory(int fd ,char * directoryPath ){
 
@@ -301,7 +286,7 @@ void newEmptyDirectory(int fd ,char * directoryPath ){
 			while (h.name[0] != '\0'){
 
 				sscanf(h.size,"%o",&filesize);
-				printf(" tversion : %s , t.magic : %s\n",h.version,h.magic);
+				//printf(" tversion : %s , t.magic : %s\n",h.version,h.magic);
 				lseek(fd, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
      			read(fd, &h, BLOCKSIZE);
 

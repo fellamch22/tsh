@@ -13,13 +13,17 @@
 #define LECTURE  0
 #define ECRITURE 1
 
+char *redirection; // Redirection output file
 char* arguments[BUFFER]; // tableau d'arguments de chaque sous commande
 char* pwd; // current dir
 char* old_pwd; // copy old pwd - used for "cd -"
-int nbexecuteCmds = 0; // nombre de sous commandes executees - utilise pour CleanUp
+int nbexecuteCmds=0; // nombre de sous commandes executees - utilise pour CleanUp
 int nbargs;
 int debug=0; // Debug mode disabled by default
-
+int redirFlag=0; // 1 = overwrite , 2 = append
+char* pwdtmp;
+char* tarname;
+char* arboTar;
 
 //convertChemin permet la Convertion chemin absolu (si relatif) ,  la Gestion des ".." et supprime le "/" final si present
 // "toto.tar/toto/titi/../titi/f3/" =>  "<pwd>/toto.tar/toto/titi/f3"
@@ -93,7 +97,6 @@ int debug=0; // Debug mode disabled by default
 		return Temp;
 }
 
-
 //findGoodPath permet de renvoyer le chemin correct a utiliser selon si le motif ".tar" est present dans le pwd ou arg1 ou arg2
  char* findGoodPath() {
 		char* pwdtmp=malloc(sizeof(char) * BUFFER);
@@ -130,7 +133,6 @@ int debug=0; // Debug mode disabled by default
 			return convertChemin(pwdtmp);
 }
 
- 
 //UseRedefCmd permet de voir si pwd ou arg1 ou arg2 contient le motif ".tar" , et si oui renvoi 1
  int UseRedefCmd() {
 	if (	
@@ -145,8 +147,7 @@ int debug=0; // Debug mode disabled by default
 	}
 	return 0;	
 } 
- 
- 
+
 //getTarPath permet de recuperer le chemin vers un tar a partir d'un chemin
 // convert /home/user/Shell/toto.tar/toto/titi => /home/user/Shell/toto.tar 
   char* getTarPath(char*chemin) {
@@ -196,12 +197,13 @@ int debug=0; // Debug mode disabled by default
 				return arboTar;
  }
 
- int rmdir_redefinir(){
-	 
-   			//VARIABLES du fils
-     		char* pwdtmp=malloc(sizeof(char) * BUFFER);
-			char* tarname=malloc(sizeof(char) * BUFFER);
-			char* arboTar=malloc(sizeof(char) * BUFFER);
+void decoupePwdtmp(){
+	//decoupe pwdtmp en tarname + arbotar
+
+	//VARIABLES du fils
+     		pwdtmp=malloc(sizeof(char) * BUFFER);
+			tarname=malloc(sizeof(char) * BUFFER);
+			arboTar=malloc(sizeof(char) * BUFFER);
 			strcpy(pwdtmp,"");
 			strcpy(tarname,"/");
 			strcpy(arboTar,"");
@@ -225,6 +227,11 @@ int debug=0; // Debug mode disabled by default
 		    
 			strcpy(arboTar,getTarArbo(pwdtmp));
 		    
+}
+
+ int rmdir_redefini(){
+	 
+			decoupePwdtmp();
 			//la partie rm2
 			//Ajoute le "/" final du arboTar
 			if (arboTar[strlen(arboTar)-1] != '/'){
@@ -244,34 +251,9 @@ int debug=0; // Debug mode disabled by default
 			return 0;
  }
 
- int rm_redefinir(){
-	 		//VARIABLES du fils
-     		char* pwdtmp=malloc(sizeof(char) * BUFFER);
-			char* tarname=malloc(sizeof(char) * BUFFER);
-			char* arboTar=malloc(sizeof(char) * BUFFER);
-			strcpy(pwdtmp,"");
-			strcpy(tarname,"/");
-			strcpy(arboTar,"");
-
-   		 	if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); }  
-
-			strcpy(pwdtmp,findGoodPath());
-			if ( debug == 1 ) printf("PWDTMP = %s\n",pwdtmp);
-			
-			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/user/Shell/toto.tar/toto$> cat ../../f2
-			if(strstr(pwdtmp, ".tar") == NULL ) {
-				if ( debug == 1 ) {printf("on sort du TAR , commande normale %s\n",pwdtmp); }
-				strcpy(arguments[1],pwdtmp);
-				execvp( arguments[0], arguments);
-			}
-			
-			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
-			//ex avec pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi  
-			strcpy(tarname,getTarPath(pwdtmp));
-			if ( debug == 1 ) { printf("tarname=%s\n", tarname); }
-		    
-			strcpy(arboTar,getTarArbo(pwdtmp));
-		    
+ int rm_redefini(){
+	 
+	 		decoupePwdtmp();
 			//la partie rm2
 			//enleve le "/" final du arboTar
 			if (arboTar[strlen(arboTar)-1] == '/'){
@@ -316,35 +298,10 @@ int debug=0; // Debug mode disabled by default
 			return 0;
  }
  
- int mkdir_redefinir(){
-
-	 		//VARIABLES du fils
-     		char* pwdtmp=malloc(sizeof(char) * BUFFER);
-			char* tarname=malloc(sizeof(char) * BUFFER);
-			char* arboTar=malloc(sizeof(char) * BUFFER);
-			strcpy(pwdtmp,"");
-			strcpy(tarname,"/");
-			strcpy(arboTar,"");
-
-   		 	if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); } 
-
-			strcpy(pwdtmp,findGoodPath());
-			if ( debug == 1 ) printf("PWDTMP = %s\n",pwdtmp);
+ int mkdir_redefini(){
+	 		
+			decoupePwdtmp();
 			
-			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/user/Shell/toto.tar/toto$> cat ../../f2
-			if(strstr(pwdtmp, ".tar") == NULL ) {
-				if ( debug == 1 ) { printf("on sort du TAR , commande normale %s\n",pwdtmp); }
-				strcpy(arguments[1],pwdtmp);
-				execvp(arguments[0], arguments);
-			}
-			
-			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
-			//ex avec pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi  
-			strcpy(tarname,getTarPath(pwdtmp));
-			if ( debug == 1 ) { printf("tarname=%s\n", tarname); }
-		    
-			strcpy(arboTar,getTarArbo(pwdtmp));
-		    
 			if (arboTar[strlen(arboTar)-1] != '/'){
 				strcat(arboTar, "/");
 			}
@@ -362,39 +319,15 @@ int debug=0; // Debug mode disabled by default
 			return 0;
  }
  
+
 //Redefinition de la fonction cat
 // exemple : cat toto/tar.h
 // strcpy(pwdtmp, FGP) --> pwdtmp=/home/user/v12/toto.tar/toto/tar.h
 // remplie tarname=/home..../toto.tar et remplie arboTar=toto/tar.h
 
- int cat_redefinir(){
-			//VARIABLES du fils
-     		char* pwdtmp=malloc(sizeof(char) * BUFFER);
-			char* tarname=malloc(sizeof(char) * BUFFER);
-			char* arboTar=malloc(sizeof(char) * BUFFER);
-			strcpy(pwdtmp,"");
-			strcpy(tarname,"/");
-			strcpy(arboTar,"");
-		
-   		 	if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); }  
-   		 	
-			strcpy(pwdtmp,findGoodPath());
-			if ( debug == 1 ) printf("PWDTMP = %s\n",pwdtmp);
-			
-			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/user/Shell/toto.tar/toto$> cat ../../f2
-			if(strstr(pwdtmp, ".tar") == NULL ) {
-				if ( debug == 1 ) {printf("on sort du TAR , commande normale %s\n",pwdtmp); }
-				strcpy(arguments[1],pwdtmp);
-				execvp( arguments[0], arguments);
-			}
-			
-			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
-			//ex avec pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi  
-			strcpy(tarname,getTarPath(pwdtmp));
-			if ( debug == 1 ) { printf("tarname=%s\n", tarname); }
-		    strcpy(arboTar,getTarArbo(pwdtmp));
-			if ( debug == 1 ) { printf("arboTar=%s\n", arboTar); }
-
+ int cat_redefini(){
+	 
+			decoupePwdtmp();
 			int fdxx = open(tarname, O_RDONLY);
             if (fdxx < 0){
 	            perror(" Error open ");
@@ -408,37 +341,10 @@ int debug=0; // Debug mode disabled by default
 			return 0;
 }
 
-
 //Redefinition de la fonction ls
- int ls_redefinir(){
-        	//VARIABLES du fils
-     		char* pwdtmp=malloc(sizeof(char) * BUFFER);
-			char* tarname=malloc(sizeof(char) * BUFFER);
-			char* arboTar=malloc(sizeof(char) * BUFFER);
- 			strcpy(pwdtmp,"");
-			strcpy(tarname,"/");
-			strcpy(arboTar,"");
-
-  		 	if ( debug == 1 ) { printf("COMMANDE REDEFINIE !\n"); }
-
-				
-  			//on set pwdtmp comme le repertoire a analyser, il prend la valeur soit de pwd soit de arg1 soit de arg2. 
-		    strcpy(pwdtmp,findGoodPath());
-
-			//ici pwdtmp est a jour avec le bon chemin.
-			 if ( debug == 1 ) { printf("pwdtmp = %s\n",pwdtmp); }
-
-			//Exception pour le cas ou on fait un cat hors du tar depuis le tar ex :   pwd = /home/user/Shell/toto.tar/toto$> ls ../../f2
-			if(strstr(pwdtmp, ".tar") == NULL ) {
-				if ( debug == 1 ) {printf("on sort du TAR , commande normale %s\n",pwdtmp); }
-				strcpy(arguments[1],pwdtmp);
-				execvp( arguments[0], arguments);
-			}
-			
-			//Decoupe pwdtmp en 2 avec des / afin d'extraire le tarname et l'arborescence dans le tar
-			//ex : pwdtmp = /home/user/Shell/toto.tar/toto/titi => tarname = /home/user/Shell/toto.tar    arboTar = toto/titi
-			strcpy(tarname,getTarPath(pwdtmp));
-		    strcpy(arboTar,getTarArbo(pwdtmp));
+ int ls_redefini(){
+	 
+        	decoupePwdtmp();
 			
   			//appel aux fonctions d'affichage : afficher_tar_content si on est a la racine du tar , afficher_repertoire si on est plus loin , avec arboTar en argument
   			int fdxx;
@@ -469,7 +375,6 @@ int debug=0; // Debug mode disabled by default
 			return 0;
 }
 
-
  // executeCmd : Execution des commandes via creation d'un fils temporaire
  //
  // fd: numero du file descriptor , 0 pour le premier fils
@@ -481,8 +386,6 @@ int debug=0; // Debug mode disabled by default
  //    fd1  = executeCmd(0, 1, 0), with args[0] = "ls" and args[1] = "-l"
  //    fd2  = executeCmd(fd1, 0, 0), with args[0] = "head" and args[1] = "-n" and args[2] = "2"
  //    fd3  = executeCmd(fd2, 0, 1), with args[0] = "wc" and args[1] = "-l"
- // 
- 
  int executeCmd(int fd, int debut, int dernier)
 {
 	if ( debug == 1 ) printf("Le pere entre dans executeCMD - FD = %d , DEBUT = %d , DERNIER = %d pour y lancer %s\n",fd,debut,dernier,arguments[0]);
@@ -534,6 +437,44 @@ int debug=0; // Debug mode disabled by default
         } else { // dernier=1
             // pour la dernier commande , ecoute de l entree depuis fd
             dup2( fd, STDIN_FILENO ); // on change l'entree standard  le fd pere
+			
+			//la redirection se fait uniquement sur le dernier process de la file
+			if( strcmp(redirection,"") != 0 ) {
+				for (int i=0;i<strlen(redirection);i++) {
+					if(redirection[i] == '\n' ) { redirection[i] =  '\0'; break;}
+				}
+				if (debug == 1) printf("Redirection Chemin = <%s> \n",convertChemin(redirection)) ;
+				
+				//cas hors tar : redirection >
+				if ( (UseRedefCmd() == 0) && (redirFlag == 1) ) {
+					//open
+					int val_op = open(convertChemin(redirection), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+					if(val_op == -1) { perror(" Error open "); }
+					
+					dup2(val_op, STDOUT_FILENO);
+				}
+				//cas hors tar : redirection double >>
+				else if ( (UseRedefCmd() == 0) && (redirFlag == 2) ) {
+					//open
+					int val_op = open(convertChemin(redirection), O_RDWR | O_APPEND | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+					if(val_op == -1) { perror(" Error open "); }
+
+					dup2(val_op, STDOUT_FILENO);
+				}
+				//cas hors tar : redirection double >>
+				else if ( (UseRedefCmd() == 0) && (redirFlag == 3) ) {
+					//open
+					int val_op = open(convertChemin(redirection), O_RDONLY);
+					if(val_op == -1) { perror(" Error open "); }
+
+					dup2(val_op, STDIN_FILENO);
+				}
+				else {
+					printf(" Redirection dans un Tar\n");
+					//void addFile( int fd, int fd1 , char * src_filename , off_t position){
+				}
+			}
+			
         }
         
         //##### REDEFINITION COMMANDE PWD
@@ -545,32 +486,34 @@ int debug=0; // Debug mode disabled by default
         
          //##### REDEFINITION COMMANDE CAT   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" (UseRedefCmd)
         else if ( (strcmp(arguments[0], "cat") == 0) && ( UseRedefCmd() == 1 ) ) {
-            int ret = cat_redefinir();
+            int ret = cat_redefini();
     		exit(ret); // kill le fils          
 		}
 
         // ##### REDEFINITION COMMANDE RM   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" (UseRedefCmd)
         else if ( (strcmp(arguments[0], "rm") == 0) && ( UseRedefCmd() == 1 ) ) {
-            int ret = rm_redefinir();
+            int ret = rm_redefini();
     		exit(ret); // kill le fils          
 		}
          //##### REDEFINITION COMMANDE RMDIR   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" (UseRedefCmd)
         else if ( (strcmp(arguments[0], "rmdir") == 0) && ( UseRedefCmd() == 1 ) ) {
-            int ret = rmdir_redefinir();
+            int ret = rmdir_redefini();
     		exit(ret); // kill le fils          
 		}
 
         //##### REDEFINITION COMMANDES LS   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" ou l'arg 2 existe et contient ".tar" (UseRedefCmd)
         else if (  (strcmp(arguments[0], "ls") == 0)  && ( UseRedefCmd() == 1 ))   //si la commande est ls ou cat et rempli les conditions de redef
 		 { 
-            int ret = ls_redefinir();
+            int ret = ls_redefini();
     		exit(ret); // kill le fils
         }
         
+	    //##### REDEFINITION COMMANDES MKDIR   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" ou l'arg 2 existe et contient ".tar" (UseRedefCmd)
 		else if ( (strcmp(arguments[0], "mkdir") == 0) && ( UseRedefCmd() == 1)) {
-			int ret = mkdir_redefinir();
+			int ret = mkdir_redefini();
 			exit(ret);
 		}
+		
 		else if (execvp( arguments[0], arguments) == -1) {
             perror("Commande Inconnue \n");
 			kill(getpid(),SIGTERM);
@@ -619,10 +562,9 @@ int debug=0; // Debug mode disabled by default
 // next[0] = '\0', nbargs = 2, i=2
 // args[2] = NULL;
 // Au final, on a arguments[0]= ls, arguments[1]= -l, arguments[2]=NULL
- 
  void decoupe(char* cmd)
 {  
-	//arguments[BUFFER] = ""; //init le tab arguemnts
+	arguments[BUFFER] = ""; //init le tab arguemnts
     cmd = removeSpace(cmd); // on enleve les espaces multiples
     char* next = strchr(cmd, ' '); // on decoupe la string avec chaque espace
     int i = 0;
@@ -630,10 +572,36 @@ int debug=0; // Debug mode disabled by default
     while(next != NULL) { // tant qu un nouvel espace est present,
         arguments[i] = cmd;
         next[0] = '\0';
-        ++i;
-        nbargs ++;
-        cmd = removeSpace(next + 1); //pour alller au char après '\0'
-        next = strchr(cmd, ' ');
+		if(strcmp(cmd,">") == 0 ) { 
+			cmd = removeSpace(next + 1);
+			if(debug == 1)  printf ("Redirection on file : <%s>\n",cmd);
+			redirection=cmd;
+			arguments[i]=NULL;
+			redirFlag=1; // 1 = overwrite , 2 = append
+			return;
+		}
+		else if(strcmp(cmd,">>") == 0 ) { 
+			cmd = removeSpace(next + 1);
+			if(debug == 1)  printf ("Redirection on file : <%s>\n",cmd);
+			redirection=cmd;
+			arguments[i]=NULL;
+			redirFlag=2; // 1 = overwrite , 2 = append
+			return;
+		}
+		else if(strcmp(cmd,"<") == 0 ) { 
+			cmd = removeSpace(next + 1);
+			if(debug == 1)  printf ("Redirection from file : <%s>\n",cmd);
+			redirection=cmd;
+			arguments[i]=NULL;
+			redirFlag=3; // 1 = overwrite , 2 = append, 3 = write into
+			return;
+		}
+		else{
+			++i;
+			nbargs ++;
+			cmd = removeSpace(next + 1); //pour alller au char après '\0'
+			next = strchr(cmd, ' ');
+		}
     }
  
     if (cmd[0] != '\0') {
@@ -749,8 +717,6 @@ int debug=0; // Debug mode disabled by default
 //Analyse les sous commandes, si elles ne contiennent pas une fonction totalement redefinie, la sous commande va dans executeCmd
 //autre exemple : on a 3 appelé analyse, un par les sous commande de cmd : ls -l, grep shell, wc -l
 //1 decoupe ls -l dans le tab d'args --> args[0]=ls, args[1]=-l
-
-
  int analyse(char* cmd, int fd, int debut, int dernier)
 {
     // decoupe la sous commande  dans le tableau d'args : ls -l => arguments[0] = "ls" , arguments[1] = "-l"
@@ -776,13 +742,13 @@ int debug=0; // Debug mode disabled by default
 	// close(fdx);
 	// fin du premier analyser, commencer 2nd analyer
 
-
     if (arguments[0] != NULL) {
         //TOTALLY REDEFINED SHELL COMMANDS
         //Implementation Exit 
         if (strcmp(arguments[0], "exit") == 0) {
             printf("Bye ! \n");
             free(old_pwd);
+			//free(redirection);
             exit(0);
         }
         //Implementation CD redefinie - se fait ici car pas besoin de creer un fils
@@ -846,8 +812,7 @@ int debug=0; // Debug mode disabled by default
                 }
                 close(fdx);
         }
-        
-        
+                
         //get_fichier_type =>
         else if (!strcmp(arguments[0], "gft")){
                 int fdx = open(arguments[1], O_RDONLY);
@@ -946,7 +911,8 @@ int main(int argc, char *argv[])
     strcpy(pwd, getenv("PWD"));
     old_pwd= malloc(sizeof(char) * BUFFER); 
     strcpy(old_pwd, pwd);
-    
+  	redirection = malloc(sizeof(char) * BUFFER);
+	
     //Shell 
     while (1) {	
 
@@ -959,9 +925,9 @@ int main(int argc, char *argv[])
 		memset(buff, 0, BUFFER); //met ligne tout en 0
 		val_read = read(STDIN_FILENO, buff, sizeof(buff));
 		if(val_read == -1) perror(" Error read ");
-
-		strcpy(ligne,buff);
 		
+		strcpy(ligne,buff);
+
  		//Parsing de la commande, decoupage des sous commandes
  		//ex: la commande  "ls -lrt | grep f3" donne 2 sous commandes cmd : "ls -lrt" , puis "grep f3" qui vont dans analyse
         int fd = 0; //chque fois fd doit = 0
@@ -983,7 +949,6 @@ int main(int argc, char *argv[])
 		//fin du while
 		//fd = analyse(wc, fd_precedent, 0, 1)
 		//Au final, on a 3 appelé analyse, un par les sous commande de cmd : ls, grep shell, wc
-
 		while (next != NULL) { // on rentre dans ce while uniquement si on a au moins un "|" dans la commande
             *next = '\0'; // on remplace dans cmd tout ce qu'il y a apres le premier | par '\0'
             fd = analyse(cmd, fd, debut, 0); // on lance une analyse de chaque sous commande dans l'ordre, avec les bons attributs de fd , debut, fin 
@@ -997,6 +962,10 @@ int main(int argc, char *argv[])
         //cleanup : le processus pere wait ces fils termine
         attenteDuPere(nbexecuteCmds);
         nbexecuteCmds = 0; //finir le traitement de ligne/cmd global, apres on fait new Prompt
+		
+		//Reset redirection : il faut etre vide avant le cmd
+		redirection="";
+		redirFlag=0;
     }  
 
     return 0;
