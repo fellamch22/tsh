@@ -11,6 +11,7 @@ void afficher_repertoire(int fd, off_t position, int mode);
 char get_fichier_type(int fd, char *chemin,int debug);
 char * modeToString(int mode, char type );
 off_t trouve(int fd, char *filename);
+off_t get_end_position(int fd_tar);
 void delete_fichier(int fd, char *filename);
 void delete_repertoire(int fd, char *repname);
 void block_to_file(int fd, char * src_path, char* dst_path);

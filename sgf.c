@@ -76,6 +76,45 @@ char * modeToString(int mode, char type ){
     return droits;
 }
 
+// retourne la position de fin d'un tarball -> exactemnt le debut des blocks nuls
+
+off_t get_end_position(int fd_tar){
+
+  off_t position;
+  struct posix_header h ;
+  int filesize;
+	// chercher la position de fin du tarball 
+					if(  lseek(fd_tar,0,SEEK_SET) == -1 ){
+
+						perror("erreur lseek \n");
+						exit(1);
+					}
+
+					// chercher la position de fin du tarball destination
+					if(read(fd_tar,&h,BLOCKSIZE) == -1){
+
+						perror(" erreur read \n");
+						exit(1);
+
+					}
+
+					while (h.name[0] != '\0'){
+
+						sscanf(h.size,"%o",&filesize);
+						lseek(fd_tar, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
+     				read(fd_tar, &h, BLOCKSIZE);
+
+					}
+			
+					// se positionner a la fin du fichier destination
+					position = lseek(fd_tar,-BLOCKSIZE,SEEK_CUR);
+
+          if(position == -1 ) perror("erreur lseek \n");
+
+          return position;
+
+}
+
 char * fileToBlocks( int fd , char * filename , int * nb_blocks ){
 
 	ssize_t c =0;
