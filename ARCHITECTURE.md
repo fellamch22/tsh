@@ -8,21 +8,23 @@ Systèmes L3 2020-2021
 ## Branche : master, Tag : soutenace
 
 ### 0 Repartition du travail 
-    MECHOUAR Fella
+    MECHOUAR Fella (A COMPLETER)
         - fonctions permettant l'ajout d'un fichier externe dans un tarball ( dans le fichier sgf.c )
         - analye syntaxique 
         - la commande ls -l
         - la commande cp, mv
         - ...
         
-    SU LiFang :
-        - la structure du shell include tous les commandes externes
-        - les commandes da la redireciton hors tar et en tar : >, <, >>, et 2>(gérer stderr)
-        - la commande cd, ls, cat, exit
-        - les fonctions pour afficher les fichiers et les répertroires dans les tarballs (collabore avec Mechouar Fella)
-        - ...
+    SU LiFang
+         - La structure du shell 
+         - La gestion des pipe et des sous commandes par des process fils
+         - L'utilisation de l'ensemble des commandes externes
+         - Les fonctions pour afficher les fichiers et les répertroires pour la gestion des fichiers tarballs (Collabore avec Mechouar Fella)
+         - La gestion des commandes cd (totalement redefinie), mais aussi ls, cat, pwd (redefinies uniquement lorsque des tarball sont en jeu)
+         - Les commandes de redirection hors tar : >, >>, <, et 1>, 2>(stderr)
+         - Les commandes de redirection dans les tar : > , 2> (Collabore avec Mechouar Fella)
         
-    BADJI Sidy : 
+    BADJI Sidy (A COMPLETER)
         - les fonctions pour supprimer fichier et repertoire dans le fichier .tar
         - les foncitons de suppression : rm, rmdir, rm -r
         - Dockerfile
@@ -35,27 +37,28 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 
 * Ce prompt est composé par une variable interne au shell nommée pwd , représentant le répertoire courant lors de l'execution du programme, par exemple :  /home/user/VB/Shell$>
 
-* Cette pwd sera évolué par la suite , et elle est différents du PWD systeme lors des passages dans les fichiers tar. On peut changer de répertoire via la commande "cd" qui a été entièrement  recodée, avec une légère modification : lors d'un appel cd sur un fichier tar, on simule une entrée dans ce fichier tar, en updatant le prompt de facon appropriée. Par la suite, on peut faire de nouveaux cd sur les différents répertoires le composant.  La commande "cd .." permet de remonter d'un niveau, même si on se trouve dans un fichier tar.
+* Cette pwd évoluera par la suite , et est différent du PWD systeme lors des passages dans les fichiers tar. On peut changer de répertoire via la commande "cd" qui a été entièrement  recodée, avec une légère modification : lors d'un appel cd sur un fichier tar, on simule une entrée dans ce fichier tar, en updatant le prompt de facon appropriée. Par la suite, on peut faire de nouveaux cd sur les différents répertoires le composant.  La commande "cd .." permet de remonter d'un niveau, même si on se trouve dans un fichier tar.
 
 * La commande recue sur le prompt est ensuite découpée à chaque "pipe" afin de séparer les sous-commandes la composant, par exemple : la commande "ls -l | head -n 2 | wc -l " sera découpée en 3 parties. 
 
-* Chaque sous commande est analysée via la fonction analyse( ) ou la sous commande est envoyée avec le fichier descripteur du processus précédent, et des variables indiquant si la commande est la premiere ou la derniere d'une chaine, par exemple : la commande "ls -l | head -n 2 | wc -l ", pour la premiere partie de commande "ls -l" sera la premiere,  "wc -l" sera la derniere. 
+* Chaque sous commande est analysée via la fonction analyse( ) ou la sous commande est envoyée avec le fichier descripteur du processus précédent, et des variables indiquant si la commande est la premiere, au milieu, ou la derniere d'une chaine, par exemple : la commande "ls -l | head -n 2 | wc -l ", pour la premiere partie de commande "ls -l" sera la premiere, "head -n 2" sera au milieu et "wc -l" sera la derniere. 
 
-* Lors de l'analyse, chaque sous commande est découpée dans un tableau d'arguments args comprenant dans notre cas "ls" "-l", dans cette table, args[0] = "ls", args[1] = "-l". (cf. void decoupe(char* cmd) ) 
+* Lors de l'analyse, chaque sous commande est découpée dans un tableau d'arguments arguments comprenant dans notre cas "ls" "-l", dans cette table, args[0] = "ls", args[1] = "-l". (cf. void decoupe(char* cmd) ) 
 
-* Si la sous commmande est reconnue comme une commande shell, les commandes seront executées par le code de fonctions spécifiques, sinon les fonctions seront considérées comme des fonctions usuelles et executées via la fonction executeCmd. Par exemple, la commande "ls",  on peut l'executer comme "ls" hors des tarballs (commande standard) , soit on l'execute comme une commande spécifique pour afficher les contenus d'un fichier tar. (cf. ls2 dans shell.c)
+* Si la sous commmande est reconnue comme une commande totalement redefinie dans le shell ( ex : cd ), les commandes seront executées par le code de fonctions spécifiques, sinon les fonctions seront considérées comme des fonctions externes ou redefinies sous condition et executées via la fonction executeCmd qui sera chargée de ce nouveau tri. Par exemple, la commande "ls",  on peut l'executer comme "ls" hors des tarballs (commande standard) , soit on l'execute comme une commande spécifique pour afficher les contenus d'un fichier tar. (cf. ls2 dans shell.c)
 
 * Chaque sous commande fork un processus l'executant.
     - La premiere sous commande crée un process qui  comprend un tube en sortie vers le process suivant.
     - Les sous commandes centrales crée un process qui comprennent un tube en entrée depuis le process précédent, ainsi qu'un tube en sortie vers le process suivant.
-    - La derniere sous commande crée un process qui comprend un tube en entrée depuis le process précédent.
+    - La derniere sous commande crée un process qui comprend uniquement un tube en entrée depuis le process précédent.
     - Sur l'exemple , le shell crée un process child afin d'executer "wc -l", qui écoute le retour du process child executant " head -n 2 ", qui écoute lui-meme le retour du process executant le "ls -l"
+      si le "ls -l" se fait dans un tarball , ou a pour argument un tarball, la fonction redéfinie sera appelée et envérra son résultat au process suivant.
 
                     fork1         fork2             fork3 (C'est le shell qui fait les forks)
             Shell <------- wc -l <------ head -n 2 <------ ls -l
 
 ### 2 Installation
-    comment installer sur antiX (en root)
+#### Comment installer sur antiX (en root)
     - mettre à jour la date-and-timn sur antiX avec la commande /usr/local/bin/set_time-and_date.sh
     - package installé(gcc, rlwarp)
         setxkbmap fr //pour met le clavier en azerty
@@ -66,71 +69,19 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 
         apt-get install manpages-dev // pour mettre le man a jour
         
-    comment installer sur Docker
-    - dockerfile
-    - package installé...etc
+ #### Comment installer sur Docker (A COMPLETER)
+ * dockerfile
+ * package installé...etc
     
 ### 3 Structure du shell ---> shell.c
-    #### role de chaque fonction
-    #### La partie suppression : 
-    Tout d'abord nous avons commencé par créer dans notre systeme de gestion de fichiers trois fonctions
-    utilisant la structure posix et les conditions pour pouvoir manipuler les fichiers ".tar" ayant chacun 
-    ces fonctionalités et agissant sur les commandes concernées telles que : 
-    
-       -off_t trouve(int fd, char *filename)
-       -void delete_fichier(int fd, char *filename) 
-       -void delete_repertoire(int fd, char *repname) :
+#### Role de chaque fonction
+#### Schema de la structure du shell
+![Schema2](https://imgur.com/a/gPShYFe)
 
-    En effet, on a  utilisé ces fonctions pour faire les différentes commandes ci dessous :
-        
-        *rm() :
-            Cette commande permet de supprimer un fichier simple mis en argument.
-            Ainsi, nous faisons appel à la fonction void delete_fichier(int fd, char *filename) qui permet à 
-            partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en 
-            suivant la structure d'un fichier ".tar" :
-            Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers 
-            contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie 
-            la position du fichier en argument et ensuite suivre le reste des instructions fait dans la 
-            fonction void delete_filename(int fd, char *repname) pour la suppression.
-            Ce qui fait la meme procéder pour la suppression d'un repertoire sauf qu'ici les deux fonctions 
-            dans le SGF sont differente.
-            Cependant il y'a une autre perpective avec rm() que l'on va decrire ci dessous sa fonctionalité.
-
-        *rmr():
-            Cette commande permet de faire la suppression recursive.
-            Cependant dans le shell elle utilise les deux fonctions en même temps qui suit le même procedé 
-            au depart mais ici la différence est qu'il permet de supprimer un repertoire contenant d'autres 
-            repertoires ou des fichiers.
-            
-            En effet la commande regarde si c'est un repertoire elle parcours recursivement le repertoire 
-            avec une suppression recursive si: 
-            Le reppetoire contient un fichier ou des fichiers elle utilise la fonction void 
-            delete_fichier(int fd, char *filename) qui va lui permettre de supprimer c/ces dernier(s)
-            
-            Le repertoir ccontient un repertoire ou des repertoires elle utilise la fonction  void 
-            delete_repertoire(int fd, char *repname) pour faire la suppression, et enfin supprimer le 
-            repertoire courant.
-
-        *rmdir() :
-            Cette commande permet de supprimer un repertoire mis en argument.
-            Ainsi, nous faisons appel à la fonction void delete_repertoire(int fd, char *repname) qui permet à 
-            partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en 
-            suivant la structure d'un fichier ".tar" :
-            Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers 
-            contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie 
-            la position du fichier en argument et ensuite suivre le reste des instructions fait dans la 
-            fonction void delete_repertoire(int fd, char *repname) pour la suppression.
-        
-                
-
-#### schema de la structure du shell
-![Duck](http://i.stack.imgur.com/ukC2U.jpg)
-![Schema](https://gaufre.informatique.univ-paris-diderot.fr/mechouar/projet_systeme/blob/SGF3/schema.png)
-![Schema2](/Users/sulifang/Desktop/schema.png)
 ### 4 Gestion des fichiers tarball ---> sgf.c
     - explique chaque fonction dans sgf.c (afficher_rep, afficher_fichier, get_fichier_type...etc)
     
-    #### Fonctions permettant l'ajout d'un fichier externe dans un tarball
+    ### Fonctions permettant l'ajout d'un fichier externe dans un tarball
     * char * fileToBlocks( int fd , char * filename , int * nb_blocks)
         - Cette fonction effectue la transformation du fichier pointé par le descripteur fd en un ensemble de blocks des taille de 512 chacun , compatibles avec la representation d'un fichier dans un tarball.
         - la fonction retourne un pointeur vers les blocs contruits pour le fichier , ainsi que le nombre de blocks aloués dans la variable 'nb_blocks'
@@ -167,22 +118,64 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         - Cette fonction est pour afficher le contenu d'un fichier tar.
         - Cela est fait une partie du syntaxe de "ls2"
 
+    #### La partie suppression : 
+    Tout d'abord nous avons commencé par créer dans notre systeme de gestion de fichiers trois fonctions
+    utilisant la structure posix et les conditions pour pouvoir manipuler les fichiers ".tar" ayant chacun 
+    ces fonctionalités et agissant sur les commandes concernées telles que : 
+    
+       -off_t trouve(int fd, char *filename)
+       -void delete_fichier(int fd, char *filename) 
+       -void delete_repertoire(int fd, char *repname) :
+
+    En effet, on a utilisé ces fonctions pour faire les différentes commandes ci dessous :
+    *rm() :
+    Cette commande permet de supprimer un fichier simple mis en argument.
+    Ainsi, nous faisons appel à la fonction void delete_fichier(int fd, char *filename) qui permet à 
+        partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en 
+        suivant la structure d'un fichier ".tar" : Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie la position du fichier en argument et ensuite suivre le reste des instructions fait dans la fonction void delete_filename(int fd, char *repname) pour la suppression.
+            Ce qui fait la meme procéder pour la suppression d'un repertoire sauf qu'ici les deux fonctions 
+            dans le SGF sont differente.Cependant il y'a une autre perpective avec rm() que l'on va decrire ci dessous sa fonctionalité.
+
+    *rmr():
+    Cette commande permet de faire la suppression recursive.
+    Cependant dans le shell elle utilise les deux fonctions en même temps qui suit le même procedé au depart mais ici la différence est qu'il permet de supprimer un repertoire contenant d'autres repertoires ou des fichiers.
+    En effet la commande regarde si c'est un repertoire elle parcours recursivement le repertoire avec une suppression recursive si: 
+        Le reppetoire contient un fichier ou des fichiers elle utilise la fonction void delete_fichier(int fd, char *filename) qui va lui permettre de supprimer c/ces dernier(s)
+        Le repertoir ccontient un repertoire ou des repertoires elle utilise la fonction  void delete_repertoire(int fd, char *repname) pour faire la suppression, et enfin supprimer le repertoire courant.
+
+    *rmdir() :
+    Cette commande permet de supprimer un repertoire mis en argument.
+    Ainsi, nous faisons appel à la fonction void delete_repertoire(int fd, char *repname) qui permet à partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en suivant la structure d'un fichier ".tar" : Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie la position du fichier en argument et ensuite suivre le reste des instructions fait dans la fonction void delete_repertoire(int fd, char *repname) pour la suppression.
+
 ### 5 Analyse syntaxique ? ---> syntaxique.c
 
 ### 6 Test effectué
-    * Le programme se compile via make. Cela crée deux binary executable : shell s'executant sans arguments ou avec un argumeent -debug pour lancer le mode debug
-    * Tous les commandes externs fonctionnent
-    * Test effectués sur les commandes cat 
-        -cat_redefini() :
+    * Tous les commandes externs fonctionnent avec redirection ou pipe :
+        free
+        free > test 
+        free >> test 
+        head -x 2> err
+        free | tail -n 2 | wc -l
+    
     * Test effectués sur les commandes cd 
-        -cd_redefini() :
+        fonctionne dans et hors des tarballs, avec prise en compte des ".."
+        cd toto.tar/toto 
+        cd toto.tar/toto/../../titi.tar
+        
+    * Test effectués sur les commandes cat 
+        fonctionne dans et hors des tarballs ( commande externe), avec prise en compte des ".."
+        -via la fonction cat_redefini() :
+        cat toto.tar/toto/f1
+        cd toto.tar ; cat toto/../toto/f1
+
     * Test effectués sur les commandes ls 
-        -ls_redefini() :
-    * Test effectués sur les commandes mkdir 
-        -mkdir_redefini() :
-    * Test effectués sur les commandes mkdir 
-        -cp_redefinir() :
-    * Test effectués sur les commandes redirecitons 
+        fonctionne dans et hors des tarballs ( commande externe), avec prise en compte des ".." et de largument -l
+        - via la fonction ls_redefini() :
+            ls toto.tar/
+            ls toto.tar/titi/../toto
+            ls -l toto.tar/titi/../toto
+            
+    * Test effectués sur les commandes cp (A COMPLETER)
           
     * Test effectués sur les commandes  rm, rmdir et rm -r
         -rmdir_redefini() :
@@ -192,10 +185,30 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         -rm_redefini() :
             rm -r fichier.tar repertoire/
             le repertoir peut contenir des fichier ou pas il sera supprimer
+### 7 Bilan
+Le shell demandé doit avoir les fonctionnalités suivantes :
+* les commandes `cd` et `exit` doivent exister (avec leur comportement habituel) 
+   => cd a été totalement recodé et fonctionne avec son comportement habituel
+* toutes les commandes externes doivent fonctionner normalement si leur déroulement n'implique pas l'utilisation d'un fichier (au sens large) dans un tarball 
+   => les commandes externes sont appelées si on implique pas de tarball
+ * `pwd` doit fonctionner y compris si le répertoire courant passe dans un tarball 
+   => pwd est redéfini et fonctionne comme demandé
+* `mkdir`, `rmdir` et `mv` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option 
+   => (A COMPLETER)
+* `cp` et `rm` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option ou avec l'option `-r`
+    => (A COMPLETER)
+* `ls` doit fonctionner y compris avec des chemins impliquant des tarball quand il est utilisé sans option ou avec l'option `-l` 
+   => ls est redéfini si des tarballs sont en jeu , et est utilisable avec l'argument "-l"
+* `cat` doit fonctionner y compris avec des chemins impliquant des tarball quand il est utilisé sans option 
+   => cat est redéfini si des tarballs sont en jeu ,et fonctionne sur les fichiers internes aux tarballs
+* les redirections de l'entrée, de la sortie et de la sortie erreur (y compris sur des fichiers d'un tarball) doivent fonctionner
+   => les redirections d'entrée , sortie et stderr fonctionnent totalement hors des tarballs, la redirection de sortie et stderr fonctionnent dans les tarball
+* les combinaisons de commandes avec `|` doivent fonctionner 
+   => les pipes sont correctement codés et fonctionnent avec des mix de commandes redéfinies par le shell et externes.
 
-### 7 Problème rencontré 
+### 8 Problème rencontré 
 
-### 8 Conclusion
-    Pour la partie suppression : 
+### 9 Conclusion
+Pour la partie suppression : 
     En somme le travail a été très enrichissant sur le plan strategique c'est à dire la répartition des taches, le travail de groupe. Cependant,ça reste quand même stressant à cause du temps les questions qui ont été posés sur discord qui permettaient toujours d'améliorer le travail et de revoir les parties qui ont échappés à notre vigilanche.
 
