@@ -682,7 +682,45 @@ void decoupePwdtmp(){
 
 
                 }
-            
+
+                //DANS UN TAR : redirFlag = 4 = stderr
+                //fonction avec les commandes extern : uname - x 2> unamex
+                //afficher : Try 'uname --help' for more information dans unamex
+                else if ( (UseRedefCmd() == 1) && (redirFlag == 4) ) {
+                    printf(" Redirection stderr dans un Tar\n");
+                    decoupePwdtmp();
+                    //on ouvre le fd du tar
+                    fd_du_tar = open(tarname, O_RDWR);
+                    if (fd < 0){
+                        perror(" Error open ");
+                        return -1;
+                    }
+                    char* FileName = malloc(sizeof(char) * BUFFER);
+                    strcpy(FileName, getTmpFileName(redirection)) ;
+
+                    // on cree un fichier temporaire local avec le resultat des commandes
+					
+					//Mise a jour de la redirection via le chemin absolu, reprise uniquement de l'arbo du tar , suppression dernier / de l'arbo
+
+					redirection = getTarArbo(convertChemin(redirection,""));
+					if(  redirection[strlen(redirection)-1] == '/' ) {
+						redirection[strlen(redirection)-1] = '\0';
+					}
+                    printf("CREATING LOCAL FILE : %s, redirection = %s\n", FileName, redirection);
+
+				
+					if ( debug == 1 ) printf("REDIRECTION = %s \n ",redirection);
+					fd_fichier = open(FileName, O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+				
+                    dup2(fd_fichier, STDERR_FILENO);
+
+                    cpFlag=1;
+                    position = get_end_position(fd_du_tar);
+
+
+                }
+             
+
             }
         }
         
@@ -806,6 +844,14 @@ void decoupePwdtmp(){
         arguments[i] = cmd;
         next[0] = '\0';
         if(strcmp(cmd,">") == 0 ) {
+            cmd = removeSpace(next + 1);
+            if(debug == 1)  printf ("Redirection on file : <%s>\n",cmd);
+            redirection=cmd;
+            arguments[i]=NULL;
+            redirFlag=1; // 1 = overwrite , 2 = append
+            return;
+        }
+        else if(strcmp(cmd,"1>") == 0 ) {
             cmd = removeSpace(next + 1);
             if(debug == 1)  printf ("Redirection on file : <%s>\n",cmd);
             redirection=cmd;
