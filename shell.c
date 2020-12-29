@@ -26,6 +26,8 @@ int redirFlag=0; // 1 = overwrite , 2 = append
 char* pwdtmp;
 char* tarname;
 char* arboTar;
+int cpFlag = 0;
+
 
 char* removePointPoint(char* NewChemin , char* begin) {
 	
@@ -76,6 +78,8 @@ char* removePointPoint(char* NewChemin , char* begin) {
 // "toto.tar/toto/titi/../titi/f3/" =>  "<pwd>/toto.tar/toto/titi/f3"
  char* convertChemin(char* chemin, char* charfinal){	
 	//VARIABLES
+        if (strcmp(chemin,".") == 0) { return strcat(pwd,charfinal);} 
+
         char* Temp = malloc(sizeof(char) * BUFFER);
         char* NewChemin = malloc(sizeof(char) * BUFFER);
         strcpy(Temp,"");
@@ -105,7 +109,6 @@ char* removePointPoint(char* NewChemin , char* begin) {
     	//Cas si on est a la racinecd -
 		//la cas qu'on n'ajoute jamais p dedans (entrant jamais dans while)
     	if(strcmp(Temp,"") == 0) {strcpy(Temp,"/");}
-        printf("temp %s \n",Temp);
 		strcat(Temp,charfinal);
 		return Temp;
 }
@@ -246,7 +249,7 @@ char* getTmpFileName(char*chemin) {
                 while(p != NULL)    {
                     //ajout FileName
                         strcpy(FileName, "/tmp/");
-                        strcat(FileName,p) ;
+                        strcat(FileName,p) ;                    
                     //Debug  printf("'%s'\n", p);
                     p = strtok(NULL, "/");
                 }
@@ -684,6 +687,10 @@ void decoupePwdtmp(){
  
     if (pid == 0) {
         //le fils
+        off_t position;
+        int fd_du_tar ;
+        int fd_fichier;
+        
         if ( debug == 1 ) {
              printf("(PID = %d) Child Exec <%s",getpid(),arguments[0]);
             for(int i=1;i<sizeof(arguments)/sizeof(arguments[0]); i++) {
@@ -763,38 +770,35 @@ void decoupePwdtmp(){
                 //DANS UN TAR
                 else if ( (UseRedefCmd() == 1) && (redirFlag == 1) ) {
                     printf(" Redirection dans un Tar\n");
-                        decoupePwdtmp();
-                        //on ouvre le fd du tar
-                        int fd_du_tar = open(tarname, O_RDWR);
-                        if (fd < 0){
-                            perror(" Error open ");
-                            return -1;
-                        }
-                        char* FileName = malloc(sizeof(char) * BUFFER);
-                        strcpy(FileName, getTmpFileName(redirection)) ;
+                    decoupePwdtmp();
+                    //on ouvre le fd du tar
+                    fd_du_tar = open(tarname, O_RDWR);
+                    if (fd < 0){
+                        perror(" Error open ");
+                        return -1;
+                    }
+                    char* FileName = malloc(sizeof(char) * BUFFER);
+                    strcpy(FileName, getTmpFileName(redirection)) ;
 
-                        // on cree un fichier temporaire local avec le resultat des commandes
-                        
-                        //Mise a jour de la redirection via le chemin absolu, reprise uniquement de l'arbo du tar , suppression dernier / de l'arbo
+                    // on cree un fichier temporaire local avec le resultat des commandes
+					
+					//Mise a jour de la redirection via le chemin absolu, reprise uniquement de l'arbo du tar , suppression dernier / de l'arbo
 
-                        redirection = getTarArbo(convertChemin(redirection,""));
-                        if(  redirection[strlen(redirection)-1] == '/' ) {
-                            redirection[strlen(redirection)-1] = '\0';
-                        }
-                        printf("CREATING LOCAL FILE : %s, redirection = %s\n", FileName, redirection);
+					redirection = getTarArbo(convertChemin(redirection,""));
+					if(  redirection[strlen(redirection)-1] == '/' ) {
+						redirection[strlen(redirection)-1] = '\0';
+					}
+                    printf("CREATING LOCAL FILE : %s, redirection = %s\n", FileName, redirection);
 
-                    
-                        if ( debug == 1 ) printf("REDIRECTION = %s \n ",redirection);
-                        int fd_fichier = open(FileName, O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
-                        dup2(fd_fichier, STDOUT_FILENO);
-                        
-                        // on ajoute le fichier local dans le tar a la bonne position
-                        // /!\ FIXME /!\ la position est mal set et corrompt le TARBALL !
-                        off_t position;
-                        position = get_end_position(fd_du_tar);
-                        addFile( fd_du_tar, fd_fichier , redirection ,  position);
-                        free(FileName);
-                        
+				
+					if ( debug == 1 ) printf("REDIRECTION = %s \n ",redirection);
+					fd_fichier = open(FileName, O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+				
+                    dup2(fd_fichier, STDOUT_FILENO);
+
+                    cpFlag=1;
+                    position = get_end_position(fd_du_tar);
+
 
                 }
             
@@ -811,6 +815,8 @@ void decoupePwdtmp(){
          //##### REDEFINITION COMMANDE CAT   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" (UseRedefCmd)
         else if ( (strcmp(arguments[0], "cat") == 0) && ( UseRedefCmd() == 1 ) ) {
             int ret = cat_redefini();
+            //printf(" >>> %d %d %s %ld\n",fd_du_tar, fd_fichier , redirection ,  position);
+			if (cpFlag == 1) addFile( fd_du_tar, fd_fichier , redirection ,  position);
             exit(ret); // kill le fils
         }
 
@@ -829,6 +835,7 @@ void decoupePwdtmp(){
         else if (  (strcmp(arguments[0], "ls") == 0)  && ( UseRedefCmd() == 1 ))   //si la commande est ls ou cat et rempli les conditions de redef
          {
             int ret = ls_redefini();
+            if (cpFlag == 1) addFile( fd_du_tar, fd_fichier , redirection ,  position);
             exit(ret); // kill le fils
         }
         
@@ -847,14 +854,29 @@ void decoupePwdtmp(){
             int ret = mv_redefini();
             exit(ret);
         }        
-
-        else if (execvp( arguments[0], arguments) == -1) {
-            perror("Commande Inconnue \n");
-            kill(getpid(),SIGTERM);
-            return 1; // kill le fils pour eviter zombie
+  
+        else {
+            int pidrecopy=1;
+            if (cpFlag == 1) {pidrecopy=fork();}
+            //le fils principal 
+            if (pidrecopy != 0 ) {
+                if (execvp( arguments[0], arguments) == -1) {
+                    perror("Commande Inconnue \n");
+                    kill(getpid(),SIGTERM);
+                    return 1; // kill le fils pour eviter zombie
+                }
+            }
+            //le petit fils
+            else {
+               int w;
+               wait(&w);
+               if (cpFlag == 1) addFile( fd_du_tar, fd_fichier , redirection ,  position);
+               kill(getpid(),SIGTERM);
+               return 0;
+            }
         }
     }// fin fils
-    
+
     //nettoyage fd
     if (fd != 0) {
         close(fd);
@@ -867,6 +889,7 @@ void decoupePwdtmp(){
     if (dernier == 1) {
         close(tubes[LECTURE]);
     }
+    
     return tubes[LECTURE];
 }
  
@@ -930,16 +953,6 @@ void decoupePwdtmp(){
             redirFlag=3; // 1 = overwrite , 2 = append, 3 = write into
             return;
         }
-        else if(strcmp(cmd,"2") == 0 ) {
-            cmd = removeSpace(next + 1);
-            next = strchr(cmd, ' ');
-            cmd = removeSpace(next + 1);
-            if(debug == 1)  printf ("Redirection on file : <%s>\n",cmd);
-            redirection=cmd;
-            arguments[i]=NULL;
-            redirFlag=4; // 1 = overwrite , 2 = append , 3 = write into , 4 = err
-            return;
-        }
         else if(strcmp(cmd,"2>") == 0 ) { ;
             cmd = removeSpace(next + 1);
             if(debug == 1)  printf ("Redirection on file : <%s>\n",cmd);
@@ -955,7 +968,6 @@ void decoupePwdtmp(){
             next = strchr(cmd, ' ');
         }
     }
- 
     if (cmd[0] != '\0') {
         arguments[i] = cmd;
         next = strchr(cmd, '\n');
@@ -964,7 +976,7 @@ void decoupePwdtmp(){
         ++i;
     }
     arguments[i] = NULL; // dernier arg de args = NULL
-}
+    }
 
 //Redefinition commande CD
  void cd(char *chemin){
@@ -1250,8 +1262,6 @@ int main(int argc, char *argv[])
     char buff[BUFFER] = { 0 };
     int val_read = 0; //recuperer la valeur de retour de read
     int val_write = 0;
-
-
     
     sprintf(msg, "(PID = %d) TSH Shell\n", pid);
     val_write = write(STDOUT_FILENO, msg, sizeof(msg)/sizeof(msg[1]));
@@ -1303,6 +1313,7 @@ int main(int argc, char *argv[])
         //fin du while
         //fd = analyse(wc, fd_precedent, 0, 1)
         //Au final, on a 3 appelé analyse, un par les sous commande de cmd : ls, grep shell, wc
+        
         while (next != NULL) { // on rentre dans ce while uniquement si on a au moins un "|" dans la commande
             *next = '\0'; // on remplace dans cmd tout ce qu'il y a apres le premier | par '\0'
             fd = analyse(cmd, fd, debut, 0); // on lance une analyse de chaque sous commande dans l'ordre, avec les bons attributs de fd , debut, fin
@@ -1310,6 +1321,7 @@ int main(int argc, char *argv[])
             next = strchr(cmd, '|'); // prochain pipe
             debut = 0;
         }
+
         //derniere sous commande
         fd = analyse(cmd, fd, debut, 1); // on analyse la cmd avec dernier = 1
         
@@ -1320,6 +1332,7 @@ int main(int argc, char *argv[])
         //Reset redirection : il faut etre vide avant le cmd
         redirection="";
         redirFlag=0;
+        cpFlag=0;
     }
 
     return 0;
