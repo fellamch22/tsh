@@ -155,7 +155,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 * Dans ce cas le petit fils créé par le fils executant la derniere partie de la commande attend qu'il ai terminé l'execution de sa commande (et de mourir) pour prendre la main et procéder a la recopie de l'ensemble du résultat.
 
 #### Schema de la structure du shell
-![Schema](https://imgur.com/a/dpXM08Q)
+![Schema](https://imgur.com/a/Pqr4l0Z)
 
 ### 4 Gestion des fichiers tarball ---> sgf.c
 Fonctions permettant l'ajout d'un fichier externe dans un tarball
