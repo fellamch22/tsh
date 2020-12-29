@@ -1,6 +1,11 @@
 SYSTÈME : premier rendu projet
 ======================
 
+A test of adding image in md
+
+![Duck](http://i.stack.imgur.com/ukC2U.jpg)
+
+
 **L3 Informatique l'équipe 6 : MECHOUAR Fella / BADJI Sidy / SU LiFang**
 
 # Premier Rendu
