@@ -77,21 +77,16 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 #### Role de chaque fonction
 #### Schema de la structure du shell
 ![Schema](https://imgur.com/a/gPShYFe)
-<img src="https://imgur.com/a/gPShYFe" alt="GitHub" title="Schema de la structure du shell" width="50" height="100" />
 
 ### 4 Gestion des fichiers tarball ---> sgf.c
-    - explique chaque fonction dans sgf.c (afficher_rep, afficher_fichier, get_fichier_type...etc)
-    
-    `Fonctions permettant l'ajout d'un fichier externe dans un tarball`
+Fonctions permettant l'ajout d'un fichier externe dans un tarball
     * char * fileToBlocks( int fd , char * filename , int * nb_blocks)
         - Cette fonction effectue la transformation du fichier pointé par le descripteur fd en un ensemble de blocks des taille de 512 chacun , compatibles avec la representation d'un fichier dans un tarball.
         - la fonction retourne un pointeur vers les blocs contruits pour le fichier , ainsi que le nombre de blocks aloués dans la variable 'nb_blocks'
-
     * void addFile( int fd, int fd1 , char * src_filename , off_t position)
+        - Cette fonction utilise le résultat  de la conversion du fichier pointé par fd1 par la fonction fileToBlocks, et l'insère à la position "position" dans le fichier .tar pointé par fd.
 
-        -  Cette fonction utilise le résultat  de la conversion du fichier pointé par fd1 par la fonction fileToBlocks, et l'insère à la position "position" dans le fichier .tar pointé par fd.
-
-    ### Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
+Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
     * off_t trouve(int fd, char *filename) 
         - Cette fonction permet de donner la position d’un fichier dans le fichier .tar
         - Si le fichier passé en argument existe celle ci renvoie une valeur de retour positive désignant la position du fichier sinon retourne -1
@@ -99,35 +94,29 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         - Cette fonction utilise la fonction trouve(int fd, char *filename) pour obtenir la position du fichier passer en argument
         - Si elle a sa position elle supprime le fichier
         - La suppression se fait avec decalage dans le fichier fichier .tar
-        
     * void delete_repertoire(int fd, char *filename)
         - Cette fonction utilise la fonction trouve(int fd, char *filename) et la fonction delete_fichier(int fd, char *repname)
         
-    ### Les fonctions pour afficher les fichiers et les répertroires dans les tarballs 
+Les fonctions pour afficher les fichiers et les répertroires dans les tarballs 
     * char get_fichier_type(int fd, char *chemin){...}
         - Cette fonction est pour obtenir le typeflag des tarballs
         - Elle permet de gérer la variable pwd interne au shell
         - Vérifie que l'on fait les cd sur des répertoires dans les fichiers tar
         - La commande pour exectuer dans le shell : gft <fichier.tar> <fichier>
-        
     * void afficher_fichier(int fd, char *chemin){...}
         - Cette fonction permet d'afficher le contenu d'un fichier dans un fichier tar
         - Elle est le composant de la fonction cat2 que nous avons crée
         - La commande pour exectuer dans le shell : il faut d'abord renter dans un fichier tar, après on peut executer cat2 <fichier>
-
     * void afficher_repertoire(int fd, off_t position, int mode){...}
         - Cette fonction est pour afficher le contenu d'un fichier tar.
         - Cela est fait une partie du syntaxe de "ls2"
 
-    #### La partie suppression : 
-    Tout d'abord nous avons commencé par créer dans notre systeme de gestion de fichiers trois fonctions
-    utilisant la structure posix et les conditions pour pouvoir manipuler les fichiers ".tar" ayant chacun 
-    ces fonctionalités et agissant sur les commandes concernées telles que : 
+La partie suppression : 
+    Tout d'abord nous avons commencé par créer dans notre systeme de gestion de fichiers trois fonctions utilisant la structure posix et les conditions pour pouvoir manipuler les fichiers ".tar" ayant chacun  ces fonctionalités et agissant sur les commandes concernées telles que : 
+        - off_t trouve(int fd, char *filename)
+        - void delete_fichier(int fd, char *filename) 
+        - void delete_repertoire(int fd, char *repname) 
     
-       -off_t trouve(int fd, char *filename)
-       -void delete_fichier(int fd, char *filename) 
-       -void delete_repertoire(int fd, char *repname) :
-
     En effet, on a utilisé ces fonctions pour faire les différentes commandes ci dessous :
     *rm() :
     Cette commande permet de supprimer un fichier simple mis en argument.
@@ -148,7 +137,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
     Cette commande permet de supprimer un repertoire mis en argument.
     Ainsi, nous faisons appel à la fonction void delete_repertoire(int fd, char *repname) qui permet à partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en suivant la structure d'un fichier ".tar" : Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie la position du fichier en argument et ensuite suivre le reste des instructions fait dans la fonction void delete_repertoire(int fd, char *repname) pour la suppression.
 
-### 5 Analyse syntaxique ? ---> syntaxique.c
+### 5 Analyse syntaxique ? ---> syntaxique.c (A COMPLETER)
 
 ### 6 Test effectué
     * Tous les commandes externs fonctionnent avec redirection ou pipe :
