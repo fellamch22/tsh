@@ -470,10 +470,13 @@ void decoupePwdtmp(){
 
  int mv_redefini(){
      
+     struct stat s ;
+     
      char * src_path = NULL;
      char * dst_path = NULL ;
      char * src_arbotar = NULL ;
      char * dst_arbotar = NULL ;
+     char rm_path[BUFFER];
      int fd_src = -1 ;
      int fd_dst = -1;
      // voir le nombre d'arguments
@@ -483,6 +486,8 @@ void decoupePwdtmp(){
         src_path = convertChemin(arguments[nbargs - 2],(arguments[nbargs - 2][strlen(arguments[nbargs - 2])-1] == '/')?"/":"");
         dst_path  = convertChemin(arguments[nbargs-1],"");
 
+        memset(rm_path,'\0',BUFFER);
+        strcpy(rm_path,src_path);
         //printf("nb : %d , conversion source : %s , conversion destination : %s \n\n",nbargs,src_path,dst_path);
 
 
@@ -493,6 +498,10 @@ void decoupePwdtmp(){
 
         if(fd_src != -1 ){// la source est un tarball
 
+            
+                 memset(arguments[1],'\0',strlen(arguments[1]));
+                 strcpy(arguments[1],rm_path);
+
             if(fd_dst != -1 ){// destination tarball
 
                 if(strcmp(src_arbotar,"") == 0){// la copier concerne le fichier avec extension .tar
@@ -502,6 +511,7 @@ void decoupePwdtmp(){
 
                 }else{
                     cp_srctar(src_arbotar,fd_src,dst_arbotar,fd_dst,1);
+                    
                     nbargs --;
                     if(src_path[strlen(src_path)-1] != '/'){
                         rm_redefini();
@@ -542,14 +552,30 @@ void decoupePwdtmp(){
 
             if(fd_dst != -1){// destination tarball
 
+                
+                memset(arguments[1],'\0',strlen(arguments[1]));
+                strcpy(arguments[1],rm_path);
+
                 cp_srcsimple(src_path,dst_arbotar,fd_dst,1);
-                    nbargs --;
-                    if(src_path[strlen(src_path)-1] != '/'){
-                        rm_redefini();
-                    }else
-                    {
-                        rmdir_redefini();
-                    }
+                nbargs --;
+                 // faire un stat pour savoir si la source est un repertoire ou un fichier
+                 
+                if (stat(rm_path,&s) == -1 ){
+
+                        perror("erreur stat \n");
+                        return -1;
+                    
+                }
+
+                 if(!S_ISDIR(s.st_mode)){
+
+
+                        execlp("rm","rm",rm_path,NULL);
+                }else
+                {   
+
+                        execlp("rmdir","rmdir",rm_path,NULL);
+                }
                     
 
             }else // destination simple
