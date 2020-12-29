@@ -86,23 +86,23 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
     - package installé...etc
     
 ### 3 Structure du shell ---> shell.c
-#### Role de chaque fonction
+#### Rôle de chaque fonction
 * int analyse(char* cmd, int fd, int debut, int dernier) 
     - permet d'analyser une sous commande précise, la découpe via decoupe(cmd) et identifie les sous commandes qui sont totalement reefinies et nécéssitant pas de fork() (ex : cd , exit)
     - si la commande n'est pas totalement redefinie, fait appel a executeCmd
 
  * void cd(char *chemin)
- - utilise dans tous les cas la redefinition de la commande cd , qui permet la mise a jour du pwd local
+    - utilise dans tous les cas la redefinition de la commande cd , qui permet la mise a jour du pwd local
  
 * void decoupe(char* cmd) 
-- permet de remplir le tableau "arguments" avec la fonction decoupe(cmd). ls -l devient arguments[0] = "ls" , arguments[1] = "-l"
+    - permet de remplir le tableau "arguments" avec la fonction decoupe(cmd). ls -l devient arguments[0] = "ls" , arguments[1] = "-l"
 
 * int executeCmd(int fd, int debut, int dernier) 
-- Fork un fils, et redirige correctement les entrées et sorties des différentes sous-commandes selon leur position dans la commande initiale 
-- Selon la commande executée, on peut faire appel a des commandes redéfinies si un tarball est en jeu, sinon on execute directement la commande via execvp
+    - Fork un fils, et redirige correctement les entrées et sorties des différentes sous-commandes selon leur position dans la commande initiale 
+    - Selon la commande executée, on peut faire appel a des commandes redéfinies si un tarball est en jeu, sinon on execute directement la commande via execvp
  
 * int UseRedefCmd()
-- Détecte si un tarball est en jeu dans le pwd actuel ou les arguments de la commande
+    - Détecte si un tarball est en jeu dans le pwd actuel ou les arguments de la commande
  
 * int rmdir_redefini()  (A COMPLETER)
 
@@ -112,23 +112,23 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 
 * int mkdir_redefini()  (A COMPLETER)
 
-* int cat_redefini()  (A COMPLETER)
- - Commandes redefinies appelées lorsque des tarball sont en jeu
+* int cat_redefini() 
+    - Commandes redefinies appelées lorsque des tarball sont en jeu
 
 * int ls_redefini()  (A COMPLETER)
- - Commandes redefinies appelées lorsque des tarball sont en jeu
+    - Commandes redefinies appelées lorsque des tarball sont en jeu
  
 * char* convertChemin(char* chemin, char* charfinal)
-- Converti un chemin relatif en absolu
+    - Converti un chemin relatif en absolu
 
 * char* removePointPoint(char* NewChemin , char* begin)
-- Supprime le ".." d'un chemin , ainsi que la sous partie qui le précède
+    - Supprime le ".." d'un chemin , ainsi que la sous partie qui le précède
 
 * char* findGoodPath() 
-- Detecte le chemin contenant le ".tar" a utiliser
+    - Detecte le chemin contenant le ".tar" a utiliser
   
  *void decoupePwdtmp()
-- Permet d'identifier le nom du tarname en jeu ainsi que son arborescence, si elle existe
+    - Permet d'identifier le nom du tarname en jeu ainsi que son arborescence, si elle existe
  
 * char* getTarParentDir(char*chemin) (A COMPLETER)
 
@@ -137,13 +137,13 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 * char* getTarArbo(char*chemin) (A COMPLETER)
 
 * char* getTmpFileName(char*chemin)
-- Permet de resortir certaines parties precises depuis un chemin donné, utilisé en argument des fonctions de sgf.c
+    - Permet de resortir certaines parties precises depuis un chemin donné, utilisé en argument des fonctions de sgf.c
 
  * char* removeSpace(char* str)
- - Supprime les espaces multiples dans la commande
+    - Supprime les espaces multiples dans la commande
  
 * void attenteDuPere(int n)
-- Permet au Shell d'attendre le retour de tous ses fils avant de continuer
+    - Permet au Shell d'attendre le retour de tous ses fils avant de continuer
 
 #### Redirections
 * Les redirections se font dans un premier temps dans la fonction decoupe, qui initialise une variable "redirection" ainsi qu'un flag redirFlag lorsqu'une redirection est détéctée, et supprime la partie redirection de la commande finale (ex : "free > test" devient "free" mais a initialisé les variables et redirFlag.
@@ -187,8 +187,8 @@ Les fonctions pour afficher les fichiers et les répertroires dans les tarballs
     - Elle est le composant de la fonction cat2 que nous avons crée
     - La commande pour exectuer dans le shell : il faut d'abord renter dans un fichier tar, après on peut executer cat2 <fichier>
 * void afficher_repertoire(int fd, off_t position, int mode){...}
-        - Cette fonction est pour afficher le contenu d'un fichier tar.
-        - Cela est fait une partie du syntaxe de "ls2"
+    - Cette fonction est pour afficher le contenu d'un fichier tar.
+    - Cela est fait une partie du syntaxe de "ls2"
 
 La partie suppression : 
 * Tout d'abord nous avons commencé par créer dans notre systeme de gestion de fichiers trois fonctions utilisant la structure posix et les conditions pour pouvoir manipuler les fichiers ".tar" ayant chacun  ces fonctionalités et agissant sur les commandes concernées telles que : 
@@ -219,11 +219,11 @@ La partie suppression :
 
 ### 6 Test effectué
     * Tous les commandes externes fonctionnent avec redirection ou pipe :
-    free
-    free > test 
-    free >> test 
-    head -x 2> err
-    free | tail -n 2 | wc -l
+        free
+        free > test 
+        free >> test 
+        head -x 2> err
+        free | tail -n 2 | wc -l
     
     * Test effectués sur les commandes cd 
         fonctionne dans et hors des tarballs, avec prise en compte des ".."
@@ -244,17 +244,14 @@ La partie suppression :
         ls -l toto.tar/titi/../toto
             
     * Test effectués sur les commandes  rm, rmdir et rm -r
-        -rmdir_redefini() :
-            rmdir fichier.tar repertoire/
-        -rm_redefini() :
-            rm fichier.tar fichier
-        -rm_redefini() :
-            rm -r fichier.tar repertoire/
-            le repertoir peut contenir des fichier ou pas il sera supprimer
+        rmdir fichier.tar repertoire/
+        rm fichier.tar fichier
+        rm -r fichier.tar repertoire/
+        le repertoir peut contenir des fichier ou pas il sera supprimer
             
     * Test effectués sur les redirections internes aux tarballs
-        - cd toto.tar; cat toto/f2 > f4 ; cat toto/f2 > toto/f6    
-        - head -x 2> toto.tar/toto/f10
+        cd toto.tar; cat toto/f2 > f4 ; cat toto/f2 > toto/f6    
+        head -x 2> toto.tar/toto/f10
 
 ### 7 Bilan
 Le shell demandé doit avoir les fonctionnalités suivantes :
