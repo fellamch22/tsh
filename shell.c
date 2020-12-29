@@ -513,7 +513,7 @@ void decoupePwdtmp(){
                     cp_srctar(src_arbotar,fd_src,dst_arbotar,fd_dst,1);
                     
                     nbargs --;
-                    if(src_path[strlen(src_path)-1] != '/'){
+                    if(rm_path[strlen(rm_path)-1] != '/'){
                         rm_redefini();
                     }else
                     {
