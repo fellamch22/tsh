@@ -1,18 +1,16 @@
 SYSTÈME : premier rendu projet
 ======================
 
-A test of adding image in md
+**L3 Informatique l'équipe 6 : MECHOUAR Fella / SU LiFang / BADJI Sidy**
 
-![Duck](http://i.stack.imgur.com/ukC2U.jpg)
+# Final Rendu
+
+## Branche : master, Tag : soutenace
 
 
-**L3 Informatique l'équipe 6 : MECHOUAR Fella / BADJI Sidy / SU LiFang**
 
-# Premier Rendu
-
-## Branche git SGF3
-
-### Fonctionnement du Shell
+### Introduction
+#### Fonctionnement du Shell
 Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les tests sont effetués sur antiX.
 
 * Le shell tsh est fait d'un prompt mis dans une boucle infinie, attendant une commande jusqu'a l'écriture de la commande "exit" par l'utilsateur.
@@ -38,80 +36,81 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
                     fork1         fork2             fork3 (C'est le shell qui fait les forks)
             Shell <------- wc -l <------ head -n 2 <------ ls -l
 
-
-
-### Fonctions permettant l'ajout d'un fichier externe dans un tarball ( dans le fichier sgf.c )
-
-* char * fileToBlocks( int fd , char * filename , int * nb_blocks)
-    - Cette fonction effectue la transformation du fichier pointé par le descripteur fd en un ensemble de blocks des taille de 512 chacun , compatibles avec la representation d'un fichier dans un tarball.
-    - la fonction retourne un pointeur vers les blocs contruits pour le fichier , ainsi que le nombre de blocks aloués dans la variable 'nb_blocks'
-
-* void addFile( int fd, int fd1 , char * src_filename , off_t position)
-
-    -  Cette fonction utilise le résultat  de la conversion du fichier pointé par fd1 par la fonction fileToBlocks, et l'insère à la position "position" dans le fichier .tar pointé par fd.
-
-
-
-
-### Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
-
-* off_t trouve(int fd, char *filename) 
-    - Cette fonction permet de donner la position d’un fichier dans le fichier .tar
-    - Si le fichier passé en argument existe celle ci renvoie une valeur de retour positive désignant la position du fichier sinon retourne -1
-* void delete_fichier(int fd, char *filename)
-    - Cette fonction utilise la fonction trouve(int fd, char *filename) pour obtenir la position du fichier passer en argument
-    - Si elle a sa position elle supprime le fichier
-    - La suppression se fait avec decalage dans le fichier fichier .tar
+### Installation
+    comment installer sur antiX 
+    - msg date, time 
+    - package installé(gcc, rlwarp)
+    comment installer sur Docker
+    - dockerfile
+    - package installé...etc
     
-* void delete_repertoire(int fd, char *filename)
-    - Cette fonction utilise la fonction trouve(int fd, char *filename) et la     fonction delete_fichier(int fd, char *repname)
+### Structure du shell ---> shell.c
+    #### role de chaque fonction
+    #### schema
+### Gestion des fichiers tarball ---> sgf.c
+    - explique chaque fonction dans sgf.c (afficher_rep, afficher_fichier, get_fichier_type...etc)
+    ### Fonctions permettant l'ajout d'un fichier externe dans un tarball ( dans le fichier sgf.c )
 
-    NB : les commandes pour supprimer ont été entamés mais ne fonctionnent pas encore voir shell.c dans la branche SGF2
+    * char * fileToBlocks( int fd , char * filename , int * nb_blocks)
+        - Cette fonction effectue la transformation du fichier pointé par le descripteur fd en un ensemble de blocks des taille de 512 chacun , compatibles avec la representation d'un fichier dans un tarball.
+        - la fonction retourne un pointeur vers les blocs contruits pour le fichier , ainsi que le nombre de blocks aloués dans la variable 'nb_blocks'
 
+    * void addFile( int fd, int fd1 , char * src_filename , off_t position)
 
+        -  Cette fonction utilise le résultat  de la conversion du fichier pointé par fd1 par la fonction fileToBlocks, et l'insère à la position "position" dans le fichier .tar pointé par fd.
 
-### Les fonctions pour afficher les fichiers et les répertroires dans les tarballs 
+    ### Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
 
-
-* char get_fichier_type(int fd, char *chemin){...}
-    - Cette fonction est pour obtenir le typeflag des tarballs
-    - Elle permet de gérer la variable pwd interne au shell
-    - Vérifie que l'on fait les cd sur des répertoires dans les fichiers tar
-    - La commande pour exectuer dans le shell : gft <fichier.tar> <fichier>
-    
-* void afficher_fichier(int fd, char *chemin){...}
-    - Cette fonction permet d'afficher le contenu d'un fichier dans un fichier tar
-    - Elle est le composant de la fonction cat2 que nous avons crée
-    - La commande pour exectuer dans le shell : il faut d'abord renter dans un fichier tar, après on peut executer cat2 <fichier>
-
-* void afficher_repertoire(int fd, off_t position, int mode){...}
-    - Cette fonction est pour afficher le contenu d'un fichier tar.
-    - Cela est fait une partie du syntaxe de "ls2"
-
-
-
-### Compilation et Test
-
-* Le programme se compile via make. Cela crée deux binary executable : shell (tsh) et sgf (Test des fonctions), s'executant sans arguments. 
-
-* Pour la partie shell : 
-    - des l'executions, le prompt apparait avec la localisation actuelle sur le systeme de fichiers (pwd). 
-    - Commandes executables : 
-        - exit (Termine le programme)
-        - cd < dir >, cd < tarfile >, cd < dir dans un tarfile >, cd ..
-        - cat2 < fichier inclus dans un tarfile >, apres etre deja rentre dedans via cd <tarfile>
-        - ls2 <fichier.tar> <chemin  (option)>
-        - ls2 -l <fichier.tar> <chemin  (option)>
-        - Toutes les commandes externes fonctionnent directement, dont les commandes avec pipe (" | ")     
+    * off_t trouve(int fd, char *filename) 
+        - Cette fonction permet de donner la position d’un fichier dans le fichier .tar
+        - Si le fichier passé en argument existe celle ci renvoie une valeur de retour positive désignant la position du fichier sinon retourne -1
+    * void delete_fichier(int fd, char *filename)
+        - Cette fonction utilise la fonction trouve(int fd, char *filename) pour obtenir la position du fichier passer en argument
+        - Si elle a sa position elle supprime le fichier
+        - La suppression se fait avec decalage dans le fichier fichier .tar
         
-* Pour la partie sgf : 
-    - Partie Ajout dans le fichier .tar : fileToBlocks / addFile
-        - ./sgf 
-    - Partie  Suppression fichier et repertoire dans le fichier .tar : delete_repertoire / delete_fichier / trouve
-        - ./sgf < fichier.tar > < fichier >
+    * void delete_repertoire(int fd, char *filename)
+        - Cette fonction utilise la fonction trouve(int fd, char *filename) et la     fonction delete_fichier(int fd, char *repname)
         
-    
-# Rapport partie suppession:
+    ### Les fonctions pour afficher les fichiers et les répertroires dans les tarballs 
+
+    * char get_fichier_type(int fd, char *chemin){...}
+        - Cette fonction est pour obtenir le typeflag des tarballs
+        - Elle permet de gérer la variable pwd interne au shell
+        - Vérifie que l'on fait les cd sur des répertoires dans les fichiers tar
+        - La commande pour exectuer dans le shell : gft <fichier.tar> <fichier>
+        
+    * void afficher_fichier(int fd, char *chemin){...}
+        - Cette fonction permet d'afficher le contenu d'un fichier dans un fichier tar
+        - Elle est le composant de la fonction cat2 que nous avons crée
+        - La commande pour exectuer dans le shell : il faut d'abord renter dans un fichier tar, après on peut executer cat2 <fichier>
+
+    * void afficher_repertoire(int fd, off_t position, int mode){...}
+        - Cette fonction est pour afficher le contenu d'un fichier tar.
+        - Cela est fait une partie du syntaxe de "ls2"
+
+### Analyse syntaxique ? ---> syntaxique.c
+
+### Test effectué
+    * Le programme se compile via make. Cela crée deux binary executable : shell (tsh) et sgf (Test des fonctions), s'executant sans arguments. 
+
+    * Pour la partie shell : 
+        - des l'executions, le prompt apparait avec la localisation actuelle sur le systeme de fichiers (pwd). 
+        - Commandes executables : 
+            - exit (Termine le programme)
+            - cd < dir >, cd < tarfile >, cd < dir dans un tarfile >, cd ..
+            - cat2 < fichier inclus dans un tarfile >, apres etre deja rentre dedans via cd <tarfile>
+            - ls2 <fichier.tar> <chemin  (option)>
+            - ls2 -l <fichier.tar> <chemin  (option)>
+            - Toutes les commandes externes fonctionnent directement, dont les commandes avec pipe (" | ") 
+            
+    * Pour la partie sgf : 
+        - Partie Ajout dans le fichier .tar : fileToBlocks / addFile
+            - ./sgf 
+        - Partie  Suppression fichier et repertoire dans le fichier .tar : delete_repertoire / delete_fichier / trouve
+            - ./sgf < fichier.tar > < fichier >
+
+# Partie suppession:
 
     Tout d'abord j'ai commencé par créer dans notre systeme de gestion de fichiers trois fonctions utilisant la structure posix et les conditions pour pouvoir manipuler les fichiers ".tar" ayant chacun ces fonctionalités et agissant sur les commandes concernées telles que : 
      
@@ -119,7 +118,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         -rm
         -rm -r
 
-        # Les fonctions pour suppression dans SGF:
+   # Les fonctions pour suppression dans SGF:
 
             * off_t trouve(int fd, char *filename) 
                 - Cette fonction permet de donner la position d’un fichier dans le fichier .tar
@@ -132,7 +131,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
             * void delete_repertoire(int fd, char *repname)
                 - Cette fonction utilise la fonction trouve(int fd, char *filename) et la     fonction delete_fichier(int fd, char *repname)
 
-        # L'intégration des fonctions dans Shell :
+   # L'intégration des fonctions dans Shell :
             
             En effet, j'ai utilisé ces fonctions pour faire les différentes commandes ci dessous :
 
@@ -158,7 +157,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
                         Le reppetoire contient un fichier ou des fichiers elle utilise la fonction void delete_fichier(int fd, char *filename) qui va lui permettre de supprimer c/ces dernier(s)
                         Le repertoir ccontient un repertoire ou des repertoires elle utilise la fonction  void delete_repertoire(int fd, char *repname) pour faire la suppression, et enfin supprimer le repertoire courant.
 
-        # Mode d'utilisation :
+   # Mode d'utilisation :
             Après  avoir compiler pour acceder dans notre shell on utilise les commandes comme montré ci dessous :
 
                     Exemple :
@@ -177,7 +176,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
                             le repertoir peut contenir des fichier ou pas il sera supprimer
 
 
-        # Problèmes rencontrés :
+   # Problèmes rencontrés :
 
             J'ai eu a rencontré quelques problème   d'inattention pour la réalisation de mes commandes qui a un peu duré mais avec le travail d'équipe j'ai fini par le résoudre.
             J'avais ouvert le fichier descripteur en lecture seulement alors que je devais le faire en lecture ecriture.
@@ -185,3 +184,12 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
             Pour les fonctions dans le SGF j'ai eu en rencontré plusieurs prblème mais ça concernait l'incompréhension de la structure d'un fichier ".tar"
             et cela pu être resouds avec l'aides de mes coéquipiés.
             Ainsi des problèmes de temps comme la majeur partie des étudiants vu le déroulement de cette année. 
+
+   # Conclusion :
+
+        En somme le travail a été très enrichissant sur le plan strategique c'est à dire la répartition des taches, le travail de groupe.
+        Cependant,ça reste quand même stressant à cause du temps les questions qui ont été posés sur gitLab qui permettaient toujours d'améliorer le travail et de revoir les parties qui ont échappés à notre vigilanche.
+        
+### Problème rencontré 
+### Conclusion
+
