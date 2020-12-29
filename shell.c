@@ -394,7 +394,7 @@ void decoupePwdtmp(){
      
      
         src_path = convertChemin(arguments[nbargs - 2],(arguments[nbargs - 2][strlen(arguments[nbargs - 2])-1] == '/')?"/":"");
-        dst_path  = convertChemin(arguments[nbargs-1],"/");
+        dst_path  = convertChemin(arguments[nbargs-1],(arguments[nbargs - 1][strlen(arguments[nbargs - 1])-1] == '/')?"/":"");
 
         //printf("nb : %d , conversion source : %s , conversion destination : %s \n\n",nbargs,src_path,dst_path);
 
@@ -488,13 +488,11 @@ void decoupePwdtmp(){
 
         memset(rm_path,'\0',BUFFER);
         strcpy(rm_path,src_path);
-        //printf("mv nb : %d , conversion source : %s , conversion destination : %s \n\n",nbargs,src_path,dst_path);
 
 
         src_arbotar = analyser_path(src_path,&fd_src);
         dst_arbotar = analyser_path(dst_path,&fd_dst);
 
-        //printf("mv source arb : %s ,  destination arb : %s \n",src_arbotar,dst_arbotar);
 
         if(fd_src != -1 ){// la source est un tarball
 
@@ -511,14 +509,13 @@ void decoupePwdtmp(){
 
                 }else{
 
+
                     cp_srctar(src_arbotar,fd_src,dst_arbotar,fd_dst,1);
-                    
-                    if(rm_path[strlen(rm_path)-1] != '/'){
-                            memset(arguments[2],'\0',strlen(arguments[2]));
-                            strcpy(arguments[2],arguments[1]);
-                            memset(arguments[1],'\0',strlen(arguments[1]));
-                            strcpy(arguments[1],"-r");
-                            exit(1);
+
+                    if(rm_path[strlen(rm_path)-1] == '/'){
+
+                            sprintf(arguments[2],"%s",rm_path);
+                            sprintf(arguments[1],"%s","-r");
 
                     }else
                     {
@@ -543,13 +540,12 @@ void decoupePwdtmp(){
                 }else{// source tar
                     
                     cp_srctar(src_arbotar,fd_src,dst_path,fd_dst,1);
-                  
-                    if(rm_path[strlen(rm_path)-1] != '/'){
 
-                            memset(arguments[2],'\0',strlen(arguments[2]));
-                            strcpy(arguments[2],arguments[1]);
-                            memset(arguments[1],'\0',strlen(arguments[1]));
-                            strcpy(arguments[1],"-r");
+                    if(rm_path[strlen(rm_path)-1] == '/'){
+
+                            sprintf(arguments[2],"%s",rm_path);
+                            sprintf(arguments[1],"%s","-r");
+
 
                     }else
                     {
@@ -570,7 +566,6 @@ void decoupePwdtmp(){
                 strcpy(arguments[1],rm_path);
 
                 cp_srcsimple(src_path,dst_arbotar,fd_dst,1);
-                nbargs --;
                  // faire un stat pour savoir si la source est un repertoire ou un fichier
                  
                 if (stat(rm_path,&s) == -1 ){
