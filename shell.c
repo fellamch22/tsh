@@ -22,7 +22,7 @@ char* old_pwd; // copy old pwd - used for "cd -"
 int nbexecuteCmds=0; // nombre de sous commandes executees - utilise pour CleanUp
 int nbargs;
 int debug=0; // Debug mode disabled by default
-int redirFlag=0; // 1 = overwrite , 2 = append
+int redirFlag=0; // 1 = overwrite , 2 = append,  3 = write into , 4 = err
 char* pwdtmp;
 char* tarname;
 char* arboTar;
@@ -33,20 +33,12 @@ char* removePointPoint(char* NewChemin , char* begin) {
 	
 	    char* Temp = malloc(sizeof(char) * BUFFER);
 		strcpy(Temp,"");
-		char *p = strtok(NewChemin, "/"); //d�couper NC avec "/", p prend le 1er argc 
-		// *p = strtok ([/home/user/vb/../toto], "/")
-		// p = home --> else, Temp=/home/ --> next = user 
-		// p = user --> else, Temp=/home/user/ --> next = vb 
-		// p = vb  --> else, Temp=/home/user/vb/ --> next = ..
-		// p = .. --> if, for (strlen(12 = b)), else b !=/ --> Temp[12] = '\0' --> Temp=/home/user/v\0
-		// 				  for (strlen(11 = v)), else v !=/ --> Temp[11] = '\0' --> Temp=/home/user/\0
-		// 				  for (strlen(10 = /)), if / = / --> break for
-		// p = toto --> else, Temp=/home/user/toto/ --> next = NULL
-		// p = NULL, fin du while
+		char *p = strtok(NewChemin, "/"); //decouper NC avec "/", p prend le 1er argc 
+		// *p = strtok ([/home/user/vb/../toto], "/"), exemple : p = home --> else, Temp=/home/ --> next = user...etc
 		
 		strcat(Temp,begin) ;
 		while(p != NULL)	{ 
-			// des que l'on rencontre le motif "..", on efface la sous partie pr?c?dente
+			// des que l'on rencontre le motif "..", on efface la sous partie precedente
 			if(strstr(p,"..") != 0 ) { 								  
 				for(int i = strlen(Temp)-2; i > 0; i--){
 	                if(Temp[i] == '/'){
@@ -74,7 +66,7 @@ char* removePointPoint(char* NewChemin , char* begin) {
 		return Temp;
 }
 
-//convertChemin permet la Convertion chemin absolu (si relatif) ,  la Gestion des ".." et supprime le "/" final si present
+//convertChemin permet la Convertion chemin absolu (si relatif) , la Gestion des ".." et supprime le "/" final si present
 // "toto.tar/toto/titi/../titi/f3/" =>  "<pwd>/toto.tar/toto/titi/f3"
  char* convertChemin(char* chemin, char* charfinal){	
 	//VARIABLES
@@ -101,10 +93,6 @@ char* removePointPoint(char* NewChemin , char* begin) {
 		
 		strcpy(Temp,removePointPoint(NewChemin,"/"));
 		//remove the ".."
-	
-		
-		//continue l'exemple : Temp=/home/user/toto/ strlen=16
-		//if Temp[15] == / final --> Temp[15] = '\0 --> Temp=/home/user/toto\0
 
     	//Cas si on est a la racinecd -
 		//la cas qu'on n'ajoute jamais p dedans (entrant jamais dans while)
@@ -182,7 +170,6 @@ char* removePointPoint(char* NewChemin , char* begin) {
                         strcat(tarDir,p);
                         strcat(tarDir,"/") ;
                     }
-                    //Debug  printf("'%s'\n", p);
                     p = strtok(NULL, "/");
                 }
                 return tarDir;
@@ -208,7 +195,6 @@ char* removePointPoint(char* NewChemin , char* begin) {
                         strcat(tarname,p);
                         strcat(tarname,"/") ;
                     }
-                    //Debug  printf("'%s'\n", p);
                     p = strtok(NULL, "/");
                 }
                 return tarname;
@@ -232,10 +218,8 @@ char* removePointPoint(char* NewChemin , char* begin) {
                         strcat(arboTar,p) ;
                         strcat(arboTar,"/") ;
                     }
-                    //Debug  printf("'%s'\n", p);
                     p = strtok(NULL, "/");
                 }
-
                 return arboTar;
  }
 
@@ -250,10 +234,8 @@ char* getTmpFileName(char*chemin) {
                     //ajout FileName
                         strcpy(FileName, "/tmp/");
                         strcat(FileName,p) ;                    
-                    //Debug  printf("'%s'\n", p);
                     p = strtok(NULL, "/");
                 }
-
                 return FileName;
  }
 
@@ -289,6 +271,7 @@ void decoupePwdtmp(){
             
 }
 
+// redefintion de la fonction rmdir
  int rmdir_redefini(){
      
             decoupePwdtmp();
@@ -311,6 +294,7 @@ void decoupePwdtmp(){
             return 0;
  }
 
+// redefintion de la fonction rm
  int rm_redefini(){
      
              decoupePwdtmp();
@@ -323,7 +307,6 @@ void decoupePwdtmp(){
 
             int fdxx;
             if(!strcmp(arguments[1], "-r")){ //il y a "-r" --> delete_rep
-                //rm --> rmdir, -r --> chemin, args[2]--> NULL
 
                 //Ajoute le "/" final du arboTar
                 if (arboTar[strlen(arboTar)-1] != '/'){
@@ -335,13 +318,7 @@ void decoupePwdtmp(){
                 if (fdxx < 0){ perror(" Error open "); return -1; }
 
                 delete_repertoire(fdxx, arboTar);
-            
 
-                // strcat(arboTar, "/");
-                // if ( debug == 1 ) { printf("with - r arboTar=%s\n", arboTar); }
-                // fdxx = open(tarname, O_RDWR);
-                // if (fdxx < 0){ perror(" Error open "); return -1; }
-                // delete_repertoire(fdxx, arboTar);
             }else{
                 fdxx = open(tarname, O_RDWR);
                 if (fdxx < 0){
@@ -359,8 +336,6 @@ void decoupePwdtmp(){
  }
  
  // redefintion de la fonction cp
-
-
  int cp_redefinir(){
 
      int option ;
@@ -392,17 +367,11 @@ void decoupePwdtmp(){
          return -1;
      }
      
-     
         src_path = convertChemin(arguments[nbargs - 2],(arguments[nbargs - 2][strlen(arguments[nbargs - 2])-1] == '/')?"/":"");
         dst_path  = convertChemin(arguments[nbargs-1],(arguments[nbargs - 1][strlen(arguments[nbargs - 1])-1] == '/')?"/":"");
 
-        //printf("nb : %d , conversion source : %s , conversion destination : %s \n\n",nbargs,src_path,dst_path);
-
-
         src_arbotar = analyser_path(src_path,&fd_src);
         dst_arbotar = analyser_path(dst_path,&fd_dst);
-
-        //printf(" source arb : %s ,  destination arb : %s \n",src_arbotar,dst_arbotar);
 
         if(fd_src != -1 ){// la source est un tarball
 
@@ -462,12 +431,10 @@ void decoupePwdtmp(){
         close(fd_src);
         close(fd_dst);
         return 1;
-
  }
 
 
  //redefintion de la fonction mv
-
  int mv_redefini(){
      
      struct stat s ;
@@ -585,7 +552,6 @@ void decoupePwdtmp(){
                         execlp("rm","rm","-r",rm_path,NULL);
                 }
                     
-
             }else // destination simple
             {
                     free(src_path);
@@ -596,8 +562,7 @@ void decoupePwdtmp(){
                     close(fd_dst);
                 execvp(arguments[0],arguments);
                 
-            }
-            
+            }    
         }
         
         free(src_path);
@@ -606,8 +571,6 @@ void decoupePwdtmp(){
         free(dst_arbotar);
         close(fd_src);
         close(fd_dst);
-
-
 
     }else { // commande mv avec option
 
@@ -711,9 +674,9 @@ void decoupePwdtmp(){
     
     //Variables
     int tubes[2];
-     pid_t pid;
-    char msg[BUFFER]={0};
     int val_op;
+    pid_t pid;
+    char msg[BUFFER]={0};
      
     //creation des pipe et fils
     pipe(tubes);
@@ -733,22 +696,7 @@ void decoupePwdtmp(){
             printf("> fd=%d debut=%d dernier=%d\n",fd,debut,dernier);
            }
                    
-        //##### Gestion des divers processus fils tel un train
-        // exemple tube et dup2 :
-        //    fd1  = executeCmd(0, 1, 0), with args[0] = "ls" and args[1] = "-l"
-         //    fd2  = executeCmd(fd1, 0, 0), with args[0] = "head" and args[1] = "-n" and args[2] = "2"
-         //    fd3  = executeCmd(fd2, 0, 1), with args[0] = "wc" and args[1] = "-l"
-        // Construction la communication entnre les fils
-        // 1er exC, 1er fork : (0, 1, 0) -->  if_first --> dup2(tubes[1], STDOUT) remplie STDOUT par le contenu de tubes[1]
-        // if_sec --> NO --> on entre dans else if(execvp(ls, ls -l)) car il ne contient pas .tar --> fils dead
-        // le processus pere continue et refait le boucle while --> on a 2nd Analyser --> 2nd exC
-        // 2nd exC, 2nd fork : (fd1, 0, 0) --> else if --> dup2(fd_1er, STDIN) remplie STDIN par fd_1er
-        //                                                    dup2(tubes[1], STDOUT) remplie STDOUT par le contenu de tubes[1]
-        // if_sec --> NO --> on entre dans else if(execvp(head, head -n 2)) --> ferme fd, fils dead
-        // le processus pere (...) --> 3re exC
-        // 3rd exC, 3rd fork : (fd2, 0, 1) --> else --> dup2(fd_2nd, STDIN) remplie STDIN par le contenu de fd_2nd
-        // if_sec --> NO --> on entre dans else if(execvp(wc, wc -l)) --> ferme fd, return tube[0] pour lire ce que dedans, après fils dead
-
+        // Gestion des divers processus fils tel un train
         if (fd == 0 && debut == 1 && dernier == 0  ) {
             // pour la debut commande redirection de la sortie dans le tube
             // on change la sortie standard par l'entree du pipe--> rewrite tubes[1] par STDOUT
@@ -796,14 +744,13 @@ void decoupePwdtmp(){
                 // cas stderr
                 else if ( (UseRedefCmd() == 0) && (redirFlag == 4) ) {
                     //open
-                    int val_op = open(convertChemin(redirection,""), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
+                    val_op = open(convertChemin(redirection,""), O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
                     if(val_op == -1) { perror(" Error open "); }
 
                     dup2(val_op, STDERR_FILENO);
                 }
                 //DANS UN TAR
                 else if ( (UseRedefCmd() == 1) && (redirFlag == 1) ) {
-                    printf(" Redirection dans un Tar\n");
                     decoupePwdtmp();
                     //on ouvre le fd du tar
                     fd_du_tar = open(tarname, O_RDWR);
@@ -822,9 +769,7 @@ void decoupePwdtmp(){
 					if(  redirection[strlen(redirection)-1] == '/' ) {
 						redirection[strlen(redirection)-1] = '\0';
 					}
-                    printf("CREATING LOCAL FILE : %s, redirection = %s\n", FileName, redirection);
 
-				
 					if ( debug == 1 ) printf("REDIRECTION = %s \n ",redirection);
 					fd_fichier = open(FileName, O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
 				
@@ -832,7 +777,6 @@ void decoupePwdtmp(){
 
                     cpFlag=1;
                     position = get_end_position(fd_du_tar);
-
 
                 }
 
@@ -859,8 +803,6 @@ void decoupePwdtmp(){
 					if(  redirection[strlen(redirection)-1] == '/' ) {
 						redirection[strlen(redirection)-1] = '\0';
 					}
-                    printf("CREATING LOCAL FILE : %s, redirection = %s\n", FileName, redirection);
-
 				
 					if ( debug == 1 ) printf("REDIRECTION = %s \n ",redirection);
 					fd_fichier = open(FileName, O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
@@ -870,10 +812,7 @@ void decoupePwdtmp(){
                     cpFlag=1;
                     position = get_end_position(fd_du_tar);
 
-
                 }
-             
-
             }
         }
         
@@ -887,7 +826,6 @@ void decoupePwdtmp(){
          //##### REDEFINITION COMMANDE CAT   uniquement si le pwd contient ".tar" ou si l'argument 1 existe et contient ".tar" (UseRedefCmd)
         else if ( (strcmp(arguments[0], "cat") == 0) && ( UseRedefCmd() == 1 ) ) {
             int ret = cat_redefini();
-            //printf(" >>> %d %d %s %ld\n",fd_du_tar, fd_fichier , redirection ,  position);
 			if (cpFlag == 1) addFile( fd_du_tar, fd_fichier , redirection ,  position);
             exit(ret); // kill le fils
         }
@@ -917,11 +855,13 @@ void decoupePwdtmp(){
             exit(ret);
         }
 
+        //##### REDEFINITION COMMANDES CP
         else if ( (strcmp(arguments[0], "cp") == 0) && ( UseRedefCmd() == 1)) {
             int ret = cp_redefinir();
             exit(ret);
         }
 
+        //##### REDEFINITION COMMANDES MV
         else if ( (strcmp(arguments[0], "mv") == 0) && ( UseRedefCmd() == 1)) {
             int ret = mv_redefini();
             exit(ret);
@@ -933,7 +873,7 @@ void decoupePwdtmp(){
             //le fils principal 
             if (pidrecopy != 0 ) {
                 if (execvp( arguments[0], arguments) == -1) {
-                    perror("Commande Inconnue \n");
+                    perror(" Commande Inconnue ");
                     kill(getpid(),SIGTERM);
                     return 1; // kill le fils pour eviter zombie
                 }
@@ -981,16 +921,6 @@ void decoupePwdtmp(){
 }
 
 // decoupe la sous commande  dans le tableau d'arguments. ex: ls -l => arguments[0] = "ls" , arguments[1] = "-l"
-// exemple : ls -l --> removeSpace(ls -l) --> ls -l
-// *next = strchr(ls -l, ' ') --> next = " "-l, cmd = ls
-// i=0, tant que next != NULL, on entre dand while1 --> args[0]=ls, next[0] = \0 --> next = -l
-// i=1, nbargs=1, cmd = removeSpace('\0'-l + 1 ) -->  cmd = -l
-// next = strchr(-l, ' ') --> next = NULL, sort du while
-// cmd = -l, i=1, if cmd[0] != '\0', on entre dans if --> args[1] = -l
-// next = strchr(-l, '\n') --> cmd = -l, next = NULL
-// next[0] = '\0', nbargs = 2, i=2
-// args[2] = NULL;
-// Au final, on a arguments[0]= ls, arguments[1]= -l, arguments[2]=NULL
  void decoupe(char* cmd)
 {
     arguments[BUFFER] = ""; //init le tab arguemnts
@@ -1166,33 +1096,12 @@ void decoupePwdtmp(){
     // decoupe la sous commande  dans le tableau d'args : ls -l => arguments[0] = "ls" , arguments[1] = "-l"
     decoupe(cmd);
 
-    // exemple1 : 1er appele analyse, on a arguments[0]= ls, arguments[1]= -l, arguments[2]=NULL
-    // args[0] != NULL, on entre dans if_outside
-    // compare ls avec "exit", if match --> on entre if_inside --> NO
-    // compare ls avec "cd", if match --> on entre if_inside --> NO
-    // compare ls avec "cat2", if match --> on entre if_inside --> NO
-     // compare ls avec "ls2", if match --> on entre if_inside --> NO
-     // compare ls avec "gft", if match --> on entre if_inside --> NO
-    // else_outside --> nbexecuteCmds=1, executeCmd(0, 1, 0); (exemple dans main, 1er appele d'analyser)
-
-    // exemple2 : args[0] = exit, on entre dans if_outside
-    // compare args[0] avec "exit", if match --> on entre if_inside --> YES
-    // printf(Bye), free(), exit(0) --> finir le programme
-
-    // exemple3 : args[0] = cat2, args[1]= f2,  on entre dans if_outside
-    // compare args[0] avec "cat2", if match --> on entre if_inside --> YES
-    // fdx = open(f2, R); --> read f2
-    // appler afficher_fichier(num of free fd, f2); --> afficher le contenu de f2
-    // close(fdx);
-    // fin du premier analyser, commencer 2nd analyer
-
     if (arguments[0] != NULL) {
         //TOTALLY REDEFINED SHELL COMMANDS
         //Implementation Exit
         if (strcmp(arguments[0], "exit") == 0) {
             printf("Bye ! \n");
             free(old_pwd);
-            //free(redirection);
             exit(0);
         }
         //Implementation CD redefinie - se fait ici car pas besoin de creer un fils
@@ -1268,7 +1177,7 @@ void decoupePwdtmp(){
                 close(fdx);
         }
 
-        //delete_(fichier et repertoire)
+        //delete_(fichier et repertoire) ==> rm / rmdir
         else if(!strcmp(arguments[0], "find2")){
             int fdx = open(arguments[1], O_RDONLY);
             if (fdx < 0){
@@ -1380,20 +1289,6 @@ int main(int argc, char *argv[])
         cmd = ligne;
         char* next = strchr(cmd, '|'); // cherche 1er pipe dans cmd, return pointeur de sa position, next = ce qu'il y a dans cmd apres le premier pipe
 
-        //exemple : cmd = ligne = ls | grep shell | wc,
-        //*next = | grep shell | wc,
-        //tant que next != NULL, on rentre dans while1 --> *next = '\0' --> cmd = ls
-        //fd = analyse(ls, 0, 1, 0) --> fd=0, debut=1, dernier=0 vont reprendre par executeCmd plus tard
-        //cmd = next + 1 --> cmd = grep shell | wc
-        //next = | wc, debut = 0
-        //tant que next != NULL, on rentre dans while2 --> *next ='\0' --> cmd = grep shell
-        //fd = analyse(grep shell, fd_precedent, 0, 0)
-        //cmd = next + 1 --> cmd = wc
-        //next = NULL, debut = 0
-        //fin du while
-        //fd = analyse(wc, fd_precedent, 0, 1)
-        //Au final, on a 3 appelé analyse, un par les sous commande de cmd : ls, grep shell, wc
-        
         while (next != NULL) { // on rentre dans ce while uniquement si on a au moins un "|" dans la commande
             *next = '\0'; // on remplace dans cmd tout ce qu'il y a apres le premier | par '\0'
             fd = analyse(cmd, fd, debut, 0); // on lance une analyse de chaque sous commande dans l'ordre, avec les bons attributs de fd , debut, fin
