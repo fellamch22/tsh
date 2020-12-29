@@ -126,6 +126,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 #### schema de la structure du shell
 ![Duck](http://i.stack.imgur.com/ukC2U.jpg)
 ![Schema](https://gaufre.informatique.univ-paris-diderot.fr/mechouar/projet_systeme/blob/SGF3/schema.png)
+![Schema2](/Users/sulifang/Desktop/schema.png)
 ### 4 Gestion des fichiers tarball ---> sgf.c
     - explique chaque fonction dans sgf.c (afficher_rep, afficher_fichier, get_fichier_type...etc)
     
