@@ -91,66 +91,69 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
     - permet d'analyser une sous commande précise, la découpe via decoupe(cmd) et identifie les sous commandes qui sont totalement reefinies et nécéssitant pas de fork() (ex : cd , exit)
     - si la commande n'est pas totalement redefinie, fait appel a executeCmd
 
- void cd(char *chemin)
-    utilise dans tous les cas la redefinition de la commande cd , qui permet la mise a jour du pwd local
+ * void cd(char *chemin)
+ - utilise dans tous les cas la redefinition de la commande cd , qui permet la mise a jour du pwd local
  
- void decoupe(char* cmd) 
-    permet de remplir le tableau "arguments" avec la fonction decoupe(cmd). ls -l devient arguments[0] = "ls" , arguments[1] = "-l"
+* void decoupe(char* cmd) 
+- permet de remplir le tableau "arguments" avec la fonction decoupe(cmd). ls -l devient arguments[0] = "ls" , arguments[1] = "-l"
 
- int executeCmd(int fd, int debut, int dernier) 
-    Fork un fils, et redirige correctement les entrées et sorties des différentes sous-commandes selon leur position dans la commande initiale 
-    Selon la commande executée, on peut faire appel a des commandes redéfinies si un tarball est en jeu, sinon on execute directement la commande via execvp
+* int executeCmd(int fd, int debut, int dernier) 
+- Fork un fils, et redirige correctement les entrées et sorties des différentes sous-commandes selon leur position dans la commande initiale 
+- Selon la commande executée, on peut faire appel a des commandes redéfinies si un tarball est en jeu, sinon on execute directement la commande via execvp
  
- int UseRedefCmd()
-    Détecte si un tarball est en jeu dans le pwd actuel ou les arguments de la commande
+* int UseRedefCmd()
+- Détecte si un tarball est en jeu dans le pwd actuel ou les arguments de la commande
  
- int rmdir_redefini()
- int rm_redefini()
- int cp_redefinir
- int mkdir_redefini()
- int cat_redefini()
- int ls_redefini()
-    Commandes redefinies appelées lorsque des tarball sont en jeu
- 
- char* convertChemin(char* chemin, char* charfinal)
-    Converti un chemin relatif en absolu
+* int rmdir_redefini()  (A COMPLETER)
 
- char* removePointPoint(char* NewChemin , char* begin)
-    Supprime le ".." d'un chemin , ainsi que la sous partie qui le précède
+* int rm_redefini()  (A COMPLETER)
 
- char* findGoodPath() 
-    Detecte le chemin contenant le ".tar" a utiliser
+* int cp_redefinir()   (A COMPLETER)
+
+* int mkdir_redefini()  (A COMPLETER)
+
+* int cat_redefini()  (A COMPLETER)
+ - Commandes redefinies appelées lorsque des tarball sont en jeu
+
+* int ls_redefini()  (A COMPLETER)
+ - Commandes redefinies appelées lorsque des tarball sont en jeu
+ 
+* char* convertChemin(char* chemin, char* charfinal)
+- Converti un chemin relatif en absolu
+
+* char* removePointPoint(char* NewChemin , char* begin)
+- Supprime le ".." d'un chemin , ainsi que la sous partie qui le précède
+
+* char* findGoodPath() 
+- Detecte le chemin contenant le ".tar" a utiliser
   
- void decoupePwdtmp()
-    Permet d'identifier le nom du tarname en jeu ainsi que son arborescence, si elle existe
+ *void decoupePwdtmp()
+- Permet d'identifier le nom du tarname en jeu ainsi que son arborescence, si elle existe
  
- char* getTarParentDir(char*chemin)
- char* getTarPath(char*chemin)
- char* getTarArbo(char*chemin)
- char* getTmpFileName(char*chemin) 
-    Permet de resortir certaines parties precises depuis un chemin donné, utilisé en argument des fonctions de sgf.c
+* char* getTarParentDir(char*chemin) (A COMPLETER)
 
- char* removeSpace(char* str)
-    Supprime les espaces multiples dans la commande
+* char* getTarPath(char*chemin) (A COMPLETER)
+
+* char* getTarArbo(char*chemin) (A COMPLETER)
+
+* char* getTmpFileName(char*chemin)
+- Permet de resortir certaines parties precises depuis un chemin donné, utilisé en argument des fonctions de sgf.c
+
+ * char* removeSpace(char* str)
+ - Supprime les espaces multiples dans la commande
  
- void attenteDuPere(int n)
-    Permet au Shell d'attendre le retour de tous ses fils avant de continuer
-
-#### schema de la structure du shell
-![Duck](http://i.stack.imgur.com/ukC2U.jpg)
+* void attenteDuPere(int n)
+- Permet au Shell d'attendre le retour de tous ses fils avant de continuer
 
 #### Redirections
-Les redirections se font dans un premier temps dans la fonction decoupe, qui initialise une variable "redirection" ainsi qu'un flag redirFlag
-lorsqu'une redirection est détéctée, et supprime la partie redirection de la commande finale (ex : "free > test" devient "free" mais a initialisé les variables et redirFlag.
+* Les redirections se font dans un premier temps dans la fonction decoupe, qui initialise une variable "redirection" ainsi qu'un flag redirFlag lorsqu'une redirection est détéctée, et supprime la partie redirection de la commande finale (ex : "free > test" devient "free" mais a initialisé les variables et redirFlag.
 
-Sur le process final de la commande arrivant dans executeCmd, si une redirection est initialisée , le fichier demandé sera ouvert, et 
-un dup2 de la sortie, de l'entrée ou de stderr sera initialisé selon le type de redirection demandé
+* Sur le process final de la commande arrivant dans executeCmd, si une redirection est initialisée , le fichier demandé sera ouvert, et un dup2 de la sortie, de l'entrée ou de stderr sera initialisé selon le type de redirection demandé
 
-Pour les redirections dans les tarballs, un fichier temporaire est créé dans /tmp , puis sera recopié par un nouveau fork dans le tarball 
-a l'emplacement souhaité. 
+* Pour les redirections dans les tarballs, un fichier temporaire est créé dans /tmp , puis sera recopié par un nouveau fork dans le tarball à l'emplacement souhaité. 
 
-Dans ce cas le petit fils créé par le fils executant la derniere partie de la commande attend qu'il ai terminé l'execution de sa commande 
-(et de mourir) pour prendre la main et procéder a la recopie de l'ensemble du résultat.
+* Dans ce cas le petit fils créé par le fils executant la derniere partie de la commande attend qu'il ai terminé l'execution de sa commande (et de mourir) pour prendre la main et procéder a la recopie de l'ensemble du résultat.
+
 #### Schema de la structure du shell
 ![Schema](https://imgur.com/a/gPShYFe)
 
@@ -215,12 +218,12 @@ La partie suppression :
 ### 5 Analyse syntaxique ? ---> syntaxique.c (A COMPLETER)
 
 ### 6 Test effectué
-    * Tous les commandes externs fonctionnent avec redirection ou pipe :
-        free
-        free > test 
-        free >> test 
-        head -x 2> err
-        free | tail -n 2 | wc -l
+    * Tous les commandes externes fonctionnent avec redirection ou pipe :
+    free
+    free > test 
+    free >> test 
+    head -x 2> err
+    free | tail -n 2 | wc -l
     
     * Test effectués sur les commandes cd 
         fonctionne dans et hors des tarballs, avec prise en compte des ".."
@@ -235,13 +238,11 @@ La partie suppression :
 
     * Test effectués sur les commandes ls 
         fonctionne dans et hors des tarballs ( commande externe), avec prise en compte des ".." et de largument -l
-        - via la fonction ls_redefini() :
-            ls toto.tar/
-            ls toto.tar/titi/../toto
-            ls -l toto.tar/titi/../toto
+        -via la fonction ls_redefini() :
+        ls toto.tar/
+        ls toto.tar/titi/../toto
+        ls -l toto.tar/titi/../toto
             
-    * Test effectués sur les commandes cp (A COMPLETER)
-          
     * Test effectués sur les commandes  rm, rmdir et rm -r
         -rmdir_redefini() :
             rmdir fichier.tar repertoire/
@@ -251,28 +252,34 @@ La partie suppression :
             rm -r fichier.tar repertoire/
             le repertoir peut contenir des fichier ou pas il sera supprimer
             
+    * Test effectués sur les redirections internes aux tarballs
+        - cd toto.tar; cat toto/f2 > f4 ; cat toto/f2 > toto/f6    
+        - head -x 2> toto.tar/toto/f10
+
 ### 7 Bilan
 Le shell demandé doit avoir les fonctionnalités suivantes :
 * les commandes `cd` et `exit` doivent exister (avec leur comportement habituel) 
-   => cd a été totalement recodé et fonctionne avec son comportement habituel
+    - cd a été totalement recodé et fonctionne avec son comportement habituel
 * toutes les commandes externes doivent fonctionner normalement si leur déroulement n'implique pas l'utilisation d'un fichier (au sens large) dans un tarball 
-   => les commandes externes sont appelées si on implique pas de tarball
+   - les commandes externes sont appelées si on implique pas de tarball
  * `pwd` doit fonctionner y compris si le répertoire courant passe dans un tarball 
-   => pwd est redéfini et fonctionne comme demandé
+   - pwd est redéfini et fonctionne comme demandé
 * `mkdir`, `rmdir` et `mv` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option 
-   => (A COMPLETER)
+   - (A COMPLETER)
 * `cp` et `rm` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option ou avec l'option `-r`
-    => (A COMPLETER)
+    - (A COMPLETER)
 * `ls` doit fonctionner y compris avec des chemins impliquant des tarball quand il est utilisé sans option ou avec l'option `-l` 
-   => ls est redéfini si des tarballs sont en jeu , et est utilisable avec l'argument "-l"
+   - ls est redéfini si des tarballs sont en jeu , et est utilisable avec l'argument "-l"
 * `cat` doit fonctionner y compris avec des chemins impliquant des tarball quand il est utilisé sans option 
-   => cat est redéfini si des tarballs sont en jeu ,et fonctionne sur les fichiers internes aux tarballs
+   - cat est redéfini si des tarballs sont en jeu ,et fonctionne sur les fichiers internes aux tarballs
 * les redirections de l'entrée, de la sortie et de la sortie erreur (y compris sur des fichiers d'un tarball) doivent fonctionner
-   => les redirections d'entrée , sortie et stderr fonctionnent totalement hors des tarballs, la redirection de sortie et stderr fonctionnent dans les tarball
+    - les redirections d'entrée , sortie et stderr fonctionnent totalement hors des tarballs, la redirection de sortie et stderr fonctionnent dans les tarball
 * les combinaisons de commandes avec `|` doivent fonctionner 
-   => les pipes sont correctement codés et fonctionnent avec des mix de commandes redéfinies par le shell et externes.
+   - les pipes sont correctement codés et fonctionnent avec des mix de commandes redéfinies par le shell et externes.
 
 ### 8 Problème rencontré (A COMPLETER)
+* La redirection dans les tarballs est assez complexe selon la source et la destination et nécéssite une étude complémentaire afin de prendre tous les cas en compte.
+* La redirection ">>" APPEND n'a pas été abordée dans les tar par manque de temps.
 
 ### 9 Conclusion (A COMPLETER)
 Pour la partie suppression : 
