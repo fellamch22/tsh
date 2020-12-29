@@ -88,9 +88,8 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 ### 3 Structure du shell ---> shell.c
 #### Role de chaque fonction
 * int analyse(char* cmd, int fd, int debut, int dernier) 
-     permet d'analyser une sous commande précise, la découpe via decoupe(cmd)
-     et identifie les sous commandes qui sont totalement reefinies et nécéssitant pas de fork() (ex : cd , exit)
-     si la commande n'est pas totalement redefinie, fait appel a executeCmd
+    - permet d'analyser une sous commande précise, la découpe via decoupe(cmd) et identifie les sous commandes qui sont totalement reefinies et nécéssitant pas de fork() (ex : cd , exit)
+    - si la commande n'est pas totalement redefinie, fait appel a executeCmd
 
  void cd(char *chemin)
     utilise dans tous les cas la redefinition de la commande cd , qui permet la mise a jour du pwd local
