@@ -1169,7 +1169,7 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 			}
 
       if(lseek(fd_src,(off_t)0,SEEK_SET) == -1){
-        
+
             perror("erreur lseek");
             exit(1);
       }
@@ -1183,7 +1183,6 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
       while( h.name[0] != '\0'){
 
 					sscanf(h.size,"%o",&filesize);
-           printf("fucking here %s\n",h.name);
 
 				if( strncmp(src_path,h.name,strlen(src_path)) == 0 ){
 					cpt = 0 ;
