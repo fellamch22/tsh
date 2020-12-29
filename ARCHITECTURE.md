@@ -77,6 +77,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 #### Role de chaque fonction
 #### Schema de la structure du shell
 ![Schema](https://imgur.com/a/gPShYFe)
+<img src="https://imgur.com/a/gPShYFe" alt="GitHub" title="Schema de la structure du shell" width="50" height="100" />
 
 ### 4 Gestion des fichiers tarball ---> sgf.c
     - explique chaque fonction dans sgf.c (afficher_rep, afficher_fichier, get_fichier_type...etc)
