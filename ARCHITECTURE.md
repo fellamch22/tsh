@@ -127,7 +127,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 * char* findGoodPath() 
     - Detecte le chemin contenant le ".tar" a utiliser
   
- *void decoupePwdtmp()
+* void decoupePwdtmp()
     - Permet d'identifier le nom du tarname en jeu ainsi que son arborescence, si elle existe
  
 * char* getTarParentDir(char*chemin) (A COMPLETER)
@@ -155,7 +155,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 * Dans ce cas le petit fils créé par le fils executant la derniere partie de la commande attend qu'il ai terminé l'execution de sa commande (et de mourir) pour prendre la main et procéder a la recopie de l'ensemble du résultat.
 
 #### Schema de la structure du shell
-![Schema](https://imgur.com/a/gPShYFe)
+![Schema](https://imgur.com/a/dpXM08Q)
 
 ### 4 Gestion des fichiers tarball ---> sgf.c
 Fonctions permettant l'ajout d'un fichier externe dans un tarball
