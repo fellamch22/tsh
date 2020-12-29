@@ -394,7 +394,7 @@ void decoupePwdtmp(){
      
      
         src_path = convertChemin(arguments[nbargs - 2],(arguments[nbargs - 2][strlen(arguments[nbargs - 2])-1] == '/')?"/":"");
-        dst_path  = convertChemin(arguments[nbargs-1],"");
+        dst_path  = convertChemin(arguments[nbargs-1],"/");
 
         //printf("nb : %d , conversion source : %s , conversion destination : %s \n\n",nbargs,src_path,dst_path);
 
@@ -484,17 +484,17 @@ void decoupePwdtmp(){
      if( nbargs == 3 ){// commande mv sans option
 
         src_path = convertChemin(arguments[nbargs - 2],(arguments[nbargs - 2][strlen(arguments[nbargs - 2])-1] == '/')?"/":"");
-        dst_path  = convertChemin(arguments[nbargs-1],"");
+        dst_path  = convertChemin(arguments[nbargs-1],(arguments[nbargs - 1][strlen(arguments[nbargs - 1])-1] == '/')?"/":"");
 
         memset(rm_path,'\0',BUFFER);
         strcpy(rm_path,src_path);
-        //printf("nb : %d , conversion source : %s , conversion destination : %s \n\n",nbargs,src_path,dst_path);
+        //printf("mv nb : %d , conversion source : %s , conversion destination : %s \n\n",nbargs,src_path,dst_path);
 
 
         src_arbotar = analyser_path(src_path,&fd_src);
         dst_arbotar = analyser_path(dst_path,&fd_dst);
 
-        //printf(" source arb : %s ,  destination arb : %s \n",src_arbotar,dst_arbotar);
+        //printf("mv source arb : %s ,  destination arb : %s \n",src_arbotar,dst_arbotar);
 
         if(fd_src != -1 ){// la source est un tarball
 
@@ -510,16 +510,22 @@ void decoupePwdtmp(){
                     return -1 ;
 
                 }else{
+
                     cp_srctar(src_arbotar,fd_src,dst_arbotar,fd_dst,1);
                     
-                    nbargs --;
                     if(rm_path[strlen(rm_path)-1] != '/'){
-                        rm_redefini();
+                            memset(arguments[2],'\0',strlen(arguments[2]));
+                            strcpy(arguments[2],arguments[1]);
+                            memset(arguments[1],'\0',strlen(arguments[1]));
+                            strcpy(arguments[1],"-r");
+                            exit(1);
+
                     }else
                     {
-                        rmdir_redefini();
+                        nbargs --;
                     }
-                    
+                    rm_redefini();
+
                 }
 
             }else{// destination exterieur
@@ -534,16 +540,23 @@ void decoupePwdtmp(){
                     close(fd_dst);
                     execvp(arguments[0],arguments);
 
-                }else{// destintion tar
+                }else{// source tar
                     
                     cp_srctar(src_arbotar,fd_src,dst_path,fd_dst,1);
-                    nbargs --;
-                    if(src_path[strlen(src_path)-1] != '/'){
-                        rm_redefini();
+                  
+                    if(rm_path[strlen(rm_path)-1] != '/'){
+
+                            memset(arguments[2],'\0',strlen(arguments[2]));
+                            strcpy(arguments[2],arguments[1]);
+                            memset(arguments[1],'\0',strlen(arguments[1]));
+                            strcpy(arguments[1],"-r");
+
                     }else
                     {
-                        rmdir_redefini();
+                        nbargs --;
                     }
+                    rm_redefini();
+
                     
                 }
             }
@@ -574,7 +587,7 @@ void decoupePwdtmp(){
                 }else
                 {   
 
-                        execlp("rmdir","rmdir",rm_path,NULL);
+                        execlp("rm","rm","-r",rm_path,NULL);
                 }
                     
 

@@ -1202,14 +1202,14 @@ void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int
 
 					while (word != NULL){
 
-						if( (cpt != 0) || (strcmp(name_buffer,"")!= 0) )strcat(name_buffer,"/");
+						if( (cpt != 0) )strcat(name_buffer,"/");
 						strcat(name_buffer,word);
 						cpt ++;
 						word = strtok(NULL,"/");
 
 					}
 
-					if(h.typeflag == '5' ) strcat(name_buffer,"/");
+					if(h.typeflag == '5' && cpt > 0) strcat(name_buffer,"/");
 
 					memset(h.name,'\0',100);
 					sprintf(h.name,"%s",name_buffer);
