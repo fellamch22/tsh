@@ -74,26 +74,19 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 ### 3 Structure du shell ---> shell.c
     #### role de chaque fonction
     #### La partie suppression : 
-    Tout d'abord j'ai commencé par créer dans notre systeme de gestion de fichiers trois fonctions
+    Tout d'abord nous avons commencé par créer dans notre systeme de gestion de fichiers trois fonctions
     utilisant la structure posix et les conditions pour pouvoir manipuler les fichiers ".tar" ayant chacun 
     ces fonctionalités et agissant sur les commandes concernées telles que : 
-       -rmdir 
-       -rm 
-       -rm -r
+    
+       -off_t trouve(int fd, char *filename)
+       -void delete_fichier(int fd, char *filename) 
+       -void delete_repertoire(int fd, char *repname) :
+
     En effet, on a  utilisé ces fonctions pour faire les différentes commandes ci dessous :
-        *rmdir() :
-            Cette commande permet de supprimer un repertoire mis en argument.
-            Ainsi, je fais appel à la fonction void delete_repertoire(int fd, char *repname) qui permet à 
-            partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en 
-            suivant la structure d'un fichier ".tar" :
-            Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers 
-            contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie 
-            la position du fichier en argument et ensuite suivre le reste des instructions fait dans la 
-            fonction void delete_repertoire(int fd, char *repname) pour la suppression.
         
         *rm() :
             Cette commande permet de supprimer un fichier simple mis en argument.
-            Ainsi, je fais appel à la fonction void delete_fichier(int fd, char *filename) qui permet à 
+            Ainsi, nous faisons appel à la fonction void delete_fichier(int fd, char *filename) qui permet à 
             partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en 
             suivant la structure d'un fichier ".tar" :
             Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers 
@@ -118,6 +111,17 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
             Le repertoir ccontient un repertoire ou des repertoires elle utilise la fonction  void 
             delete_repertoire(int fd, char *repname) pour faire la suppression, et enfin supprimer le 
             repertoire courant.
+
+        *rmdir() :
+            Cette commande permet de supprimer un repertoire mis en argument.
+            Ainsi, nous faisons appel à la fonction void delete_repertoire(int fd, char *repname) qui permet à 
+            partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en 
+            suivant la structure d'un fichier ".tar" :
+            Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers 
+            contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie 
+            la position du fichier en argument et ensuite suivre le reste des instructions fait dans la 
+            fonction void delete_repertoire(int fd, char *repname) pour la suppression.
+        
                 
     #### schema de la structure du shell
     ![Duck](http://i.stack.imgur.com/ukC2U.jpg)
@@ -185,10 +189,10 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 
 ### 7 Problème rencontré 
     Pour la partie suppression : 
-    J'ai eu a rencontré quelques problème   d'inattention pour la réalisation de mes commandes qui a un peu duré mais avec le travail d'équipe j'ai fini par le résoudre. J'avais ouvert le fichier descripteur en lecture seulement alors que je devais le faire en lecture ecriture.
-    Pour les fonctions dans le SGF j'ai eu en rencontré plusieurs prblème mais ça concernait l'incompréhension de la structure d'un fichier ".tar" et cela pu être resouds avec l'aides de mes coéquipiés. Ainsi des problèmes de temps comme la majeur partie des étudiants vu le déroulement de cette année. 
+    Nous avons eu a rencontré quelques problèmes d'inattention pour la réalisation de mes commandes qui a un peu duré mais avec le travail d'équipe nous avons fini par le résoudre. Nous avions ouvert le fichier descripteur en lecture seulement alors qu'on devait le faire en lecture ecriture.
+    Pour les fonctions dans le SGF on a eu rencontré plusieurs problèmes mais ça concernait l'incompréhension de la structure d'un fichier ".tar" et cela a pu être resouds avec le travail de groupe. Ainsi des problèmes de temps comme la majeur partie des étudiants vu le déroulement de cette année. 
 
 ### 8 Conclusion
     Pour la partie suppression : 
-    En somme le travail a été très enrichissant sur le plan strategique c'est à dire la répartition des taches, le travail de groupe. Cependant,ça reste quand même stressant à cause du temps les questions qui ont été posés sur gitLab qui permettaient toujours d'améliorer le travail et de revoir les parties qui ont échappés à notre vigilanche.
+    En somme le travail a été très enrichissant sur le plan strategique c'est à dire la répartition des taches, le travail de groupe. Cependant,ça reste quand même stressant à cause du temps les questions qui ont été posés sur discord qui permettaient toujours d'améliorer le travail et de revoir les parties qui ont échappés à notre vigilanche.
 
