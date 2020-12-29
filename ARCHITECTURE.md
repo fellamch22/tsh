@@ -26,7 +26,6 @@ Systèmes L3 2020-2021
         - les fonctions pour supprimer fichier et repertoire dans le fichier .tar
         - les foncitons de suppression : rm, rmdir, rm -r
         - Dockerfile
-        - ...
 
 ### 1 Introduction
 #### Fonctionnement du Shell
@@ -123,9 +122,10 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
             fonction void delete_repertoire(int fd, char *repname) pour la suppression.
         
                 
-    #### schema de la structure du shell
-    ![Duck](http://i.stack.imgur.com/ukC2U.jpg)
 
+#### schema de la structure du shell
+![Duck](http://i.stack.imgur.com/ukC2U.jpg)
+[Schema](https://gaufre.informatique.univ-paris-diderot.fr/mechouar/projet_systeme/blob/SGF3/schema.png)
 ### 4 Gestion des fichiers tarball ---> sgf.c
     - explique chaque fonction dans sgf.c (afficher_rep, afficher_fichier, get_fichier_type...etc)
     
@@ -176,8 +176,13 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
     * Test effectués sur les commandes cd 
         -cd_redefini() :
     * Test effectués sur les commandes ls 
-        -ls_redefini() 
-            
+        -ls_redefini() :
+    * Test effectués sur les commandes mkdir 
+        -mkdir_redefini() :
+    * Test effectués sur les commandes mkdir 
+        -cp_redefinir() :
+    * Test effectués sur les commandes redirecitons 
+          
     * Test effectués sur les commandes  rm, rmdir et rm -r
         -rmdir_redefini() :
             rmdir fichier.tar repertoire/
@@ -188,9 +193,6 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
             le repertoir peut contenir des fichier ou pas il sera supprimer
 
 ### 7 Problème rencontré 
-    Pour la partie suppression : 
-    Nous avons eu a rencontré quelques problèmes d'inattention pour la réalisation de mes commandes qui a un peu duré mais avec le travail d'équipe nous avons fini par le résoudre. Nous avions ouvert le fichier descripteur en lecture seulement alors qu'on devait le faire en lecture ecriture.
-    Pour les fonctions dans le SGF on a eu rencontré plusieurs problèmes mais ça concernait l'incompréhension de la structure d'un fichier ".tar" et cela a pu être resouds avec le travail de groupe. Ainsi des problèmes de temps comme la majeur partie des étudiants vu le déroulement de cette année. 
 
 ### 8 Conclusion
     Pour la partie suppression : 
