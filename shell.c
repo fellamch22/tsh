@@ -668,14 +668,14 @@ void decoupePwdtmp(){
                         if ( debug == 1 ) printf("REDIRECTION = %s \n ",redirection);
                         int fd_fichier = open(FileName, O_RDWR | O_TRUNC | O_CREAT, S_IRUSR | S_IRGRP | S_IWGRP | S_IWUSR);
                         dup2(fd_fichier, STDOUT_FILENO);
-
+                        
                         // on ajoute le fichier local dans le tar a la bonne position
                         // /!\ FIXME /!\ la position est mal set et corrompt le TARBALL !
                         off_t position;
                         position = get_end_position(fd_du_tar);
                         addFile( fd_du_tar, fd_fichier , redirection ,  position);
                         free(FileName);
-
+                        
 
                 }
             
@@ -1126,6 +1126,8 @@ int main(int argc, char *argv[])
     char buff[BUFFER] = { 0 };
     int val_read = 0; //recuperer la valeur de retour de read
     int val_write = 0;
+
+
     
     sprintf(msg, "(PID = %d) TSH Shell\n", pid);
     val_write = write(STDOUT_FILENO, msg, sizeof(msg)/sizeof(msg[1]));
