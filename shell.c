@@ -462,6 +462,125 @@ void decoupePwdtmp(){
 
  }
 
+
+ //redefintion de la fonction mv
+
+ int mv_redefini(){
+     
+     char * src_path = NULL;
+     char * dst_path = NULL ;
+     char * src_arbotar = NULL ;
+     char * dst_arbotar = NULL ;
+     int fd_src = -1 ;
+     int fd_dst = -1;
+     // voir le nombre d'arguments
+    
+     if( nbargs == 3 ){// commande mv sans option
+
+        src_path = convertChemin(arguments[nbargs - 2],(arguments[nbargs - 2][strlen(arguments[nbargs - 2])-1] == '/')?"/":"");
+        dst_path  = convertChemin(arguments[nbargs-1],"");
+
+        //printf("nb : %d , conversion source : %s , conversion destination : %s \n\n",nbargs,src_path,dst_path);
+
+
+        src_arbotar = analyser_path(src_path,&fd_src);
+        dst_arbotar = analyser_path(dst_path,&fd_dst);
+
+        //printf(" source arb : %s ,  destination arb : %s \n",src_arbotar,dst_arbotar);
+
+        if(fd_src != -1 ){// la source est un tarball
+
+            if(fd_dst != -1 ){// destination tarball
+
+                if(strcmp(src_arbotar,"") == 0){// la copier concerne le fichier avec extension .tar
+
+                    perror(" imbriquation de tarballs impossible \n");
+                    return -1 ;
+
+                }else{
+                    cp_srctar(src_arbotar,fd_src,dst_arbotar,fd_dst,1);
+                    nbargs --;
+                    if(src_path[strlen(src_path)-1] != '/'){
+                        rm_redefini();
+                    }else
+                    {
+                        rmdir_redefini();
+                    }
+                    
+                }
+
+            }else{// destination exterieur
+
+                if(strcmp(src_arbotar,"") == 0){// la copier concerne le fichier avec extension .tar
+
+                    free(src_path);
+                    free(src_arbotar);
+                    free(dst_path);
+                    free(dst_arbotar);
+                    close(fd_src);
+                    close(fd_dst);
+                    execvp(arguments[0],arguments);
+
+                }else{// destintion tar
+                    
+                    cp_srctar(src_arbotar,fd_src,dst_path,fd_dst,1);
+                    nbargs --;
+                    if(src_path[strlen(src_path)-1] != '/'){
+                        rm_redefini();
+                    }else
+                    {
+                        rmdir_redefini();
+                    }
+                    
+                }
+            }
+        }else // une source simple ( fichier ou repertoire exterieur )
+        {
+
+            if(fd_dst != -1){// destination tarball
+
+                cp_srcsimple(src_path,dst_arbotar,fd_dst,1);
+                    nbargs --;
+                    if(src_path[strlen(src_path)-1] != '/'){
+                        rm_redefini();
+                    }else
+                    {
+                        rmdir_redefini();
+                    }
+                    
+
+            }else // destination simple
+            {
+                    free(src_path);
+                    free(src_arbotar);
+                    free(dst_path);
+                    free(dst_arbotar);
+                    close(fd_src);
+                    close(fd_dst);
+                execvp(arguments[0],arguments);
+                
+            }
+            
+        }
+        
+        free(src_path);
+        free(src_arbotar);
+        free(dst_path);
+        free(dst_arbotar);
+        close(fd_src);
+        close(fd_dst);
+
+
+
+    }else { // commande mv avec option
+
+         
+             execvp(arguments[0],arguments);
+     }
+        
+     return 1;
+ }
+
  int mkdir_redefini(){
              
             decoupePwdtmp();
@@ -723,7 +842,12 @@ void decoupePwdtmp(){
             int ret = cp_redefinir();
             exit(ret);
         }
-        
+
+        else if ( (strcmp(arguments[0], "mv") == 0) && ( UseRedefCmd() == 1)) {
+            int ret = mv_redefini();
+            exit(ret);
+        }        
+
         else if (execvp( arguments[0], arguments) == -1) {
             perror("Commande Inconnue \n");
             kill(getpid(),SIGTERM);
