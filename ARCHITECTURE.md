@@ -76,12 +76,12 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 ### 3 Structure du shell ---> shell.c
 #### Role de chaque fonction
 #### Schema de la structure du shell
-![Schema2](https://imgur.com/a/gPShYFe)
+![Schema](https://imgur.com/a/gPShYFe)
 
 ### 4 Gestion des fichiers tarball ---> sgf.c
     - explique chaque fonction dans sgf.c (afficher_rep, afficher_fichier, get_fichier_type...etc)
     
-    ### Fonctions permettant l'ajout d'un fichier externe dans un tarball
+    `Fonctions permettant l'ajout d'un fichier externe dans un tarball`
     * char * fileToBlocks( int fd , char * filename , int * nb_blocks)
         - Cette fonction effectue la transformation du fichier pointé par le descripteur fd en un ensemble de blocks des taille de 512 chacun , compatibles avec la representation d'un fichier dans un tarball.
         - la fonction retourne un pointeur vers les blocs contruits pour le fichier , ainsi que le nombre de blocks aloués dans la variable 'nb_blocks'
@@ -185,6 +185,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         -rm_redefini() :
             rm -r fichier.tar repertoire/
             le repertoir peut contenir des fichier ou pas il sera supprimer
+            
 ### 7 Bilan
 Le shell demandé doit avoir les fonctionnalités suivantes :
 * les commandes `cd` et `exit` doivent exister (avec leur comportement habituel) 
@@ -206,9 +207,9 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
 * les combinaisons de commandes avec `|` doivent fonctionner 
    => les pipes sont correctement codés et fonctionnent avec des mix de commandes redéfinies par le shell et externes.
 
-### 8 Problème rencontré 
+### 8 Problème rencontré (A COMPLETER)
 
-### 9 Conclusion
+### 9 Conclusion (A COMPLETER)
 Pour la partie suppression : 
     En somme le travail a été très enrichissant sur le plan strategique c'est à dire la répartition des taches, le travail de groupe. Cependant,ça reste quand même stressant à cause du temps les questions qui ont été posés sur discord qui permettaient toujours d'améliorer le travail et de revoir les parties qui ont échappés à notre vigilanche.
 
