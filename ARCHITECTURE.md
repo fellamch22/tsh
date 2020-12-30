@@ -188,6 +188,10 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 * Dans ce cas le petit fils créé par le fils executant la derniere partie de la commande attend qu'il ai terminé l'execution de sa commande (et de mourir) pour prendre la main et procéder a la recopie de l'ensemble du résultat.
 
 #### Schema de la structure du shell
+[<img src="https://imgur.com/a/nJPtDgj">](http://google.com.au/)
+
+[![Foo](https://imgur.com/a/nJPtDgj)](http://google.com.au/)
+
 ![Schema](https://imgur.com/a/nJPtDgj)
 
 ### 4 Gestion des fichiers tarball ---> sgf.c
