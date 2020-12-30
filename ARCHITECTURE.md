@@ -9,32 +9,32 @@ Systèmes L3 2020-2021
  
 ### 0 Répartition du travail
 MECHOUAR Fella
-- Les fonctions permettant l'ajout d'un fichier / répertoire  externe dans un tarball ( dans le fichier sgf.c )
-- Les fonctions permettant l'ajout d'un répertoire /fichier d'un tarball dans un répertoire extérieur ( dans le fichier sgf.c )
-- Les fonctions assurant la copie des fichiers ou répertoires entre les tarballs  ( dans le fichier sgf.c )
-- Participer à l'implémentation des fonctions de suppression et de recherche dans les tarballs (Collabore  avec Sidy Badji)
+- Les fonctions permettant l'ajout d'un fichier / répertoire  externe dans un tarball. ( dans le fichier sgf.c )
+- Les fonctions permettant l'ajout d'un répertoire /fichier d'un tarball dans un répertoire extérieur. ( dans le fichier sgf.c )
+- Les fonctions assurant la copie des fichiers ou répertoires entre les tarballs. ( dans le fichier sgf.c )
+- Participer à l'implémentation des fonctions de suppression et de recherche dans les tarballs. (Collabore  avec Sidy Badji)
 - L'Analyse syntaxique des chemins.
-- La commande ls -l
-- La commande cp, mv
-- La commande mkdir
+- La commande ls -l.
+- La commande cp, mv.
+- La commande mkdir.
       
 SU LiFang
-- La structure core du shell
-- La gestion des pipe et des sous commandes par des processus fils
-- L'utilisation de l'ensemble des commandes externes
-- Les fonctions pour afficher les fichiers et les répertoires pour la gestion des fichiers tarballs (Collabore avec Mechouar Fella)
-- La gestion des commandes cd (totalement redéfinie), mais aussi ls, cat, pwd (redéfinies uniquement lorsque des tarball sont en jeu)
-- Les commandes de redirection hors tar : >, >>, <, et 1>, 2>(stderr)
-- Les commandes de redirection dans les tar : > , 2> (Collabore avec Mechouar Fella)
+- La structure core du shell.
+- La gestion des pipe et des sous commandes par des processus fils.
+- L'utilisation de l'ensemble des commandes externes.
+- Les fonctions pour afficher les fichiers et les répertoires pour la gestion des fichiers tarballs. (Collabore avec Mechouar Fella)
+- La gestion des commandes cd (totalement redéfinie), mais aussi ls, cat, pwd. (redéfinies uniquement lorsque des tarball sont en jeu)
+- Les commandes de redirection hors tar : >, >>, <, et 1>, 2>(stderr).
+- Les commandes de redirection dans les tar : > , 2> .(Collabore avec Mechouar Fella)
       
 BADJI Sidy
 - les fonctions pour supprimer fichier et répertoire dans le fichier .tar:
            Ces fonctions forment la base des commandes de suppression dans le SGF.
 - les commande de suppression :
-           rm, rmdir, rm -r
+           rm, rmdir, rm -r.
 - Fonction permettant de trouver un fichier quelconque dans un tarball, elle renvoie sa position si le fichier existe,elle est aussi utilisée dans la plupart de nos fonctions.
 - Dockerfile :
-           environnement alpine en sh , on peut travailler avec l'image comme avec le dockerfile dans ce cas on doit installer l'environnement indiqué
+           environnement alpine en sh , on peut travailler avec l'image comme avec le dockerfile dans ce cas on doit installer l'environnement indiqué.
  
 ### 1 Introduction
 #### Fonctionnement du Shell
