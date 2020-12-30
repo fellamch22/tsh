@@ -82,8 +82,36 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
     - l'utilitaire rlwrap permettant l'utilisation des fleches du haut et bas afin de rappeler les commandes précédentes du shell.
         
  #### Comment installer sur Docker (A COMPLETER)
-    - dockerfile
-    - package installé...etc
+    - dockerfile :
+         sudo docker run -it ubuntu bash -> pour installer l'image de ubuntu
+         sudo docker container ls -> pour lister les container 
+         sudo docker image ls -> pour lister les differentes images installer sur votre ordi
+         sudo docker exec -it container /bin/bash -> pour l'executter en /bin/bash
+         sudo docker start container -> pour lancer l'image correspondant au container
+         sudo docker stop container -> pour l'arreter
+         sudo docker rmi NomImage -> pour supprimer l'image 
+         sudo docker rm container -> pour supprimer l'image au cas ou y'a un container en marche.
+
+         
+
+    - package installé :
+         Il faut tout d'abord creer un fichier contenant l'algorithme permettant de creer l'image et les fichiers a exécuté
+                Exemple Algorithme:
+                        FROM alpine:latest 
+                        RUN apk update
+                        RUN apk add libc-dev
+                        RUN apk add gcc
+                        RUN mkdir /home/TestForDocker1
+                        COPY test.c /home/TestForDocker1/test.c
+
+         pour creer une nouvelle image avec le dockerfile que nous avons créé il faut :
+
+            sudo docker build -t nomNewImage ./
+
+        pour lancer cette image :
+
+            sudo docker run -ti nomNewImage
+
     
 ### 3 Structure du shell ---> shell.c
 #### Rôle de chaque fonction
@@ -104,9 +132,11 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 * int UseRedefCmd()
     - Détecte si un tarball est en jeu dans le pwd actuel ou les arguments de la commande
  
-* int rmdir_redefini()  (A COMPLETER)
+* int rmdir_redefini() 
+    -Commande agissant sur un tarball pour le suppression de repertoire
 
-* int rm_redefini()  (A COMPLETER)
+* int rm_redefini()  
+    -Commande agissant sur un  tarball pour la suppression de fichier 
 
 * int cp_redefinir()   (A COMPLETER)
 
