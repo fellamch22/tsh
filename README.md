@@ -1,2 +1,0 @@
-# PROJET_SYSTEME
-
