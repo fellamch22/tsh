@@ -8,32 +8,32 @@ Systèmes L3 2020-2021
 ## Branche : master, Tag : soutenance
  
 ### 0 Répartition du travail
-* MECHOUAR Fella
-       - fonctions permettant l'ajout d'un fichier / répertoire  externe dans un tarball ( dans le fichier sgf.c )
-       - fonctions permettant l'ajout d'un répertoire /fichier d'un tarball dans un répertoire extérieur ( dans le fichier sgf.c )
-       - fonctions assurant la copie des fichiers ou répertoires entre les tarballs  ( dans le fichier sgf.c )
-       - Participer à l'implémentation des fonctions de suppression et de recherche dans les tarballs (Collabore  avec Sidy Badji)
-       - analyse syntaxique
-       - la commande ls -l
-       - la commande cp, mv
-       - la commande mkdir
+#### MECHOUAR Fella
+    * fonctions permettant l'ajout d'un fichier / répertoire  externe dans un tarball ( dans le fichier sgf.c )
+    * fonctions permettant l'ajout d'un répertoire /fichier d'un tarball dans un répertoire extérieur ( dans le fichier sgf.c )
+    * fonctions assurant la copie des fichiers ou répertoires entre les tarballs  ( dans le fichier sgf.c )
+    * Participer à l'implémentation des fonctions de suppression et de recherche dans les tarballs (Collabore  avec Sidy Badji)
+    * analyse syntaxique
+    * la commande ls -l
+    * la commande cp, mv
+    * la commande mkdir
       
-* SU LiFang
-        - La structure core du shell
-        - La gestion des pipe et des sous commandes par des processus fils
-        - L'utilisation de l'ensemble des commandes externes
-        - Les fonctions pour afficher les fichiers et les répertoires pour la gestion des fichiers tarballs (Collabore avec Mechouar Fella)
-        - La gestion des commandes cd (totalement redéfinie), mais aussi ls, cat, pwd (redéfinies uniquement lorsque des tarball sont en jeu)
-        - Les commandes de redirection hors tar : >, >>, <, et 1>, 2>(stderr)
-        - Les commandes de redirection dans les tar : > , 2> (Collabore avec Mechouar Fella)
+#### SU LiFang
+La structure core du shell
+    * La gestion des pipe et des sous commandes par des processus fils
+    * L'utilisation de l'ensemble des commandes externes
+    * Les fonctions pour afficher les fichiers et les répertoires pour la gestion des fichiers tarballs (Collabore avec Mechouar Fella)
+    * La gestion des commandes cd (totalement redéfinie), mais aussi ls, cat, pwd (redéfinies uniquement lorsque des tarball sont en jeu)
+    * Les commandes de redirection hors tar : >, >>, <, et 1>, 2>(stderr)
+    * Les commandes de redirection dans les tar : > , 2> (Collabore avec Mechouar Fella)
       
-* BADJI Sidy
-       - les fonctions pour supprimer fichier et répertoire dans le fichier .tar:
+##### BADJI Sidy
+    * les fonctions pour supprimer fichier et répertoire dans le fichier .tar:
            Ces fonctions forment la base des commandes de suppression dans le SGF.
-       - les commande de suppression :
+    * les commande de suppression :
            rm, rmdir, rm -r
-       - Fonction permettant de trouver un fichier quelconque dans un tarball, elle renvoie sa position si le fichier existe,elle est aussi utilisée dans la plupart de nos fonctions.
-       - Dockerfile :
+    * Fonction permettant de trouver un fichier quelconque dans un tarball, elle renvoie sa position si le fichier existe,elle est aussi utilisée dans la plupart de nos fonctions.
+    * Dockerfile :
            environnement alpine en sh , on peut travailler avec l'image comme avec le dockerfile dans ce cas on doit installer l'environnement indiqué
  
 ### 1 Introduction
@@ -347,18 +347,18 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
 * `mkdir`, `rmdir` et `mv` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option
   - les trois commandes sont redéfinies si on manipule des tarballs .la commande 'mv' assure une copie avec une variété
   des cas : 
-           - mv d'un tarball vers une destination externe
-           - mv d'une source externe vers un tarball
+            * mv d'un tarball vers une destination externe
+            * mv d'une source externe vers un tarball
            - mv entre deux tarballs
            - mv avec l'implémentation classique ( sans implication des tarballs)
  
 * `cp` et `rm` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option ou avec l'option `-r`
     - les deux commandes sont redéfinies si on manipule des tarballs .la commande 'cp' assure une copie avec une variété
   des cas :
-           - cp d'un tarball vers une destination externe
-           - cp d'une source externe vers un tarball
-           - cp entre deux tarballs
-           - cp avec l'implémentation classique (sans implication des tarballs)
+            * cp d'un tarball vers une destination externe
+            * cp d'une source externe vers un tarball
+            * cp entre deux tarballs
+            * cp avec l'implémentation classique (sans implication des tarballs)
           
 * `ls` doit fonctionner y compris avec des chemins impliquant des tarball quand il est utilisé sans option ou avec l'option `-l`
   - ls est redéfini si des tarballs sont en jeu , et est utilisable avec l'argument "-l"
