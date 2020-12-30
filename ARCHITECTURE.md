@@ -29,6 +29,13 @@ Systèmes L3 2020-2021
         - les foncitons de suppression : rm, rmdir, rm -r
         - Dockerfile
 
+[<img src="https://imgur.com/a/nJPtDgj">](http://google.com.au/)
+
+[![Foo](https://imgur.com/a/nJPtDgj)](http://google.com.au/)
+
+![Schema](https://imgur.com/a/nJPtDgj)
+
+
 ### 1 Introduction
 #### Fonctionnement du Shell
 Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les tests sont effetués sur antiX.
