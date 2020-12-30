@@ -8,12 +8,14 @@ Systèmes L3 2020-2021
 ## Branche : master, Tag : soutenace
 
 ### 0 Repartition du travail 
-    MECHOUAR Fella (A COMPLETER)
-        - fonctions permettant l'ajout d'un fichier externe dans un tarball ( dans le fichier sgf.c )
-        - analye syntaxique 
+    MECHOUAR Fella 
+        - fonctions permettant l'ajout d'un fichier / repertoire  externe dans un tarball ( dans le fichier sgf.c )
+        - fonctions permettant l'ajout d'un reprtoire /fichier d'un tarball dans un repertoire exterieur ( dans le fichier sgf.c )
+        - fonctions assurant la copie des fichiers ou repertoires entre les tarballs  ( dans le fichier sgf.c )
+        - analyse syntaxique 
         - la commande ls -l
         - la commande cp, mv
-        - ...
+        - la commande mkdir
         
     SU LiFang
          - La structure du shell 
@@ -108,9 +110,14 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 
 * int rm_redefini()  (A COMPLETER)
 
-* int cp_redefinir()   (A COMPLETER)
+* int cp_redefinir()  
+    - analyse les arguments de la commande et assure l'execution du bon code la commande cp
 
-* int mkdir_redefini()  (A COMPLETER)
+* int mkdir_redefini()  
+    - analyse les arguments de la commande et assure l'execution du bon code de la commande mkdir
+
+* int mv_redefini()  
+    - analyse les arguments de la commande et assure l'execution  du bon code de la commande mv
 
 * int cat_redefini() 
     - Commandes redefinies appelées lorsque des tarball sont en jeu
