@@ -5,7 +5,7 @@ Systèmes L3 2020-2021
 
 # Final Rendu projet
 
-## Branche : master, Tag : soutenace
+## Branche : master, Tag : soutenance
 
 ### 0 Repartition du travail 
     MECHOUAR Fella 
@@ -200,7 +200,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 ![Schema](schema_du_shell.png)
 
 ### 4 Gestion des fichiers tarball ---> sgf.c
-Les fonctions qui permettent l'ajout d'un fichier / repertoire externe dans un tarball
+#### Les fonctions qui permettent l'ajout d'un fichier / repertoire externe dans un tarball
 * char * fileToBlocks( int fd , char * filename , int * nb_blocks)
     - Cette fonction effectue la transformation du fichier pointé par le descripteur fd en un ensemble de blocks des taille de 512 chacun , compatibles avec la representation d'un fichier dans un tarball.
     - la fonction retourne un pointeur vers les blocs contruits pour le fichier , ainsi que le nombre de blocks aloués dans la variable 'nb_blocks'
@@ -210,17 +210,17 @@ Les fonctions qui permettent l'ajout d'un fichier / repertoire externe dans un t
     - effectue la copie d'un repertoire externe ( et tout son contenu ) dans un tarball (ou sous-repertoire d'un
 	tarball )
 
-Les fonctions qui permettent la copie d'un fichier / repertoire d'un tarball vers l'exterieur
+#### Les fonctions qui permettent la copie d'un fichier / repertoire d'un tarball vers l'exterieur
 * void block_to_file(int fd, char * src_path, char* dst_path)
     - Copie le contenu d'un fichier  qui est à l'interieur d'un tarball vers la destination externe
 * void block_to_directory(int fd, char * src_path,char* dst_path)
     - Copie le contenu d'un repertoire qui est à l'interieur d'un tarball vers un repertoire externe
 
-Les fonctions qui assurent la copie d'un fichier / repertoire entre deux tarballs 
+#### Les fonctions qui assurent la copie d'un fichier / repertoire entre deux tarballs 
 * void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int fd_dst )
     - Copie un fichier / repertoire d'un tarball source vers un tarball destination
 
-Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
+#### Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
 * off_t trouve(int fd, char *filename) 
     - Cette fonction permet de donner la position d’un fichier dans le fichier .tar
     - Si le fichier passé en argument existe celle ci renvoie une valeur de retour positive désignant la position du fichier sinon retourne -1
@@ -231,7 +231,7 @@ Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
 * void delete_repertoire(int fd, char *filename)
     - Cette fonction utilise la fonction trouve(int fd, char *filename) et la fonction delete_fichier(int fd, char *repname)
         
-Les fonctions pour afficher les fichiers et les répertroires dans les tarballs 
+#### Les fonctions pour afficher les fichiers et les répertroires dans les tarballs 
 * char get_fichier_type(int fd, char *chemin){...}
     - Cette fonction est pour obtenir le typeflag des tarballs
     - Elle permet de gérer la variable pwd interne au shell
@@ -245,7 +245,7 @@ Les fonctions pour afficher les fichiers et les répertroires dans les tarballs
     - Cette fonction est pour afficher le contenu d'un fichier tar.
     - Cela est fait une partie du syntaxe de "ls2"
 
-La partie suppression : 
+#### La partie suppression : 
 * Tout d'abord nous avons commencé par créer dans notre systeme de gestion de fichiers trois fonctions utilisant la structure posix et les conditions pour pouvoir manipuler les fichiers ".tar" ayant chacun  ces fonctionalités et agissant sur les commandes concernées telles que : 
     - off_t trouve(int fd, char *filename)
     - void delete_fichier(int fd, char *filename) 
@@ -346,7 +346,7 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
    - pwd est redéfini et fonctionne comme demandé
 * `mkdir`, `rmdir` et `mv` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option 
    - les trois commandes sont redefinies si on manipule des tarballs .la commande 'mv' assure une copie avec une variété
-   des cas : 
+   des cas :  
             - mv d'un tarball vers une destination externe
             - mv d'une source externe vers un tarball
             - mv entre deux tarballs
@@ -358,7 +358,7 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
             - cp d'un tarball vers une destination externe
             - cp d'une source externe vers un tarball
             - cp entre deux tarballs
-            - cp avec l'implementation classique ( sans implication des tarballs)S
+            - cp avec l'implementation classique (sans implication des tarballs)
             
 * `ls` doit fonctionner y compris avec des chemins impliquant des tarball quand il est utilisé sans option ou avec l'option `-l` 
    - ls est redéfini si des tarballs sont en jeu , et est utilisable avec l'argument "-l"
@@ -377,14 +377,5 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
 commandes.
 
 ### 9 Conclusion
-    Ce projet était en premier lieu une véritable expérience dans laquelle on a appris la
-gestion du travail, la communication et la collaboration au sein d’une équipe. Grâce au bon
-encadrement par les professeurs responsables, notre expérience est devenue similaire à celle
-d’un vrai projet en entreprise. Ce qui nous a permis en quelque sorte d’avoir un aperçu sur le
-monde professionnel.
-    Techniquement, à travers ce projet on a pu acquérir des notions relatives à
-l’intelligence artificielle. Et ce, en rendant possible la résolution des grilles sudoku par une
-machine en quelques secondes grâce à l’identification des « patterns » des stratégies de
-résolution, chose qui demande des heures et des heures de réflexion pour un être humain.
-Pour conclure, on veut adresser un petit mot de remerciement à nos encadreurs qui
-étaient toujours à l'écoute et qui nous ont permis de réussir notre projet.
+Ce projet était en premier lieu une véritable expérience dans laquelle on a appris la gestion du travail, la communication et la collaboration au sein d’une équipe. Grâce au bon encadrement par les professeurs responsables, notre expérience est devenue similaire à celle d’un vrai projet en entreprise. Ce qui nous a permis en quelque sorte d’avoir un aperçu sur le monde professionnel.
+    Techniquement, à travers ce projet on a pu acquérir des notions relatives à l’intelligence artificielle. Et ce, en rendant possible la résolution des grilles sudoku par une machine en quelques secondes grâce à l’identification des « patterns » des stratégies de résolution, chose qui demande des heures et des heures de réflexion pour un être humain. Pour conclure, on veut adresser un petit mot de remerciement à nos encadreurs qui étaient toujours à l'écoute et qui nous ont permis de réussir notre projet.
