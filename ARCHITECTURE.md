@@ -37,6 +37,9 @@ BADJI Sidy
            environnement alpine en sh , on peut travailler avec l'image comme avec le dockerfile dans ce cas on doit installer l'environnement indiqué.
  
 ### 1 Introduction
+Les fichiers Tarball sont de plus en plus répendus dans le monde informatique. Afin de faciliter leur utilisation sous shell, nous avons dévéloppe ce programme afin de faciliter la manipulation des documents dans ces fichiers.
+Ce programme a été développé et testé sur une machine virtuelle AntiX, via VirtualBox,  cependant une version Docker sur Ubuntu est aussi disponible.
+
 #### Fonctionnement du Shell
 Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les tests sont effectués sur antiX.
  
