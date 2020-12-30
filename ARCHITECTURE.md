@@ -8,7 +8,7 @@ Systèmes L3 2020-2021
 ## Branche : master, Tag : soutenance
  
 ### 0 Répartition du travail
-   MECHOUAR Fella
+* MECHOUAR Fella
        - fonctions permettant l'ajout d'un fichier / répertoire  externe dans un tarball ( dans le fichier sgf.c )
        - fonctions permettant l'ajout d'un répertoire /fichier d'un tarball dans un répertoire extérieur ( dans le fichier sgf.c )
        - fonctions assurant la copie des fichiers ou répertoires entre les tarballs  ( dans le fichier sgf.c )
@@ -18,7 +18,7 @@ Systèmes L3 2020-2021
        - la commande cp, mv
        - la commande mkdir
       
-   SU LiFang
+* SU LiFang
         - La structure core du shell
         - La gestion des pipe et des sous commandes par des processus fils
         - L'utilisation de l'ensemble des commandes externes
@@ -27,7 +27,7 @@ Systèmes L3 2020-2021
         - Les commandes de redirection hors tar : >, >>, <, et 1>, 2>(stderr)
         - Les commandes de redirection dans les tar : > , 2> (Collabore avec Mechouar Fella)
       
-   BADJI Sidy
+* BADJI Sidy
        - les fonctions pour supprimer fichier et répertoire dans le fichier .tar:
            Ces fonctions forment la base des commandes de suppression dans le SGF.
        - les commande de suppression :
