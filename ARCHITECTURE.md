@@ -37,7 +37,7 @@ BADJI Sidy
            environnement alpine en sh , on peut travailler avec l'image comme avec le dockerfile dans ce cas on doit installer l'environnement indiqué.
  
 ### 1 Introduction
-Les fichiers Tarball sont de plus en plus répendus dans le monde informatique. Afin de faciliter leur utilisation sous shell, nous avons dévéloppe ce programme afin de faciliter la manipulation des documents dans ces fichiers.
+Les fichiers Tarball sont de plus en plus répendus dans le monde informatique. Afin de rendre pratique leur utilisation sous shell, nous avons développé ce programme afin de faciliter la manipulation des documents dans ces fichiers.
 Ce programme a été développé et testé sur une machine virtuelle AntiX, via VirtualBox,  cependant une version Docker sur Ubuntu est aussi disponible.
 
 ### 2 Fonctionnement du Shell
@@ -89,36 +89,7 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
        rlwrap ./shell -debug
       
    - L'utilitaire rlwrap permettant l'utilisation des flèches du haut et bas afin de rappeler les commandes précédentes du shell.
-      
-#### Comment installer sur Docker
-   - dockerfile :
-        sudo docker run -it ubuntu bash -> pour installer l'image de ubuntu
-        sudo docker container ls -> pour lister les container
-        sudo docker image ls -> pour lister les différentes images installer sur votre ordi
-        sudo docker exec -it container /bin/bash -> pour l'exécuter en /bin/bash
-        sudo docker start container -> pour lancer l'image correspondant au container
-        sudo docker stop container -> pour l'arrêter
-        sudo docker rmi NomImage -> pour supprimer l'image
-        sudo docker rm container -> pour supprimer l'image au cas ou y'a un container en marche.
- 
-   - package installé :
-        Il faut tout d'abord créer un fichier contenant l'algorithme permettant de créer l'image et les fichiers a exécuté
-               Exemple Algorithme:
-                       FROM alpine:latest
-                       RUN apk update
-                       RUN apk add libc-dev
-                       RUN apk add gcc
-                       RUN mkdir /home/TestForDocker1
-                       COPY test.c /home/TestForDocker1/test.c
- 
-        pour créer une nouvelle image avec le dockerfile que nous avons créé il faut :
- 
-           sudo docker build -t nomNewImage ./
- 
-       pour lancer cette image :
- 
-           sudo docker run -ti nomNewImage
-  
+
 ### 4 Structure du shell ---> shell.c
 #### Rôle de chaque fonction
 * int analyse(char* cmd, int fd, int debut, int dernier)
@@ -376,10 +347,42 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
 * La redirection dans les tarballs est assez complexe selon la source et la destination et nécessite une étude complémentaire afin de prendre tous les cas en compte.
 * La redirection ">>" APPEND n'a pas été abordée dans les tar par manque de temps.
 * La redéfinition de la commande 'rm' fonctionne avec un seul argument et ne prend pas en charge le cas de plusieurs arguments.
-* Les commandes cp et mv comporte la partie du renommage qui n'a pas été traitée vu la variété des cas dans ces deux
-commandes.
+* Les commandes cp et mv comporte la partie du renommage qui n'a pas été traitée vu la variété des cas dans ces deux commandes.
+* Nous avons testé une installation sur docker Ubuntu, qui a révélé un souci de compatibilité sur certaines commandes redirigées, qui fonctionnent sur AntiX. 
+
+
+### 10 Installation Docker Ubuntu
+Comment installer sur Docker
+  - dockerfile :
+       sudo docker run -it ubuntu bash -> pour installer l'image de ubuntu
+       sudo docker container ls -> pour lister les container
+       sudo docker image ls -> pour lister les différentes images installer sur votre ordi
+       sudo docker exec -it container /bin/bash -> pour l'exécuter en /bin/bash
+       sudo docker start container -> pour lancer l'image correspondant au container
+       sudo docker stop container -> pour l'arrêter
+       sudo docker rmi NomImage -> pour supprimer l'image
+       sudo docker rm container -> pour supprimer l'image au cas ou y'a un container en marche.
+
+  - package installé :
+       Il faut tout d'abord créer un fichier contenant l'algorithme permettant de créer l'image et les fichiers a exécuté
+              Exemple Algorithme:
+                      FROM alpine:latest
+                      RUN apk update
+                      RUN apk add libc-dev
+                      RUN apk add gcc
+                      RUN mkdir /home/TestForDocker1
+                      COPY test.c /home/TestForDocker1/test.c
+
+       pour créer une nouvelle image avec le dockerfile que nous avons créé il faut :
+
+          sudo docker build -t nomNewImage ./
+
+      pour lancer cette image :
+
+          sudo docker run -ti nomNewImage
+  
  
-### 10 Conclusion
+### 11 Conclusion
 
 Ce projet était en premier lieu une véritable expérience dans laquelle on a appliqué et développé nos compétences en termes  de gestion du travail, la communication et la collaboration au sein d’une équipe.
 
