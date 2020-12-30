@@ -20,6 +20,7 @@ Systèmes L3 2020-2021
     SU LiFang
          - La structure core du shell 
          - La gestion des pipe et des sous commandes par des process fils
+         - Configuration des packages sous AntiX 19.2.1
          - L'utilisation de l'ensemble des commandes externes
          - Les fonctions pour afficher les fichiers et les répertroires pour la gestion des fichiers tarballs (Collabore avec Mechouar Fella)
          - La gestion des commandes cd (totalement redefinie), mais aussi ls, cat, pwd (redefinies uniquement lorsque des tarball sont en jeu)
