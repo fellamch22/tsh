@@ -73,7 +73,6 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
    - Mettre à jour la date et l'heure sur antiX avec la commande root /usr/local/bin/set_time-and_date.sh
    - Si besoin utiliser la commande "setxkbmap fr" afin de mettre le clavier en azerty
    - Package à installer : gcc, manpages-dev et rlwarp
- 
        - apt update  //pour mettre à jour la liste des packages
        - apt install build essential //pour installer gcc
        - apt install rlwrap //pour installer rlwrap
