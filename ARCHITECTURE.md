@@ -1,4 +1,4 @@
-![Schema](https://imgur.com/a/nJPtDgj)
+![Schema](schema_du_shell.png)
 
 
 Systèmes L3 2020-2021
