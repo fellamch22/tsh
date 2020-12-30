@@ -335,7 +335,6 @@ void newEmptyDirectory(int fd ,char * directoryPath ){
 			while (h.name[0] != '\0'){
 
 				sscanf(h.size,"%o",&filesize);
-				//printf(" tversion : %s , t.magic : %s\n",h.version,h.magic);
 				lseek(fd, (filesize % 512 == 0)? filesize : ((filesize + BLOCKSIZE - 1)/BLOCKSIZE)*BLOCKSIZE, SEEK_CUR);
      			read(fd, &h, BLOCKSIZE);
 
@@ -660,7 +659,6 @@ void afficher_repertoire(int fd, off_t position, int mode , char* arboTar){
 
 
 void afficher_tar_content(int fd , int mode){
-	printf("Afficher TAR CONTENT  \n");
 
     struct posix_header p;
     unsigned int filesize ;
@@ -1292,7 +1290,6 @@ void copy_directory_to_tarball(char * src_path ,char * dst_path , int fd_dst){
 		memset(mkdir_path,'\0',100);
 
 		strcpy(mkdir_path,dst_path);
-		printf("directory_name : %s \n",directory_name);
 		strcat(mkdir_path,directory_name);
 		strcat(mkdir_path,"/");
 
