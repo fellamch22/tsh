@@ -268,8 +268,9 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
 * char * analyser_path ( char * path , int * fd )
    -  analyse le chemin absolu donné en paramètre si le chemin mène à un tarball elle retourne  le chemin à l'intérieur du tarball et le descripteur du tarball sinon elle retourne null et -1 dans fd
  
-### 6 Test effectué
-   * Tous les commandes externes fonctionnent avec redirection ou pipe :
+ ### 6 Test effectué 
+ #### Tous les tests sont effectués sur antiX
+    * Tous les commandes externes fonctionnent avec redirection ou pipe :
        /home/user/VB/Shell$> free
        /home/user/VB/Shell$> free > test
        /home/user/VB/Shell$> free >> test
@@ -277,38 +278,39 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
        /home/user/VB/Shell$> echo system > f1 ; cat < f1
        /home/user/VB/Shell$> free | tail -n 2 | wc -l
   
-   * Tests effectués sur les commandes cd
+    * Tests effectués sur les commandes cd
        fonctionne dans et hors des tarballs, avec prise en compte des ".."
        /home/user/VB/Shell$> cd toto.tar/toto
        /home/user/VB/Shell$> cd toto.tar/toto/../../titi.tar
       
-   * Tests effectués sur les commandes cat
+    * Tests effectués sur les commandes cat
        fonctionne dans et hors des tarballs ( commande externe), avec prise en compte des ".."
        -via la fonction cat_redefini() :
        /home/user/VB/Shell$> cat toto.tar/toto/f1
        /home/user/VB/Shell$> cd toto.tar ; cat toto/../toto/f1
  
-   * Tests effectués sur les commandes ls
+    * Tests effectués sur les commandes ls
        fonctionne dans et hors des tarballs ( commande externe), avec prise en compte des ".." et de largument -l
        -via la fonction ls_redefini() :
        /home/user/VB/Shell$> ls toto.tar/
        /home/user/VB/Shell/toto.tar/toto$> ls -l
-       /home/user/VB/Shell$> ls toto.tar/titi/../toto
-       /home/user/VB/Shell$> ls -l toto.tar/titi/../toto
+       /home/user/VB/Shell$> ls toto.tar/toto/../toto
+       /home/user/VB/Shell$> ls -l toto.tar/toto/titi
        /home/user/VB/Shell$> ls -l toto.tar/toto | grep f2
           
-   * Tests effectués sur les commandes  rm, rmdir et rm -r
+    * Tests effectués sur les commandes  rm, rmdir et rm -r
        /home/user/VB/Shell$> rmdir fichier.tar repertoire/
        /home/user/VB/Shell$> rm fichier.tar fichier
        /home/user/VB/Shell$> rm -r fichier.tar repertoire/
        le repertoire peut contenir des fichier ou pas il sera supprimer
           
-   * Tests effectués sur les redirections internes aux tarballs
+    * Tests effectués sur les redirections internes aux tarballs
        /home/user/VB/Shell$> cd toto.tar; cat toto/f2 > f4
        /home/user/VB/Shell/toto.tar$> cat toto/f2 > toto/f6
+       /home/user/VB/Shell/toto.tar$> ls -l toto/nosuchfile 2> toto/msgerr
        /home/user/VB/Shell$> head -x 2> toto.tar/toto/f10
       
-   * Tests effectués sur la commande  cp (le slash '/' à la fin des répertoires internes des tarballs est important à mettre)
+    * Tests effectués sur la commande  cp (le slash '/' à la fin des répertoires internes des tarballs est important à mettre)
        /home/user/VB/Shell$> cp toto.tar/fichier repertoire_externe
        /home/user/VB/Shell$> cp toto.tar/fichier tata.tar
        /home/user/VB/Shell$> cp fichier_externe tata.tar
@@ -318,9 +320,8 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
        /home/user/VB/Shell$> cp -r toto.tar/repertoire1/ tata.tar
        /home/user/VB/Shell$> cp -r toto.tar/repertoire/ repertoire_externe
        /home/user/VB/Shell$> cp -r repertoire_externe toto.tar
- 
- 
-   * Tests effectués sur la commande  mv (le slash '/' à la fin des répertoires internes des tarballs est important à mettre)
+    
+    * Tests effectués sur la commande  mv (le slash '/' à la fin des répertoires internes des tarballs est important à mettre)
        /home/user/VB/Shell$> mv toto.tar/fichier repertoire_externe
        /home/user/VB/Shell$> mv toto.tar/fichier tata.tar
        /home/user/VB/Shell$> mv fichier_externe tata.tar
@@ -331,8 +332,7 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
        /home/user/VB/Shell$> mv repertoire_externe toto.tar
  
  
-   * Tests effectués sur la commande  mkdir
- 
+    * Tests effectués sur la commande  mkdir
        /home/user/VB/Shell$> mkdir toto.tar/repertoire
  
  
