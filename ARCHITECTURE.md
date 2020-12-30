@@ -191,7 +191,11 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 
 * Dans ce cas le petit fils créé par le fils executant la derniere partie de la commande attend qu'il ai terminé l'execution de sa commande (et de mourir) pour prendre la main et procéder a la recopie de l'ensemble du résultat.
 
+<<<<<<< HEAD
 #### Schéma de la structure du shell
+=======
+#### Schema de la structure du shell
+>>>>>>> e794e4326888c6fd0fe4c150aaf794d7e9bf8f93
 ![Schema](schema_du_shell.png)
 
 ### 4 Gestion des fichiers tarball ---> sgf.c
@@ -204,8 +208,9 @@ Fonctions permettant l'ajout d'un fichier externe dans un tarball
     
 Fonctions permettant la copie d'un fichier / repertoire d'un tarball vers l'exterieur
 * void block_to_file(int fd, char * src_path, char* dst_path)
-
+    - Copie le contenu d'un fichier  qui est à l'interieur d'un tarball vers la destination externe
 * void block_to_directory(int fd, char * src_path,char* dst_path)
+    - Copie le contenu d'un repertoire qui est à l'interieur d'un tarball vers un repertoire externe
 
 Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
 * off_t trouve(int fd, char *filename) 
