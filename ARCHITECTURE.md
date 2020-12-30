@@ -25,9 +25,13 @@ Systèmes L3 2020-2021
          - Les commandes de redirection dans les tar : > , 2> (Collabore avec Mechouar Fella)
         
     BADJI Sidy (A COMPLETER)
-        - les fonctions pour supprimer fichier et repertoire dans le fichier .tar
-        - les foncitons de suppression : rm, rmdir, rm -r
-        - Dockerfile
+        - les fonctions pour supprimer fichier et repertoire dans le fichier .tar:
+            Ces fonctions forment la base des commande de suppression dans le SGF.
+        - les commande de suppression : 
+            rm, rmdir, rm -r
+        - Fonction permettant de trouver un fichier quelconque dans un tarball, elle renvoie sa position si le fichier existe,elle est aussi utiliée sur la plus part de nos fonctions.
+        - Dockerfile : 
+            environnement alpine en sh , on peut travailler avec l'image comme avec le dockerfile dans ce cas on doit installer l'environnement indiqué
 
 ### 1 Introduction
 #### Fonctionnement du Shell
@@ -133,10 +137,10 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
     - Détecte si un tarball est en jeu dans le pwd actuel ou les arguments de la commande
  
 * int rmdir_redefini() 
-    -Commande agissant sur un tarball pour le suppression de repertoire
+    - Commande agissant sur un tarball pour le suppression de repertoire
 
 * int rm_redefini()  
-    -Commande agissant sur un  tarball pour la suppression de fichier 
+    - Commande agissant sur un  tarball pour la suppression de fichier 
 
 * int cp_redefinir()   (A COMPLETER)
 
