@@ -28,16 +28,15 @@ SU LiFang
 - Les commandes de redirection dans les tar : > , 2> .(Collabore avec Mechouar Fella)
       
 BADJI Sidy
-- les fonctions pour supprimer fichier et répertoire dans le fichier .tar:
-           Ces fonctions forment la base des commandes de suppression dans le SGF.
-            - Fonction permettant de trouve la position d'un quelconque fichier
-            - Fonction permettant de supprimer un fichier ordinaire avec l'aide de la fonction qui permet de trouver la position
-            - Fonction permettant de suprimer un repertoire utilisiant celui qui supprime les fichiers
-            - Ces fonctions permettent aussi la suppresion recursive de fichier
+- les fonctions pour supprimer fichier et répertoire dans le fichier .tar: Ces fonctions forment la base des commandes de suppression dans le SGF.
+- Fonction permettant de trouve la position d'un quelconque fichier
+- Fonction permettant de supprimer un fichier ordinaire avec l'aide de la fonction qui permet de trouver la position
+- Fonction permettant de suprimer un repertoire utilisiant celui qui supprime les fichiers
+- Ces fonctions permettent aussi la suppresion recursive de fichier
 - les commande de suppression :
-           -rm, 
-           -rmdir, 
-           -rm -r.
+- rm, 
+- rmdir, 
+- rm -r.
 - Fonction permettant de trouver un fichier quelconque dans un tarball, elle renvoie sa position si le fichier existe,elle est aussi utilisée dans la plupart de nos fonctions dans notre SGF.
 - Dockerfile :
            environnement Ubuntu en bash , on peut travailler avec l'image comme avec le dockerfile dans ce cas on doit installer l'environnement indiqué.
@@ -379,13 +378,13 @@ Comment installer sur Docker
                       RUN mkdir /home/TestForDocker1
                       COPY test.c /home/TestForDocker1/test.c
 
-       pour créer une nouvelle image avec le dockerfile que nous avons créé il faut :
+       Pour créer une nouvelle image avec le dockerfile que nous avons créé il faut :
 
-          sudo docker build -t nomNewImage ./
+         * sudo docker build -t nomNewImage .
 
-      pour lancer cette image :
+       Pour lancer cette image :
 
-          sudo docker run -ti nomNewImage
+         * sudo docker run -ti nomNewImage
   
  
 ### 11 Conclusion
