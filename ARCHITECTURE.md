@@ -70,24 +70,26 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
  
 ### 3 Installation
 #### Comment installer sur antiX (en root)
-   - mettre à jour la date et l'heure sur antiX avec la commande root /usr/local/bin/set_time-and_date.sh
-   - si besoin utiliser la commande "setxkbmap fr" afin de mettre le clavier en azerty
-   - package à installer : gcc, manpages-dev et rlwarp
+   - Mettre à jour la date et l'heure sur antiX avec la commande root /usr/local/bin/set_time-and_date.sh
+   - Si besoin utiliser la commande "setxkbmap fr" afin de mettre le clavier en azerty
+   - Package à installer : gcc, manpages-dev et rlwarp
  
-       apt update  //pour mettre à jour la liste des packages
-       apt install build essential //pour installer gcc
-       apt install rlwrap //pour installer rlwrap
-       apt-get install manpages-dev // pour mettre le man a jour
+       - apt update  //pour mettre à jour la liste des packages
+       - apt install build essential //pour installer gcc
+       - apt install rlwrap //pour installer rlwrap
+       - apt-get install manpages-dev // pour mettre le man a jour
       
    - Le programme se compile via make, un Makefile étant présent afin de compiler les sources. Cela crée un unique binaire exécutable : shell
        make clean
        make
-   - le shell s'exécute ainsi :
+       
+   - Le shell s'exécute ainsi :
        rlwrap ./shell
+       
    - Un mode debug est aussi disponible via l'ajout de l'argument "-debug"
        rlwrap ./shell -debug
       
-   - l'utilitaire rlwrap permettant l'utilisation des flèches du haut et bas afin de rappeler les commandes précédentes du shell.
+   - L'utilitaire rlwrap permettant l'utilisation des flèches du haut et bas afin de rappeler les commandes précédentes du shell.
       
 #### Comment installer sur Docker
    - dockerfile :
