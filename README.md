@@ -16,6 +16,7 @@ Systèmes L3 2020-2021
        - apt-get install manpages-dev // pour mettre le man a jour
        
     - Mettre à jour la date et l'heure sur antiX avec la commande root /usr/local/bin/set_time-and_date.sh
+    
     - Si besoin utiliser la commande "setxkbmap fr" afin de mettre le clavier en azerty
     
     - Le programme se compile via make, un Makefile étant présent afin de compiler les sources. Cela crée un unique binaire exécutable : shell
