@@ -81,7 +81,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         
     - l'utilitaire rlwrap permettant l'utilisation des fleches du haut et bas afin de rappeler les commandes précédentes du shell.
         
- #### Comment installer sur Docker (A COMPLETER)
+ #### Comment installer sur Docker
     - dockerfile :
          sudo docker run -it ubuntu bash -> pour installer l'image de ubuntu
          sudo docker container ls -> pour lister les container 
