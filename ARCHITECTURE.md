@@ -174,8 +174,9 @@ Fonctions permettant l'ajout d'un fichier externe dans un tarball
     
 Fonctions permettant la copie d'un fichier / repertoire d'un tarball vers l'exterieur
 * void block_to_file(int fd, char * src_path, char* dst_path)
-
+    - Copie le contenu d'un fichier  qui est à l'interieur d'un tarball vers la destination externe
 * void block_to_directory(int fd, char * src_path,char* dst_path)
+    - Copie le contenu d'un repertoire qui est à l'interieur d'un tarball vers un repertoire externe
 
 Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
 * off_t trouve(int fd, char *filename) 
