@@ -353,12 +353,12 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
     * mv avec l'implémentation classique ( sans implication des tarballs)
  
 * `cp` et `rm` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option ou avec l'option `-r`
-    - les deux commandes sont redéfinies si on manipule des tarballs .la commande 'cp' assure une copie avec une variété
+   - les deux commandes sont redéfinies si on manipule des tarballs .la commande 'cp' assure une copie avec une variété
   des cas :
-            * cp d'un tarball vers une destination externe
-            * cp d'une source externe vers un tarball
-            * cp entre deux tarballs
-            * cp avec l'implémentation classique (sans implication des tarballs)
+     * cp d'un tarball vers une destination externe
+     * cp d'une source externe vers un tarball
+     * cp entre deux tarballs
+     * cp avec l'implémentation classique (sans implication des tarballs)
           
 * `ls` doit fonctionner y compris avec des chemins impliquant des tarball quand il est utilisé sans option ou avec l'option `-l`
   - ls est redéfini si des tarballs sont en jeu , et est utilisable avec l'argument "-l"
