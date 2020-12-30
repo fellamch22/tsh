@@ -8,15 +8,17 @@ Systèmes L3 2020-2021
 ## Branche : master, Tag : soutenace
 
 ### 0 Repartition du travail 
-    MECHOUAR Fella (A COMPLETER)
-        - fonctions permettant l'ajout d'un fichier externe dans un tarball ( dans le fichier sgf.c )
-        - analye syntaxique 
+    MECHOUAR Fella 
+        - fonctions permettant l'ajout d'un fichier / repertoire  externe dans un tarball ( dans le fichier sgf.c )
+        - fonctions permettant l'ajout d'un reprtoire /fichier d'un tarball dans un repertoire exterieur ( dans le fichier sgf.c )
+        - fonctions assurant la copie des fichiers ou repertoires entre les tarballs  ( dans le fichier sgf.c )
+        - analyse syntaxique 
         - la commande ls -l
         - la commande cp, mv
-        - ...
+        - la commande mkdir
         
     SU LiFang
-         - La structure du shell 
+         - La structure core du shell 
          - La gestion des pipe et des sous commandes par des process fils
          - L'utilisation de l'ensemble des commandes externes
          - Les fonctions pour afficher les fichiers et les répertroires pour la gestion des fichiers tarballs (Collabore avec Mechouar Fella)
@@ -24,6 +26,7 @@ Systèmes L3 2020-2021
          - Les commandes de redirection hors tar : >, >>, <, et 1>, 2>(stderr)
          - Les commandes de redirection dans les tar : > , 2> (Collabore avec Mechouar Fella)
         
+<<<<<<< HEAD
     BADJI Sidy (A COMPLETER)
         - les fonctions pour supprimer fichier et repertoire dans le fichier .tar:
             Ces fonctions forment la base des commande de suppression dans le SGF.
@@ -32,6 +35,12 @@ Systèmes L3 2020-2021
         - Fonction permettant de trouver un fichier quelconque dans un tarball, elle renvoie sa position si le fichier existe,elle est aussi utiliée sur la plus part de nos fonctions.
         - Dockerfile : 
             environnement alpine en sh , on peut travailler avec l'image comme avec le dockerfile dans ce cas on doit installer l'environnement indiqué
+=======
+    BADJI Sidy
+        - les fonctions pour supprimer fichier et repertoire dans le fichier .tar
+        - les foncitons de suppression : rm, rmdir, rm -r
+        - Dockerfile
+>>>>>>> 9237a951a41e7e625afd50f6c0c5416de3b5e5bc
 
 ### 1 Introduction
 #### Fonctionnement du Shell
@@ -66,16 +75,14 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 #### Comment installer sur antiX (en root)
     - mettre à jour la date et l'heure sur antiX avec la commande root /usr/local/bin/set_time-and_date.sh
     - si besoin utiliser la commande "setxkbmap fr" afin de mettre le clavier en azerty
-    - package a installer gcc, manpages-dev et rlwarp
+    - package a installer : gcc, manpages-dev et rlwarp
 
         apt update  //pour mettre a jour la liste des packages 
         apt install build essential //pour installer gcc
         apt install rlwrap //pour installer rlwrap
         apt-get install manpages-dev // pour mettre le man a jour
         
-    - Le programme se compile via make, un Makefile étant présent afin de compiler les sources. Cela crée un unique binaire executable : 
-        shell 
-        cd ~/projet
+    - Le programme se compile via make, un Makefile étant présent afin de compiler les sources. Cela crée un unique binaire executable : shell 
         make clean
         make
     - le shell s'execute ainsi : 
@@ -85,7 +92,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         
     - l'utilitaire rlwrap permettant l'utilisation des fleches du haut et bas afin de rappeler les commandes précédentes du shell.
         
- #### Comment installer sur Docker (A COMPLETER)
+ #### Comment installer sur Docker
     - dockerfile :
          sudo docker run -it ubuntu bash -> pour installer l'image de ubuntu
          sudo docker container ls -> pour lister les container 
@@ -95,8 +102,6 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
          sudo docker stop container -> pour l'arreter
          sudo docker rmi NomImage -> pour supprimer l'image 
          sudo docker rm container -> pour supprimer l'image au cas ou y'a un container en marche.
-
-         
 
     - package installé :
          Il faut tout d'abord creer un fichier contenant l'algorithme permettant de creer l'image et les fichiers a exécuté
@@ -115,7 +120,6 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         pour lancer cette image :
 
             sudo docker run -ti nomNewImage
-
     
 ### 3 Structure du shell ---> shell.c
 #### Rôle de chaque fonction
@@ -141,16 +145,25 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 
 * int rm_redefini()  
     - Commande agissant sur un  tarball pour la suppression de fichier 
+<<<<<<< HEAD
+=======
 
-* int cp_redefinir()   (A COMPLETER)
+* int cp_redefinir()  
+    - analyse les arguments de la commande et assure l'execution du bon code la commande cp
+>>>>>>> 9237a951a41e7e625afd50f6c0c5416de3b5e5bc
 
-* int mkdir_redefini()  (A COMPLETER)
+* int mkdir_redefini()  
+    - analyse les arguments de la commande et assure l'execution du bon code de la commande mkdir
+
+* int mv_redefini()  
+    - analyse les arguments de la commande et assure l'execution  du bon code de la commande mv
 
 * int cat_redefini() 
-    - Commandes redefinies appelées lorsque des tarball sont en jeu
+    -  Version redéfinie de cat appelée sur les tarballs afin de visualiser le contenu des fichiers présents a l'intérieur 
 
-* int ls_redefini()  (A COMPLETER)
-    - Commandes redefinies appelées lorsque des tarball sont en jeu
+* int ls_redefini() 
+    - Version redéfinie de ls appelée sur les tarballs afin de visualiser le contenu de leur arborescence par rapport au pwd actuel
+    - l'option -l existe pour cette commande afin de visualiser les droits des fichiers
  
 * char* convertChemin(char* chemin, char* charfinal)
     - Converti un chemin relatif en absolu
@@ -164,14 +177,18 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 * void decoupePwdtmp()
     - Permet d'identifier le nom du tarname en jeu ainsi que son arborescence, si elle existe
  
-* char* getTarParentDir(char*chemin) (A COMPLETER)
+* char* getTarParentDir(char*chemin) 
+    - Permet d'extraire le répertoire parent d'un chemin incluant un fichier tarball
 
-* char* getTarPath(char*chemin) (A COMPLETER)
+* char* getTarPath(char*chemin) 
+    - Permet d'extraire le chemin complet d'un tar a partir d'un chemin incluant un fichier tarball
 
-* char* getTarArbo(char*chemin) (A COMPLETER)
+* char* getTarArbo(char*chemin) 
+    - Permet d'extraire l'arborescence d'un tar a partir d'un chemin incluant un fichier tarball
 
 * char* getTmpFileName(char*chemin)
-    - Permet de resortir certaines parties precises depuis un chemin donné, utilisé en argument des fonctions de sgf.c
+    - Permet de resortir le nom final d'un fichier sur un chemin incluant un tarball, et y ajoute au préalable "/tmp/".
+    - Utilisé pour la redirection dans un tar
 
  * char* removeSpace(char* str)
     - Supprime les espaces multiples dans la commande
@@ -188,16 +205,30 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 
 * Dans ce cas le petit fils créé par le fils executant la derniere partie de la commande attend qu'il ai terminé l'execution de sa commande (et de mourir) pour prendre la main et procéder a la recopie de l'ensemble du résultat.
 
-#### Schema de la structure du shell
-![Schema](https://imgur.com/a/nJPtDgj)
+
+#### Schéma de la structure du shell
+![Schema](schema_du_shell.png)
 
 ### 4 Gestion des fichiers tarball ---> sgf.c
-Fonctions permettant l'ajout d'un fichier externe dans un tarball
+Les fonctions qui permettent l'ajout d'un fichier / repertoire externe dans un tarball
 * char * fileToBlocks( int fd , char * filename , int * nb_blocks)
     - Cette fonction effectue la transformation du fichier pointé par le descripteur fd en un ensemble de blocks des taille de 512 chacun , compatibles avec la representation d'un fichier dans un tarball.
     - la fonction retourne un pointeur vers les blocs contruits pour le fichier , ainsi que le nombre de blocks aloués dans la variable 'nb_blocks'
 * void addFile( int fd, int fd1 , char * src_filename , off_t position)
     - Cette fonction utilise le résultat  de la conversion du fichier pointé par fd1 par la fonction fileToBlocks, et l'insère à la position "position" dans le fichier .tar pointé par fd.
+* void copy_directory_to_tarball(char * src_path ,char * dst_path , int fd_dst)
+    - effectue la copie d'un repertoire externe ( et tout son contenu ) dans un tarball (ou sous-repertoire d'un
+	tarball )
+
+Les fonctions qui permettent la copie d'un fichier / repertoire d'un tarball vers l'exterieur
+* void block_to_file(int fd, char * src_path, char* dst_path)
+    - Copie le contenu d'un fichier  qui est à l'interieur d'un tarball vers la destination externe
+* void block_to_directory(int fd, char * src_path,char* dst_path)
+    - Copie le contenu d'un repertoire qui est à l'interieur d'un tarball vers un repertoire externe
+
+Les fonctions qui assurent la copie d'un fichier / repertoire entre deux tarballs 
+* void copy_tarball_into_tarball(char * src_path ,int fd_src ,char * dst_path, int fd_dst )
+    - Copie un fichier / repertoire d'un tarball source vers un tarball destination
 
 Les fonctions pour supprimer fichier et repertoire dans le fichier .tar
 * off_t trouve(int fd, char *filename) 
@@ -247,58 +278,98 @@ La partie suppression :
 
     - rmdir() :
     Cette commande permet de supprimer un repertoire mis en argument.
-    Ainsi, nous faisons appel à la fonction void delete_repertoire(int fd, char *repname) qui permet à partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en suivant la structure d'un fichier ".tar" : Il pointe sur l'entête du fichier qui permettra son tours de pointé sur les sur les fichiers contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie la position du fichier en argument et ensuite suivre le reste des instructions fait dans la fonction void delete_repertoire(int fd, char *repname) pour la suppression.
+    Ainsi, nous faisons appel à la fonction void delete_repertoire(int fd, char *repname) qui permet à partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en suivant la structure d'un fichier ".tar" : Il pointe sur l'entête du fichier qui permettra son tour de pointer sur les sur les fichiers contenus dans le fichier grâce a la fonction off_t trouve(int fd, char *filename) qui renvoie la position du fichier en argument et ensuite suivre le reste des instructions fait dans la fonction void delete_repertoire(int fd, char *repname) pour la suppression.
 
-### 5 Analyse syntaxique ? ---> syntaxique.c (A COMPLETER)
+### 5 Analyse syntaxique 
+* char * analyser_path ( char * path , int * fd )
+    -  analyse le chemin absolu donné en paramétre si le chemin mene à un tarball elle retourne  le chemin à l'interieur du tarball et le descripteur du tarball sinon elle retourne null et -1 dans fd
 
 ### 6 Test effectué
     * Tous les commandes externes fonctionnent avec redirection ou pipe :
-        free
-        free > test 
-        free >> test 
-        head -x 2> err
-        free | tail -n 2 | wc -l
+        /home/user/VB/Shell$> free
+        /home/user/VB/Shell$> free > test 
+        /home/user/VB/Shell$> free >> test 
+        /home/user/VB/Shell$> head -x 2> err
+        /home/user/VB/Shell$> echo system > f1 ; cat < f1
+        /home/user/VB/Shell$> free | tail -n 2 | wc -l
     
     * Test effectués sur les commandes cd 
         fonctionne dans et hors des tarballs, avec prise en compte des ".."
-        cd toto.tar/toto 
-        cd toto.tar/toto/../../titi.tar
+        /home/user/VB/Shell$> cd toto.tar/toto 
+        /home/user/VB/Shell$> cd toto.tar/toto/../../titi.tar
         
     * Test effectués sur les commandes cat 
         fonctionne dans et hors des tarballs ( commande externe), avec prise en compte des ".."
         -via la fonction cat_redefini() :
-        cat toto.tar/toto/f1
-        cd toto.tar ; cat toto/../toto/f1
+        /home/user/VB/Shell$> cat toto.tar/toto/f1
+        /home/user/VB/Shell$> cd toto.tar ; cat toto/../toto/f1
 
     * Test effectués sur les commandes ls 
         fonctionne dans et hors des tarballs ( commande externe), avec prise en compte des ".." et de largument -l
         -via la fonction ls_redefini() :
-        ls toto.tar/
-        ls toto.tar/titi/../toto
-        ls -l toto.tar/titi/../toto
+        /home/user/VB/Shell$> ls toto.tar/
+        /home/user/VB/Shell/toto.tar/toto$> ls -l
+        /home/user/VB/Shell$> ls toto.tar/titi/../toto
+        /home/user/VB/Shell$> ls -l toto.tar/titi/../toto
+        /home/user/VB/Shell$> ls -l toto.tar/toto | grep f2
             
     * Test effectués sur les commandes  rm, rmdir et rm -r
-        rmdir fichier.tar repertoire/
-        rm fichier.tar fichier
-        rm -r fichier.tar repertoire/
+        /home/user/VB/Shell$> rmdir fichier.tar repertoire/
+        /home/user/VB/Shell$> rm fichier.tar fichier
+        /home/user/VB/Shell$> rm -r fichier.tar repertoire/
         le repertoir peut contenir des fichier ou pas il sera supprimer
             
     * Test effectués sur les redirections internes aux tarballs
-        cd toto.tar; cat toto/f2 > f4 ; cat toto/f2 > toto/f6    
-        head -x 2> toto.tar/toto/f10
+        /home/user/VB/Shell$> cd toto.tar; cat toto/f2 > f4
+        /home/user/VB/Shell/toto.tar$> cat toto/f2 > toto/f6
+        /home/user/VB/Shell$> head -x 2> toto.tar/toto/f10
+        
+    * Test effectués sur la commande  cp 
+        /home/user/VB/Shell$> cp toto.tar/fichier repertoire_externe
+        /home/user/VB/Shell$> cp toto.tar/fichier tata.tar
+        /home/user/VB/Shell$> cp fichier_externe tata.tar
+        /home/user/VB/Shell$> cp toto.tar/fichier tata.tar/repertoire/
+        /home/user/VB/Shell$> cp fichier_externe tata.tar/repertoire/
+        /home/user/VB/Shell$> cp -r toto.tar/repertoire1/ tata.tar/repertoire2/
+        /home/user/VB/Shell$> cp -r toto.tar/repertoire1/ tata.tar
+        /home/user/VB/Shell$> cp -r toto.tar/repertoire/ repertoire_externe
+        /home/user/VB/Shell$> cp -r repertoire_externe toto.tar
+
+
+    * Test effectués sur la commande  mv 
+        /home/user/VB/Shell$> mv toto.tar/fichier repertoire_externe
+        /home/user/VB/Shell$> mv toto.tar/fichier tata.tar
+        /home/user/VB/Shell$> mv toto.tar/fichier tata.tar/repertoire/
+        /home/user/VB/Shell$> mv toto.tar/repertoire1/ tata.tar/repertoire2/
+        /home/user/VB/Shell$> mv toto.tar/repertoire1/ tata.tar
+        /home/user/VB/Shell$> mv toto.tar/repertoire/ repertoire/
+
+    * Test effectués sur la commande  mkdir
 
 ### 7 Bilan
 Le shell demandé doit avoir les fonctionnalités suivantes :
 * les commandes `cd` et `exit` doivent exister (avec leur comportement habituel) 
-    - cd a été totalement recodé et fonctionne avec son comportement habituel
+    - cd et exit ont été totalement recodé et fonctionne avec son comportement habituel
 * toutes les commandes externes doivent fonctionner normalement si leur déroulement n'implique pas l'utilisation d'un fichier (au sens large) dans un tarball 
    - les commandes externes sont appelées si on implique pas de tarball
  * `pwd` doit fonctionner y compris si le répertoire courant passe dans un tarball 
    - pwd est redéfini et fonctionne comme demandé
 * `mkdir`, `rmdir` et `mv` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option 
-   - (A COMPLETER)
+   - les trois commandes sont redefinies si on manipule des tarballs .la commande 'mv' assure une copie avec une variété
+   des cas : 
+            - mv d'un tarball vers une destination externe
+            - mv d'une source externe vers un tarball
+            - mv entre deux tarballs
+            - mv avec l'implementation classique ( sans implicationdes tarballs)
+
 * `cp` et `rm` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option ou avec l'option `-r`
-    - (A COMPLETER)
+     - les deux commandes sont redefinies si on manipule des tarballs .la commande 'cp' assure une copie avec une variété
+   des cas : 
+            - cp d'un tarball vers une destination externe
+            - cp d'une source externe vers un tarball
+            - cp entre deux tarballs
+            - cp avec l'implementation classique ( sans implication des tarballs)S
+            
 * `ls` doit fonctionner y compris avec des chemins impliquant des tarball quand il est utilisé sans option ou avec l'option `-l` 
    - ls est redéfini si des tarballs sont en jeu , et est utilisable avec l'argument "-l"
 * `cat` doit fonctionner y compris avec des chemins impliquant des tarball quand il est utilisé sans option 
@@ -308,11 +379,22 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
 * les combinaisons de commandes avec `|` doivent fonctionner 
    - les pipes sont correctement codés et fonctionnent avec des mix de commandes redéfinies par le shell et externes.
 
-### 8 Problème rencontré (A COMPLETER)
+### 8 Problème rencontré 
 * La redirection dans les tarballs est assez complexe selon la source et la destination et nécéssite une étude complémentaire afin de prendre tous les cas en compte.
-* La redirection ">>" APPEND n'a pas été abordée dans les tar par manque de temps.
+* La redirection ">>" APPEND n'a pas été abordée dans les tar par manque de temps. 
+* la redefinition de la commande 'rm' fonctionne avec un seul argument et ne prend pas en charge le cas de plusieurs arguments.
+* Les commandes cp et mv comporte la partie du renommage qui n'a pas été traitée vu la variété des cas dans ces deux
+commandes.
 
-### 9 Conclusion (A COMPLETER)
-Pour la partie suppression : 
-    En somme le travail a été très enrichissant sur le plan strategique c'est à dire la répartition des taches, le travail de groupe. Cependant,ça reste quand même stressant à cause du temps les questions qui ont été posés sur discord qui permettaient toujours d'améliorer le travail et de revoir les parties qui ont échappés à notre vigilanche.
-
+### 9 Conclusion
+    Ce projet était en premier lieu une véritable expérience dans laquelle on a appris la
+gestion du travail, la communication et la collaboration au sein d’une équipe. Grâce au bon
+encadrement par les professeurs responsables, notre expérience est devenue similaire à celle
+d’un vrai projet en entreprise. Ce qui nous a permis en quelque sorte d’avoir un aperçu sur le
+monde professionnel.
+    Techniquement, à travers ce projet on a pu acquérir des notions relatives à
+l’intelligence artificielle. Et ce, en rendant possible la résolution des grilles sudoku par une
+machine en quelques secondes grâce à l’identification des « patterns » des stratégies de
+résolution, chose qui demande des heures et des heures de réflexion pour un être humain.
+Pour conclure, on veut adresser un petit mot de remerciement à nos encadreurs qui
+étaient toujours à l'écoute et qui nous ont permis de réussir notre projet.
