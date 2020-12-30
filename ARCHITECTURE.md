@@ -81,7 +81,7 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         
     - l'utilitaire rlwrap permettant l'utilisation des fleches du haut et bas afin de rappeler les commandes précédentes du shell.
         
- #### Comment installer sur Docker (A COMPLETER)
+ #### Comment installer sur Docker
     - dockerfile :
          sudo docker run -it ubuntu bash -> pour installer l'image de ubuntu
          sudo docker container ls -> pour lister les container 
@@ -191,11 +191,8 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 
 * Dans ce cas le petit fils créé par le fils executant la derniere partie de la commande attend qu'il ai terminé l'execution de sa commande (et de mourir) pour prendre la main et procéder a la recopie de l'ensemble du résultat.
 
-<<<<<<< HEAD
+
 #### Schéma de la structure du shell
-=======
-#### Schema de la structure du shell
->>>>>>> e794e4326888c6fd0fe4c150aaf794d7e9bf8f93
 ![Schema](schema_du_shell.png)
 
 ### 4 Gestion des fichiers tarball ---> sgf.c
