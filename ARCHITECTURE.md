@@ -30,11 +30,17 @@ SU LiFang
 BADJI Sidy
 - les fonctions pour supprimer fichier et répertoire dans le fichier .tar:
            Ces fonctions forment la base des commandes de suppression dans le SGF.
+            - Fonction permettant de trouve la position d'un quelconque fichier
+            - Fonction permettant de supprimer un fichier ordinaire avec l'aide de la fonction qui permet de trouver la position
+            - Fonction permettant de suprimer un repertoire utilisiant celui qui supprime les fichiers
+            - Ces fonctions permettent aussi la suppresion recursive de fichier
 - les commande de suppression :
-           rm, rmdir, rm -r.
-- Fonction permettant de trouver un fichier quelconque dans un tarball, elle renvoie sa position si le fichier existe,elle est aussi utilisée dans la plupart de nos fonctions.
+           -rm, 
+           -rmdir, 
+           -rm -r.
+- Fonction permettant de trouver un fichier quelconque dans un tarball, elle renvoie sa position si le fichier existe,elle est aussi utilisée dans la plupart de nos fonctions dans notre SGF.
 - Dockerfile :
-           environnement alpine en sh , on peut travailler avec l'image comme avec le dockerfile dans ce cas on doit installer l'environnement indiqué.
+           environnement Ubuntu en bash , on peut travailler avec l'image comme avec le dockerfile dans ce cas on doit installer l'environnement indiqué.
  
 ### 1 Introduction
 Les fichiers Tarball sont de plus en plus répendus dans le monde informatique. Afin de rendre pratique leur utilisation sous shell, nous avons développé ce programme afin de faciliter la manipulation des documents dans ces fichiers.
@@ -367,9 +373,9 @@ Comment installer sur Docker
        Il faut tout d'abord créer un fichier contenant l'algorithme permettant de créer l'image et les fichiers a exécuté
               Exemple Algorithme:
                       FROM alpine:latest
-                      RUN apk update
-                      RUN apk add libc-dev
-                      RUN apk add gcc
+                      RUN apt-get update
+                      RUN apt install libc-dev
+                      RUN apt-get install -y build-essential
                       RUN mkdir /home/TestForDocker1
                       COPY test.c /home/TestForDocker1/test.c
 
