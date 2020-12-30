@@ -371,13 +371,13 @@ Comment installer sur Docker
 
   - package installé :
        Il faut tout d'abord créer un fichier contenant l'algorithme permettant de créer l'image et les fichiers a exécuté
-              Exemple Algorithme:
-                      FROM alpine:latest
-                      RUN apt-get update
-                      RUN apt install libc-dev
-                      RUN apt-get install -y build-essential
-                      RUN mkdir /home/TestForDocker1
-                      COPY test.c /home/TestForDocker1/test.c
+       - Exemple Algorithme:
+       - FROM alpine:latest
+          - RUN apt-get update
+          - RUN apt install libc-dev
+          - RUN apt-get install -y build-essential
+          - RUN mkdir /home/TestForDocker1
+          - COPY test.c /home/TestForDocker1/test.c
 
        Pour créer une nouvelle image avec le dockerfile que nous avons créé il faut :
 
