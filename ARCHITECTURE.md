@@ -40,7 +40,7 @@ BADJI Sidy
 Les fichiers Tarball sont de plus en plus répendus dans le monde informatique. Afin de faciliter leur utilisation sous shell, nous avons dévéloppe ce programme afin de faciliter la manipulation des documents dans ces fichiers.
 Ce programme a été développé et testé sur une machine virtuelle AntiX, via VirtualBox,  cependant une version Docker sur Ubuntu est aussi disponible.
 
-#### Fonctionnement du Shell
+### 2 Fonctionnement du Shell
 Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les tests sont effectués sur antiX.
  
 * Le shell tsh est fait d'un prompt mis dans une boucle infinie, attendant une commande jusqu'à l'écriture de la commande "exit" par l'utilisateur.
@@ -68,7 +68,7 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
                    fork1         fork2             fork3 (C'est le shell qui fait les forks)
            Shell <------- wc -l <------ head -n 2 <------ ls -l
  
-### 2 Installation
+### 3 Installation
 #### Comment installer sur antiX (en root)
    - mettre à jour la date et l'heure sur antiX avec la commande root /usr/local/bin/set_time-and_date.sh
    - si besoin utiliser la commande "setxkbmap fr" afin de mettre le clavier en azerty
@@ -118,7 +118,7 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
  
            sudo docker run -ti nomNewImage
   
-### 3 Structure du shell ---> shell.c
+### 4 Structure du shell ---> shell.c
 #### Rôle de chaque fonction
 * int analyse(char* cmd, int fd, int debut, int dernier)
    - permet d'analyser une sous commande précise, la découpe via decoupe(cmd) et identifie les sous commandes qui sont totalement redéfinies et nécessitant pas de fork() (ex : cd , exit)
@@ -196,7 +196,7 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
 #### Schéma de la structure du shell
 ![Schema](schema_du_shell.png)
  
-### 4 Gestion des fichiers tarball ---> sgf.c
+### 5 Gestion des fichiers tarball ---> sgf.c
 #### Les fonctions qui permettent l'ajout d'un fichier / répertoire externe dans un tarball
 * char * fileToBlocks( int fd , char * filename , int * nb_blocks)
    - Cette fonction effectue la transformation du fichier pointé par le descripteur fd en un ensemble de blocs des taille de 512 chacun , compatibles avec la représentation d'un fichier dans un tarball.
@@ -267,11 +267,11 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
    Cette commande permet de supprimer un répertoire mis en argument.
    Ainsi, nous faisons appel à la fonction void delete_repertoire(int fd, char *repname) qui permet à partir des processus d'ouvrir un fichier descripteur, si ce dernier ne renvoie pas d'erreur, en suivant la structure d'un fichier ".tar" : Il pointe sur l'entête du fichier qui permettra son tour de pointer sur les sur les fichiers contenus dans le fichier grâce à la fonction off_t trouve(int fd, char *filename) qui renvoie la position du fichier en argument et ensuite suivre le reste des instructions fait dans la fonction void delete_repertoire(int fd, char *repname) pour la suppression.
  
-### 5 Analyse syntaxique
+### 6 Analyse syntaxique
 * char * analyser_path ( char * path , int * fd )
    -  analyse le chemin absolu donné en paramètre si le chemin mène à un tarball elle retourne  le chemin à l'intérieur du tarball et le descripteur du tarball sinon elle retourne null et -1 dans fd
  
- ### 6 Test effectué 
+ ### 7 Test effectué 
  #### Tous les tests sont effectués sur antiX
     * Tous les commandes externes fonctionnent avec redirection ou pipe :
        /home/user/VB/Shell$> free
@@ -334,12 +334,11 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
        /home/user/VB/Shell$> mv toto.tar/repertoire/  repertoire_externe
        /home/user/VB/Shell$> mv repertoire_externe toto.tar
  
- 
     * Tests effectués sur la commande  mkdir
        /home/user/VB/Shell$> mkdir toto.tar/repertoire
  
  
-### 7 Bilan
+### 8 Bilan
 Le shell demandé doit avoir les fonctionnalités suivantes :
 * les commandes `cd` et `exit` doivent exister (avec leur comportement habituel)
    - cd et exit ont été totalement recodé et fonctionne avec son comportement habituel
@@ -372,14 +371,14 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
 * les combinaisons de commandes avec `|` doivent fonctionner
   - les pipes sont correctement codés et fonctionnent avec des mix de commandes redéfinies par le shell et externes.
  
-### 8 Problème rencontré
+### 9 Problème rencontré
 * La redirection dans les tarballs est assez complexe selon la source et la destination et nécessite une étude complémentaire afin de prendre tous les cas en compte.
 * La redirection ">>" APPEND n'a pas été abordée dans les tar par manque de temps.
 * La redéfinition de la commande 'rm' fonctionne avec un seul argument et ne prend pas en charge le cas de plusieurs arguments.
 * Les commandes cp et mv comporte la partie du renommage qui n'a pas été traitée vu la variété des cas dans ces deux
 commandes.
  
-### 9 Conclusion
+### 10 Conclusion
 
 Ce projet était en premier lieu une véritable expérience dans laquelle on a appliqué et développé nos compétences en termes  de gestion du travail, la communication et la collaboration au sein d’une équipe.
 
