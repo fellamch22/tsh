@@ -281,8 +281,9 @@ Vous pouvez trouver ces  fonctions dans le fichier sgf.c et shell.c. Tous les te
     * Tests effectués sur les commandes  rm, rmdir et rm -r
        /home/user/VB/Shell$> rmdir fichier.tar repertoire/
        /home/user/VB/Shell$> rm fichier.tar fichier
-       /home/user/VB/Shell$> rm -r fichier.tar repertoire/
-       le repertoire peut contenir des fichier ou pas il sera supprimer
+       /home/user/VB/Shell$> rm -r fichier.tar
+       /home/user/VB/Shell$> rm -r toto.tar/repertoire1/
+       /home/user/VB/Shell$> rm -r toto.tar/repertoire/titi.txt
           
     * Tests effectués sur les redirections internes aux tarballs
        /home/user/VB/Shell$> cd toto.tar; cat toto/f2 > f4
