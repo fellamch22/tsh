@@ -347,10 +347,10 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
 * `mkdir`, `rmdir` et `mv` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option
   - les trois commandes sont redéfinies si on manipule des tarballs .la commande 'mv' assure une copie avec une variété
   des cas : 
-            * mv d'un tarball vers une destination externe
-            * mv d'une source externe vers un tarball
-           - mv entre deux tarballs
-           - mv avec l'implémentation classique ( sans implication des tarballs)
+    * mv d'un tarball vers une destination externe
+    * mv d'une source externe vers un tarball
+    * mv entre deux tarballs
+    * mv avec l'implémentation classique ( sans implication des tarballs)
  
 * `cp` et `rm` doivent fonctionner y compris avec des chemins impliquant des tarball quand ils sont utilisés sans option ou avec l'option `-r`
     - les deux commandes sont redéfinies si on manipule des tarballs .la commande 'cp' assure une copie avec une variété
