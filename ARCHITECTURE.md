@@ -64,16 +64,14 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 #### Comment installer sur antiX (en root)
     - mettre à jour la date et l'heure sur antiX avec la commande root /usr/local/bin/set_time-and_date.sh
     - si besoin utiliser la commande "setxkbmap fr" afin de mettre le clavier en azerty
-    - package a installer gcc, manpages-dev et rlwarp
+    - package a installer : gcc, manpages-dev et rlwarp
 
         apt update  //pour mettre a jour la liste des packages 
         apt install build essential //pour installer gcc
         apt install rlwrap //pour installer rlwrap
         apt-get install manpages-dev // pour mettre le man a jour
         
-    - Le programme se compile via make, un Makefile étant présent afin de compiler les sources. Cela crée un unique binaire executable : 
-        shell 
-        cd ~/projet
+    - Le programme se compile via make, un Makefile étant présent afin de compiler les sources. Cela crée un unique binaire executable : shell 
         make clean
         make
     - le shell s'execute ainsi : 
@@ -83,9 +81,37 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
         
     - l'utilitaire rlwrap permettant l'utilisation des fleches du haut et bas afin de rappeler les commandes précédentes du shell.
         
- #### Comment installer sur Docker (A COMPLETER)
-    - dockerfile
-    - package installé...etc
+ #### Comment installer sur Docker
+    - dockerfile :
+         sudo docker run -it ubuntu bash -> pour installer l'image de ubuntu
+         sudo docker container ls -> pour lister les container 
+         sudo docker image ls -> pour lister les differentes images installer sur votre ordi
+         sudo docker exec -it container /bin/bash -> pour l'executter en /bin/bash
+         sudo docker start container -> pour lancer l'image correspondant au container
+         sudo docker stop container -> pour l'arreter
+         sudo docker rmi NomImage -> pour supprimer l'image 
+         sudo docker rm container -> pour supprimer l'image au cas ou y'a un container en marche.
+
+         
+
+    - package installé :
+         Il faut tout d'abord creer un fichier contenant l'algorithme permettant de creer l'image et les fichiers a exécuté
+                Exemple Algorithme:
+                        FROM alpine:latest 
+                        RUN apk update
+                        RUN apk add libc-dev
+                        RUN apk add gcc
+                        RUN mkdir /home/TestForDocker1
+                        COPY test.c /home/TestForDocker1/test.c
+
+         pour creer une nouvelle image avec le dockerfile que nous avons créé il faut :
+
+            sudo docker build -t nomNewImage ./
+
+        pour lancer cette image :
+
+            sudo docker run -ti nomNewImage
+
     
 ### 3 Structure du shell ---> shell.c
 #### Rôle de chaque fonction
@@ -106,9 +132,11 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 * int UseRedefCmd()
     - Détecte si un tarball est en jeu dans le pwd actuel ou les arguments de la commande
  
-* int rmdir_redefini()  (A COMPLETER)
+* int rmdir_redefini() 
+    -Commande agissant sur un tarball pour le suppression de repertoire
 
-* int rm_redefini()  (A COMPLETER)
+* int rm_redefini()  
+    -Commande agissant sur un  tarball pour la suppression de fichier 
 
 * int cp_redefinir()  
     - analyse les arguments de la commande et assure l'execution du bon code la commande cp
@@ -120,10 +148,11 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
     - analyse les arguments de la commande et assure l'execution  du bon code de la commande mv
 
 * int cat_redefini() 
-    - Commandes redefinies appelées lorsque des tarball sont en jeu
+    -  Version redéfinie de cat appelée sur les tarballs afin de visualiser le contenu des fichiers présents a l'intérieur 
 
 * int ls_redefini()  (A COMPLETER)
-    - Commandes redefinies appelées lorsque des tarball sont en jeu
+    - Version redéfinie de ls appelée sur les tarballs afin de visualiser le contenu de leur arborescence par rapport au pwd actuel
+    - l'option -l existe pour cette commande afin de visualiser les droits des fichiers
  
 * char* convertChemin(char* chemin, char* charfinal)
     - Converti un chemin relatif en absolu
@@ -137,15 +166,19 @@ Vous pouvez trouver ces  foncitons dans le fichier sgf.c et shell.c. Tous les te
 * void decoupePwdtmp()
     - Permet d'identifier le nom du tarname en jeu ainsi que son arborescence, si elle existe
  
-* char* getTarParentDir(char*chemin) (A COMPLETER)
+* char* getTarParentDir(char*chemin) 
+    - Permet d'extraire le répertoire parent d'un chemin incluant un fichier tarball
 
-* char* getTarPath(char*chemin) (A COMPLETER)
+* char* getTarPath(char*chemin) 
+    - Permet d'extraire le chemin complet d'un tar a partir d'un chemin incluant un fichier tarball
 
-* char* getTarArbo(char*chemin) (A COMPLETER)
+* char* getTarArbo(char*chemin) 
+    - Permet d'extraire l'arborescence d'un tar a partir d'un chemin incluant un fichier tarball
 
 * char* getTmpFileName(char*chemin)
-    - Permet de resortir certaines parties precises depuis un chemin donné, utilisé en argument des fonctions de sgf.c
-
+    - Permet de resortir le nom final d'un fichier sur un chemin incluant un tarball, et y ajoute au préalable "/tmp/".
+    - Utilisé pour la redirection dans un tar
+    
  * char* removeSpace(char* str)
     - Supprime les espaces multiples dans la commande
  
@@ -226,39 +259,43 @@ La partie suppression :
 
 ### 6 Test effectué
     * Tous les commandes externes fonctionnent avec redirection ou pipe :
-        free
-        free > test 
-        free >> test 
-        head -x 2> err
-        free | tail -n 2 | wc -l
+        /home/user/VB/Shell$> free
+        /home/user/VB/Shell$> free > test 
+        /home/user/VB/Shell$> free >> test 
+        /home/user/VB/Shell$> head -x 2> err
+        /home/user/VB/Shell$> echo system > f1 ; cat < f1
+        /home/user/VB/Shell$> free | tail -n 2 | wc -l
     
     * Test effectués sur les commandes cd 
         fonctionne dans et hors des tarballs, avec prise en compte des ".."
-        cd toto.tar/toto 
-        cd toto.tar/toto/../../titi.tar
+         /home/user/VB/Shell$> cd toto.tar/toto 
+         /home/user/VB/Shell$> cd toto.tar/toto/../../titi.tar
         
     * Test effectués sur les commandes cat 
         fonctionne dans et hors des tarballs ( commande externe), avec prise en compte des ".."
         -via la fonction cat_redefini() :
-        cat toto.tar/toto/f1
-        cd toto.tar ; cat toto/../toto/f1
+        /home/user/VB/Shell$> cat toto.tar/toto/f1
+        /home/user/VB/Shell$> cd toto.tar ; cat toto/../toto/f1
 
     * Test effectués sur les commandes ls 
         fonctionne dans et hors des tarballs ( commande externe), avec prise en compte des ".." et de largument -l
         -via la fonction ls_redefini() :
-        ls toto.tar/
-        ls toto.tar/titi/../toto
-        ls -l toto.tar/titi/../toto
+        /home/user/VB/Shell$> ls toto.tar/
+        /home/user/VB/Shell/toto.tar/toto$> ls -l
+        /home/user/VB/Shell$> ls toto.tar/titi/../toto
+        /home/user/VB/Shell$> ls -l toto.tar/titi/../toto
+        /home/user/VB/Shell$> ls -l toto.tar/toto | grep f2
             
     * Test effectués sur les commandes  rm, rmdir et rm -r
-        rmdir fichier.tar repertoire/
-        rm fichier.tar fichier
-        rm -r fichier.tar repertoire/
+        /home/user/VB/Shell$> rmdir fichier.tar repertoire/
+        /home/user/VB/Shell$> rm fichier.tar fichier
+        /home/user/VB/Shell$> rm -r fichier.tar repertoire/
         le repertoir peut contenir des fichier ou pas il sera supprimer
             
     * Test effectués sur les redirections internes aux tarballs
-        cd toto.tar; cat toto/f2 > f4 ; cat toto/f2 > toto/f6    
-        head -x 2> toto.tar/toto/f10
+        /home/user/VB/Shell$> cd toto.tar; cat toto/f2 > f4
+        /home/user/VB/Shell/toto.tar$> cat toto/f2 > toto/f6
+        /home/user/VB/Shell$> head -x 2> toto.tar/toto/f10
 
 ### 7 Bilan
 Le shell demandé doit avoir les fonctionnalités suivantes :
@@ -286,6 +323,5 @@ Le shell demandé doit avoir les fonctionnalités suivantes :
 * La redirection ">>" APPEND n'a pas été abordée dans les tar par manque de temps.
 
 ### 9 Conclusion (A COMPLETER)
-Pour la partie suppression : 
-    En somme le travail a été très enrichissant sur le plan strategique c'est à dire la répartition des taches, le travail de groupe. Cependant,ça reste quand même stressant à cause du temps les questions qui ont été posés sur discord qui permettaient toujours d'améliorer le travail et de revoir les parties qui ont échappés à notre vigilanche.
+
 
