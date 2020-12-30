@@ -784,7 +784,6 @@ void decoupePwdtmp(){
                 //fonction avec les commandes extern : uname - x 2> unamex
                 //afficher : Try 'uname --help' for more information dans unamex
                 else if ( (UseRedefCmd() == 1) && (redirFlag == 4) ) {
-                    printf(" Redirection stderr dans un Tar\n");
                     decoupePwdtmp();
                     //on ouvre le fd du tar
                     fd_du_tar = open(tarname, O_RDWR);
@@ -1040,7 +1039,6 @@ void decoupePwdtmp(){
                                     strcat(arboTar,p) ; //t=1, AT=toto/
                                     strcat(arboTar,"/") ;
                              }
-                              //Debug  printf("'%s'\n", p);
                             p = strtok(NULL, "/");
                           }
                 //Fin Decoupe
@@ -1184,7 +1182,6 @@ void decoupePwdtmp(){
                 perror("Error open");
                 return -1;
             }
-            printf("%ld", trouve(fdx, arguments[2]));
             close(fdx);
         }
         else if(!strcmp(arguments[0], "rmdir2")){
